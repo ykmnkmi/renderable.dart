@@ -1,0 +1,17 @@
+include: package:pedantic/analysis_options.yaml
+
+analyzer:
+  # enable-experiment:
+  #   - non-nullable
+  exclude:
+    - example/**
+  strong-mode:
+    implicit-casts: false
+    implicit-dynamic: false
+
+linter:
+  rules:
+    always_specify_types: true
+    avoid_print: true
+    omit_local_variable_types: false
+    prefer_final_locals: false
