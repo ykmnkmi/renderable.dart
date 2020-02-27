@@ -1,8 +1,5 @@
 library dsx;
 
-import 'package:petitparser/petitparser.dart' hide Parser;
-import 'package:petitparser/petitparser.dart' as pp show Parser;
-
 abstract class Visitor {
   void visitText(Text text);
 
@@ -70,11 +67,13 @@ class Renderer extends Visitor {
 }
 
 class Template implements Node, Renderable {
-  factory Template(String source) => Parser().parse(source);
+  factory Template(String source) => const Parser().parse(source);
 
-  const Template.fromNodes(this.nodes);
+  Template.fromNodes(this.nodes) : buffer = StringBuffer();
 
   final List<Node> nodes;
+
+  final StringBuffer buffer;
 
   @override
   void accept(Visitor visitor) {
@@ -83,9 +82,8 @@ class Template implements Node, Renderable {
 
   @override
   String render(Map<String, Object> context) {
-    final StringBuffer buffer = StringBuffer();
-    final Renderer renderer = Renderer(buffer, context);
-    accept(renderer);
+    buffer.clear();
+    accept(Renderer(buffer, context));
     return '$buffer';
   }
 
@@ -94,44 +92,15 @@ class Template implements Node, Renderable {
 }
 
 class Parser {
-  static Parser _instance;
-
-  static Parser Function() _checker = () {
-    try {
-      return _instance ??= Parser._();
-    } finally {
-      _checker = () => _instance;
-    }
-  };
-
-  factory Parser() => _checker();
-
-  Parser._() {
-    identifier = (pattern('a-z') & pattern('a-z').star()).flatten();
-    variableOpen = (string('{{') & whitespace().star()).pick<String>(0);
-    variableClose = (whitespace().star() & string('}}')).pick<String>(1);
-    variable = (variableOpen & identifier & variableClose).pick<String>(1).map<Node>((String name) => Variable(name));
-    data = any().starLazy(variableOpen).flatten().map<Node>((String text) => Text(text));
-    template = data.separatedBy<Node>(variable, optionalSeparatorAtEnd: true).end();
-  }
-
-  pp.Parser<String> identifier;
-  pp.Parser<String> variableOpen;
-  pp.Parser<String> variableClose;
-  pp.Parser<Node> variable;
-  pp.Parser<Node> data;
-  pp.Parser<List<Node>> template;
+  const Parser();
 
   Template parse(String source) {
-    final Result<List<Node>> parseResult = template.parse(source);
-    if (parseResult.isFailure) throw parseResult;
-    final List<Node> nodes = parseResult.value;
-    return Template.fromNodes(nodes);
+    return null;
   }
 }
 
 extension TemplateString on String {
-  Template parse() => Parser().parse(this);
+  Template parse() => const Parser().parse(this);
 
   String render(Map<String, Object> context) => parse().render(context);
 }

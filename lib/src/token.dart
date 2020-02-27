@@ -1,60 +1,69 @@
-// abstract class Token {
-//   // factory Token.whitespace(int offset, String lexeme) => LexemeToken.whitespace(offset, lexeme);
+part of 'scanner.dart';
 
-//   factory Token.unexpected(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.unexpected);
+enum TokenType {
+  text,
+  whitespace,
+  unexpected,
+  eof,
+}
 
-//   factory Token.eof(int offset) => SimpleToken(offset, TokenType.eof);
+abstract class Token {
+  factory Token.whitespace(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.whitespace);
 
-//   int get offset;
+  factory Token.unexpected(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.unexpected);
 
-//   int get end;
+  factory Token.eof(int offset) => SimpleToken(offset, TokenType.eof);
 
-//   int get length;
+  int get offset;
 
-//   String get lexeme;
+  int get end;
 
-//   TokenType get type;
+  int get length;
 
-//   @override
-//   String toString() => 'Token#$offset "$lexeme"';
-// }
+  String get lexeme;
 
-// abstract class BaseToken implements Token {
-//   @override
-//   int get end => offset + length;
+  TokenType get type;
 
-//   @override
-//   int get length => lexeme.length;
-// }
+  @override
+  String toString() => 'Token#$offset "$lexeme"';
+}
 
-// class SimpleToken extends BaseToken {
-//   static final Map<TokenType, String> lexemes = <TokenType, String>{
-//     TokenType.eof: '',
-//   };
+abstract class BaseToken implements Token {
+  @override
+  int get end => offset + length;
 
-//   SimpleToken(this.offset, this.type);
+  @override
+  int get length => lexeme.length;
+}
 
-//   @override
-//   final int offset;
+class SimpleToken extends BaseToken {
+  static final Map<TokenType, String> lexemes = <TokenType, String>{
+    TokenType.eof: '',
+  };
 
-//   @override
-//   final TokenType type;
+  SimpleToken(this.offset, this.type);
 
-//   @override
-//   String get lexeme => lexemes[type];
-// }
+  @override
+  final int offset;
 
-// class LexemeToken extends BaseToken {
-//   // factory LexemeToken.whitespace(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.whitespace);
+  @override
+  final TokenType type;
 
-//   LexemeToken(this.offset, this.lexeme, this.type);
+  @override
+  String get lexeme => lexemes[type];
+}
 
-//   @override
-//   final int offset;
+class LexemeToken extends BaseToken {
+  // factory LexemeToken.whitespace(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.whitespace);
 
-//   @override
-//   final String lexeme;
+  LexemeToken(this.offset, this.lexeme, this.type);
 
-//   @override
-//   final TokenType type;
-// }
+  @override
+  final int offset;
+
+  @override
+  final String lexeme;
+
+  @override
+  final TokenType type;
+}
