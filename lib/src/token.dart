@@ -1,6 +1,9 @@
 part of 'scanner.dart';
 
 enum TokenType {
+  comment,
+  commentEnd,
+  commentStart,
   text,
   whitespace,
   unexpected,
@@ -8,11 +11,25 @@ enum TokenType {
 }
 
 abstract class Token {
-  factory Token.whitespace(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.whitespace);
-
-  factory Token.unexpected(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.unexpected);
-
   factory Token.eof(int offset) => SimpleToken(offset, TokenType.eof);
+
+  factory Token.unexpected(int offset, String lexeme) =>
+      LexemeToken(offset, lexeme, TokenType.unexpected);
+
+  factory Token.whitespace(int offset, String lexeme) =>
+      LexemeToken(offset, lexeme, TokenType.whitespace);
+
+  factory Token.text(int offset, String lexeme) =>
+      LexemeToken(offset, lexeme, TokenType.text);
+
+  factory Token.commentStart(int offset) =>
+      SimpleToken(offset, TokenType.commentStart);
+
+  factory Token.commentEnd(int offset) =>
+      SimpleToken(offset, TokenType.commentEnd);
+
+  factory Token.comment(int offset, String lexeme) =>
+      LexemeToken(offset, lexeme, TokenType.comment);
 
   int get offset;
 
@@ -39,6 +56,8 @@ abstract class BaseToken implements Token {
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
     TokenType.eof: '',
+    TokenType.commentStart: '{#',
+    TokenType.commentEnd: '#}',
   };
 
   SimpleToken(this.offset, this.type);
@@ -54,8 +73,6 @@ class SimpleToken extends BaseToken {
 }
 
 class LexemeToken extends BaseToken {
-  // factory LexemeToken.whitespace(int offset, String lexeme) => LexemeToken(offset, lexeme, TokenType.whitespace);
-
   LexemeToken(this.offset, this.lexeme, this.type);
 
   @override
@@ -66,4 +83,7 @@ class LexemeToken extends BaseToken {
 
   @override
   final TokenType type;
+
+  @override
+  String toString() => '#Token($type) {$offset:$lexeme}';
 }
