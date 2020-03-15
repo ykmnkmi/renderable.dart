@@ -12,46 +12,45 @@ class Tokenizer {
   factory Tokenizer() => _factory();
 
   Tokenizer._() {
-    text = any()
-        .plusLazy(commentStartTag)
-        .flatten()
-        .map((String lexeme) => Token.text(0, lexeme));
+    commentStartTag = (string('{#') & whitespace().star()).pick<String>(0);
+    commentEndTag = (whitespace().star() & string('#}')).pick<String>(1);
 
-    commentStartTag = string('{#');
-
-    commentStart = (commentStartTag & whitespace().star())
-        .pick<String>(0)
-        .map((String lexeme) => Token.commentStart(0));
-
-    commentEnd = (whitespace().star() & string('#}'))
-        .pick<String>(1)
-        .map((String lexeme) => Token.commentEnd(0));
+    commentStart = commentStartTag.mapWithOffset<Token>(
+        (int offset, String lexeme) => Token.commentStart(offset));
+    commentEnd = commentEndTag.mapWithOffset<Token>(
+        (int offset, String lexeme) => Token.commentEnd(offset));
 
     comment = (commentStart &
-            any()
-                .starLazy(commentEnd)
+            (any().starLazy(commentEndTag) | any().star())
                 .flatten()
-                .map<Token>((String lexeme) => Token.comment(0, lexeme)) &
+                .mapWithOffset<Token>((int offset, String lexeme) =>
+                    Token.comment(offset, lexeme)) &
             commentEnd)
         .castList<Token>();
 
-    root = comment;
+    text = (any().plusLazy(commentStartTag) | any().plus())
+        .flatten()
+        .mapWithOffset<Token>(
+            (int offset, String lexeme) => Token.text(offset, lexeme));
+
+    root = (comment | text).plus();
     // identifier = (pattern('a-z') & pattern('a-z').star()).flatten();
   }
 
-  Parser<Token> text;
   Parser<String> commentStartTag;
   Parser<Token> commentStart;
+  Parser<String> commentEndTag;
   Parser<Token> commentEnd;
   Parser<List<Token>> comment;
+  Parser<Token> text;
   // Parser<String> identifier;
   // Parser<String> expressionStart;
   // Parser<String> expressionEnd;
   // Parser<Token> expression;
-  Parser<List<Token>> root;
+  Parser<List<Object>> root;
 
-  List<Token> tokenize(String template) {
-    final Result<List<Token>> result = root.parse(template);
+  List<Object> tokenize(String template) {
+    final Result<List<Object>> result = root.parse(template);
 
     if (result.isFailure) {
       throw result.message;

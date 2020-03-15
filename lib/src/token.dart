@@ -42,7 +42,7 @@ abstract class Token {
   TokenType get type;
 
   @override
-  String toString() => 'Token#$offset "$lexeme"';
+  String toString() => '#$type:$offset {$lexeme}';
 }
 
 abstract class BaseToken implements Token {
@@ -51,6 +51,9 @@ abstract class BaseToken implements Token {
 
   @override
   int get length => lexeme.length;
+
+  @override
+  String toString() => '#$type:$offset:$length {$lexeme}';
 }
 
 class SimpleToken extends BaseToken {
@@ -83,7 +86,4 @@ class LexemeToken extends BaseToken {
 
   @override
   final TokenType type;
-
-  @override
-  String toString() => '#Token($type) {$offset:$lexeme}';
 }
