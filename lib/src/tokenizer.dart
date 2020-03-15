@@ -49,13 +49,29 @@ class Tokenizer {
   // Parser<Token> expression;
   Parser<List<Object>> root;
 
-  List<Object> tokenize(String template) {
+  Iterable<Token> tokenize(String template) sync* {
     final Result<List<Object>> result = root.parse(template);
 
     if (result.isFailure) {
       throw result.message;
     }
 
-    return result.value;
+    for (Object value in result.value) {
+      if (value is Token) {
+        yield value;
+      } else if (value is Iterable<Object>) {
+        for (Object object in value) {
+          if (object is Iterable<Token>) {
+            yield* object;
+          } else if (object is Token) {
+            yield object;
+          } else {
+            throw TypeError();
+          }
+        }
+      } else {
+        throw TypeError();
+      }
+    }
   }
 }
