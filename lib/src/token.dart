@@ -42,6 +42,16 @@ abstract class Token {
   TokenType get type;
 
   @override
+  int get hashCode => type.hashCode & offset & lexeme.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Token &&
+      type == other.type &&
+      offset == other.offset &&
+      lexeme == other.lexeme;
+
+  @override
   String toString() => '#$type:$offset {$lexeme}';
 }
 
