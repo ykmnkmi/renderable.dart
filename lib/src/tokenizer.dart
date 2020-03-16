@@ -60,7 +60,10 @@ class Tokenizer {
     expressionBody =
         (identifier | spaces).plusLazy(expressionEndTag).castList<Token>();
 
-    expression = expressionStart & expressionBody & expressionEnd;
+    expression = (expressionStart & expressionBody & expressionEnd)
+        .map<List<Token>>((List<Object> values) => (values[1] as List<Token>)
+          ..insert(0, values[0] as Token)
+          ..add(values[2] as Token));
 
     // text
 
@@ -91,7 +94,7 @@ class Tokenizer {
   Parser<Token> identifier;
   Parser<List<Token>> expressionBody;
 
-  Parser<List<Object>> expression;
+  Parser<List<Token>> expression;
 
   Parser<List<Object>> root;
 
@@ -105,16 +108,8 @@ class Tokenizer {
     for (Object value in result.value) {
       if (value is Token) {
         yield value;
-      } else if (value is Iterable<Object>) {
-        for (Object object in value) {
-          if (object is Iterable<Token>) {
-            yield* object;
-          } else if (object is Token) {
-            yield object;
-          } else {
-            throw TypeError();
-          }
-        }
+      } else if (value is Iterable<Token>) {
+        yield* value;
       } else {
         throw TypeError();
       }

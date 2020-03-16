@@ -47,3 +47,39 @@ class MapWithStartParser<T, R> extends DelegateParser<R> {
       callback == other.callback &&
       hasSideEffects == other.hasSideEffects;
 }
+
+// extension InsertToParserExtension on Parser<Object> {
+//   Parser<List<T>> insertTo<T>(Parser<List<T>> list) =>
+//       InsertToParser<T>(this as Parser<T>, list);
+// }
+
+// class InsertToParser<T> extends DelegateParser<List<T>> {
+//   final Parser<List<T>> list;
+
+//   InsertToParser(Parser<T> delegate, this.list)
+//       : assert(list != null, 'list must not be null'),
+//         super(delegate);
+
+//   @override
+//   Result<List<T>> parseOn(Context context) {
+//     final Result<Object> result = delegate.parseOn(context);
+//     if (result.isSuccess) {
+//       final input = result.value;
+//       final output = input[index < 0 ? input.length + index : index];
+//       return result.success(output);
+//     } else {
+//       return result.failure(result.message);
+//     }
+//   }
+
+//   @override
+//   int fastParseOn(String buffer, int position) =>
+//       delegate.fastParseOn(buffer, position);
+
+//   @override
+//   InsertToParser<T> copy() => InsertToParser<T>(delegate as Parser<T>, list);
+
+//   @override
+//   bool hasEqualProperties(InsertToParser<T> other) =>
+//       super.hasEqualProperties(other) && list == other.list;
+// }
