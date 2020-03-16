@@ -1,21 +1,21 @@
 part of 'scanner.dart';
 
-typedef MapWithOffsetCallback<T, R> = R Function(int offset, T value);
+typedef MapWithStartCallback<T, R> = R Function(int start, T value);
 
-extension MapWithOffsetParserExtension<T> on Parser<T> {
-  Parser<R> mapWithOffset<R>(MapWithOffsetCallback<T, R> callback,
+extension MapWithStartParserExtension<T> on Parser<T> {
+  Parser<R> mapWithStart<R>(MapWithStartCallback<T, R> callback,
           {bool hasSideEffects = false}) =>
-      MapWithOffsetParser<T, R>(this, callback, hasSideEffects);
+      MapWithStartParser<T, R>(this, callback, hasSideEffects);
 }
 
-class MapWithOffsetParser<T, R> extends DelegateParser<R> {
-  MapWithOffsetParser(Parser<T> delegate, this.callback,
+class MapWithStartParser<T, R> extends DelegateParser<R> {
+  MapWithStartParser(Parser<T> delegate, this.callback,
       [this.hasSideEffects = false])
       : assert(callback != null, 'callback must not be null'),
         assert(hasSideEffects != null, 'hasSideEffects must not be null'),
         super(delegate);
 
-  final MapWithOffsetCallback<T, R> callback;
+  final MapWithStartCallback<T, R> callback;
 
   final bool hasSideEffects;
 
@@ -38,11 +38,11 @@ class MapWithOffsetParser<T, R> extends DelegateParser<R> {
   }
 
   @override
-  MapWithOffsetParser<T, R> copy() => MapWithOffsetParser<T, R>(
-      delegate as Parser<T>, callback, hasSideEffects);
+  MapWithStartParser<T, R> copy() =>
+      MapWithStartParser<T, R>(delegate as Parser<T>, callback, hasSideEffects);
 
   @override
-  bool hasEqualProperties(MapWithOffsetParser<T, R> other) =>
+  bool hasEqualProperties(MapWithStartParser<T, R> other) =>
       super.hasEqualProperties(other) &&
       callback == other.callback &&
       hasSideEffects == other.hasSideEffects;

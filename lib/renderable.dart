@@ -49,7 +49,8 @@ abstract class Renderable {
 }
 
 class Renderer extends Visitor {
-  Renderer(this.buffer, Map<String, Object> context) : context = Map<String, Object>.unmodifiable(context);
+  Renderer(this.buffer, Map<String, Object> context)
+      : context = Map<String, Object>.unmodifiable(context);
 
   final StringBuffer buffer;
 

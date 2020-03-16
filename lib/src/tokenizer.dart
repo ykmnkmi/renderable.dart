@@ -1,5 +1,10 @@
 part of 'scanner.dart';
 
+enum TagType {
+  trim,
+  keep,
+}
+
 class Tokenizer {
   static Tokenizer _instance;
 
@@ -9,44 +14,85 @@ class Tokenizer {
     return _instance;
   };
 
-  factory Tokenizer() => _factory();
+  factory Tokenizer() {
+    return _factory();
+  }
 
   Tokenizer._() {
+    // comment
+
     commentStartTag = (string('{#') & whitespace().star()).pick<String>(0);
     commentEndTag = (whitespace().star() & string('#}')).pick<String>(1);
 
-    commentStart = commentStartTag.mapWithOffset<Token>(
+    commentStart = commentStartTag.mapWithStart<Token>(
         (int offset, String lexeme) => Token.commentStart(offset));
-    commentEnd = commentEndTag.mapWithOffset<Token>(
+    commentEnd = commentEndTag.mapWithStart<Token>(
         (int offset, String lexeme) => Token.commentEnd(offset));
 
     comment = (commentStart &
             (any().starLazy(commentEndTag) | any().star())
                 .flatten()
-                .mapWithOffset<Token>((int offset, String lexeme) =>
+                .mapWithStart<Token>((int offset, String lexeme) =>
                     Token.comment(offset, lexeme)) &
             commentEnd)
         .castList<Token>();
 
-    text = (any().plusLazy(commentStartTag) | any().plus())
+    // expression
+
+    expressionStartTag = (((whitespace().star() & string('{{') & pattern('-')) |
+                    (string('{{') & pattern('+').optional()))
+                .flatten() &
+            whitespace().star())
+        .pick<String>(0);
+    expressionEndTag = (whitespace().star() &
+            (pattern('+-').optional() & string('}}')).flatten())
+        .pick<String>(1);
+
+    expressionStart = expressionStartTag.mapWithStart<Token>(
+        (int offset, String lexeme) => Token.expressionStart(offset, lexeme));
+    expressionEnd = expressionEndTag.mapWithStart<Token>(
+        (int offset, String lexeme) => Token.expressionEnd(offset, lexeme));
+
+    identifier = letter().plus().flatten().mapWithStart<Token>(
+        (int offset, String lexeme) => Token.identifier(offset, lexeme));
+    spaces = whitespace().plus().flatten().mapWithStart<Token>(
+        (int offset, String lexeme) => Token.whitespace(offset, lexeme));
+    expressionBody =
+        (identifier | spaces).plusLazy(expressionEndTag).castList<Token>();
+
+    expression = expressionStart & expressionBody & expressionEnd;
+
+    // text
+
+    text = (any().plusLazy(expressionStartTag | commentStartTag) | any().plus())
         .flatten()
-        .mapWithOffset<Token>(
+        .mapWithStart<Token>(
             (int offset, String lexeme) => Token.text(offset, lexeme));
 
-    root = (comment | text).plus();
-    // identifier = (pattern('a-z') & pattern('a-z').star()).flatten();
+    // template
+
+    root = (expression | comment | text).star();
   }
 
+  Parser<Token> text;
+
   Parser<String> commentStartTag;
-  Parser<Token> commentStart;
   Parser<String> commentEndTag;
+  Parser<Token> commentStart;
   Parser<Token> commentEnd;
   Parser<List<Token>> comment;
-  Parser<Token> text;
-  // Parser<String> identifier;
-  // Parser<String> expressionStart;
-  // Parser<String> expressionEnd;
-  // Parser<Token> expression;
+
+  Parser<String> expressionStartTag;
+  Parser<String> expressionEndTag;
+  Parser<Token> expressionStart;
+  Parser<Token> expressionEnd;
+
+  Parser<Token> spaces;
+  Parser<Token> identifier;
+  Parser<List<Token>> expressionBody;
+
+  Parser<List<Object>> expression;
+
   Parser<List<Object>> root;
 
   Iterable<Token> tokenize(String template) sync* {

@@ -1,37 +1,65 @@
 part of 'scanner.dart';
 
 enum TokenType {
+  whitespace,
+  identifier,
+  expression,
+  expressionEnd,
+  expressionStart,
   comment,
   commentEnd,
   commentStart,
   text,
-  whitespace,
   unexpected,
   eof,
 }
 
 abstract class Token {
-  factory Token.eof(int offset) => SimpleToken(offset, TokenType.eof);
+  factory Token.whitespace(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.whitespace);
+  }
 
-  factory Token.unexpected(int offset, String lexeme) =>
-      LexemeToken(offset, lexeme, TokenType.unexpected);
+  factory Token.identifier(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.identifier);
+  }
 
-  factory Token.whitespace(int offset, String lexeme) =>
-      LexemeToken(offset, lexeme, TokenType.whitespace);
+  factory Token.expression(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.expression);
+  }
 
-  factory Token.text(int offset, String lexeme) =>
-      LexemeToken(offset, lexeme, TokenType.text);
+  factory Token.expressionEnd(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.expressionEnd);
+  }
 
-  factory Token.commentStart(int offset) =>
-      SimpleToken(offset, TokenType.commentStart);
+  factory Token.expressionStart(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.expressionStart);
+  }
 
-  factory Token.commentEnd(int offset) =>
-      SimpleToken(offset, TokenType.commentEnd);
+  factory Token.comment(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.comment);
+  }
 
-  factory Token.comment(int offset, String lexeme) =>
-      LexemeToken(offset, lexeme, TokenType.comment);
+  factory Token.commentEnd(int start) {
+    return SimpleToken(start, TokenType.commentEnd);
+  }
 
-  int get offset;
+  factory Token.commentStart(int start) {
+    return SimpleToken(start, TokenType.commentStart);
+  }
+
+  factory Token.text(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.text);
+  }
+
+  factory Token.unexpected(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.unexpected);
+  }
+
+  factory Token.eof(int start) {
+    return SimpleToken(start, TokenType.eof);
+  }
+
+  int get start;
 
   int get end;
 
@@ -42,54 +70,69 @@ abstract class Token {
   TokenType get type;
 
   @override
-  int get hashCode => type.hashCode & offset & lexeme.hashCode;
+  int get hashCode {
+    return type.hashCode & start & lexeme.hashCode;
+  }
 
   @override
-  bool operator ==(Object other) =>
-      other is Token &&
-      type == other.type &&
-      offset == other.offset &&
-      lexeme == other.lexeme;
+  bool operator ==(Object other) {
+    return other is Token &&
+        type == other.type &&
+        start == other.start &&
+        lexeme == other.lexeme;
+  }
 
   @override
-  String toString() => '#$type:$offset {$lexeme}';
+  String toString() {
+    return '#$type:$start {$lexeme}';
+  }
 }
 
 abstract class BaseToken implements Token {
   @override
-  int get end => offset + length;
+  int get end {
+    return start + length;
+  }
 
   @override
-  int get length => lexeme.length;
+  int get length {
+    return lexeme.length;
+  }
 
   @override
-  String toString() => '#$type:$offset:$length {$lexeme}';
+  String toString() {
+    return '#$type:$start:$length {$lexeme}';
+  }
 }
 
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
-    TokenType.eof: '',
-    TokenType.commentStart: '{#',
+    TokenType.expressionEnd: '}}',
+    TokenType.expressionStart: '{{',
     TokenType.commentEnd: '#}',
+    TokenType.commentStart: '{#',
+    TokenType.eof: '',
   };
 
-  SimpleToken(this.offset, this.type);
+  SimpleToken(this.start, this.type);
 
   @override
-  final int offset;
+  final int start;
 
   @override
   final TokenType type;
 
   @override
-  String get lexeme => lexemes[type];
+  String get lexeme {
+    return lexemes[type];
+  }
 }
 
 class LexemeToken extends BaseToken {
-  LexemeToken(this.offset, this.lexeme, this.type);
+  LexemeToken(this.start, this.lexeme, this.type);
 
   @override
-  final int offset;
+  final int start;
 
   @override
   final String lexeme;
@@ -97,3 +140,5 @@ class LexemeToken extends BaseToken {
   @override
   final TokenType type;
 }
+
+final Expando<TagType> simpleTokenTagTypes = Expando<TagType>('TagType');
