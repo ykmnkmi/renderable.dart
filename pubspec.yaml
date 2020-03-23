@@ -9,6 +9,5 @@ dependencies:
   petitparser: ^3.0.1
 
 dev_dependencies:
-  # for comparsion and testing
-  angular_ast: ^0.5.11
+  angular_ast: ^0.5.11 # for comparsion and testing
   pedantic: ^1.9.0

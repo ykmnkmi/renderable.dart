@@ -1,4 +1,4 @@
-part of 'scanner.dart';
+part of '../tokenizer.dart';
 
 enum TokenType {
   whitespace,
@@ -140,5 +140,3 @@ class LexemeToken extends BaseToken {
   @override
   final TokenType type;
 }
-
-final Expando<TagType> simpleTokenTagTypes = Expando<TagType>('TagType');

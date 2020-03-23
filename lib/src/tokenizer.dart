@@ -1,4 +1,9 @@
-part of 'scanner.dart';
+library tokenizer;
+
+import 'package:petitparser/petitparser.dart' hide Token;
+
+part 'tokenizer/petitparser_ext.dart';
+part 'tokenizer/token.dart';
 
 enum TagType {
   trim,

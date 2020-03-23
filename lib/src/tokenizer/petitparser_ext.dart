@@ -1,4 +1,4 @@
-part of 'scanner.dart';
+part of '../tokenizer.dart';
 
 typedef MapWithStartCallback<T, R> = R Function(int start, T value);
 
