@@ -3,7 +3,7 @@ library ast;
 import 'visitor.dart';
 
 abstract class Node {
-  void accept(Visitor visitor);
+  void accept<C>(Visitor<C> visitor, C context);
 }
 
 class Text implements Node {
@@ -12,8 +12,8 @@ class Text implements Node {
   final String text;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitText(this);
+  void accept<C>(Visitor<C> visitor, C context) {
+    visitor.visitText(this, context);
   }
 
   @override
@@ -26,11 +26,10 @@ class Variable implements Node {
   final String name;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitVariable(this);
+  void accept<C>(Visitor<C> visitor, C context) {
+    visitor.visitVariable(this, context);
   }
 
   @override
   String toString() => 'Variable $name';
 }
-
