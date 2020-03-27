@@ -3,9 +3,8 @@ part of '../tokenizer.dart';
 enum TokenType {
   whitespace,
   identifier,
-  expression,
-  expressionEnd,
-  expressionStart,
+  interpolationEnd,
+  interpolationStart,
   comment,
   commentEnd,
   commentStart,
@@ -23,16 +22,12 @@ abstract class Token {
     return LexemeToken(start, lexeme, TokenType.identifier);
   }
 
-  factory Token.expression(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.expression);
+  factory Token.interpolationEnd(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.interpolationEnd);
   }
 
-  factory Token.expressionEnd(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.expressionEnd);
-  }
-
-  factory Token.expressionStart(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.expressionStart);
+  factory Token.interpolationStart(int start, String lexeme) {
+    return LexemeToken(start, lexeme, TokenType.interpolationStart);
   }
 
   factory Token.comment(int start, String lexeme) {
@@ -76,10 +71,7 @@ abstract class Token {
 
   @override
   bool operator ==(Object other) {
-    return other is Token &&
-        type == other.type &&
-        start == other.start &&
-        lexeme == other.lexeme;
+    return other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
   }
 
   @override
@@ -107,8 +99,8 @@ abstract class BaseToken implements Token {
 
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
-    TokenType.expressionEnd: '}}',
-    TokenType.expressionStart: '{{',
+    TokenType.interpolationEnd: '}}',
+    TokenType.interpolationStart: '{{',
     TokenType.commentEnd: '#}',
     TokenType.commentStart: '{#',
     TokenType.eof: '',

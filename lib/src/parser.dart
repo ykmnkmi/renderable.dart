@@ -20,50 +20,82 @@ class Scanner {
     return iterator.moveNext() ? iterator.current : null;
   }
 
-  Token peek() {
-    return _peek = next();
+  Token peek() => _peek = next();
+
+  bool skip(TokenType comment) {
+    if (peek().type == comment) {
+      next();
+      return true;
+    }
+
+    return false;
+  }
+
+  Token expected(TokenType type) {
+    final Token token = next();
+
+    if (token == null || token.type != type) {
+      throw Exception('$type token expected, got ${token.type}.');
+    }
+
+    return token;
   }
 }
 
 class Parser {
-  static Parser _instance;
-
-  static Parser Function() _factory = () {
-    _instance = Parser._();
-    _factory = () => _instance;
-    return _instance;
-  };
-
-  factory Parser() {
-    return _factory();
-  }
-
-  Parser._();
+  const Parser();
 
   List<Node> parse(String source) {
     final Iterable<Token> tokens = Tokenizer().tokenize(source);
     final Scanner scanner = Scanner(tokens);
-
     final List<Node> nodes = <Node>[];
+
     Token token;
 
     while ((token = scanner.next()) != null) {
       switch (token.type) {
+        case TokenType.interpolationStart:
+          nodes.add(parseInterpolation(scanner));
+          break;
+        case TokenType.commentStart:
+          skipComment(scanner);
+          break;
         case TokenType.text:
           nodes.add(Text(token.lexeme));
           break;
-        // case TokenType.commentStart:
-        //   if (scanner.next())
-        //   break;
         default:
-          return null;
+          throw Exception('unexpected token: $token.');
       }
     }
 
     return nodes;
   }
 
-  Text parseText(Token token) {
-    return Text(token.lexeme);
+  void skipComment(Scanner scanner) {
+    scanner.skip(TokenType.comment);
+    scanner.expected(TokenType.commentEnd);
+  }
+
+  Node parseInterpolation(Scanner scanner) {
+    final Token peek = scanner.peek();
+
+    if (peek == null || peek.type == TokenType.interpolationEnd) {
+      throw Exception('interpolation body expected.');
+    }
+
+    final Node body = parseExpression(scanner);
+    scanner.expected(TokenType.interpolationEnd);
+    return body;
+  }
+
+  Node parseExpression(Scanner scanner) {
+    Token token = scanner.next();
+
+    switch (token.type) {
+      case TokenType.identifier:
+        return Variable(token.lexeme);
+      default:
+        throw Exception('unexpected token: $token.');
+    }
   }
 }
