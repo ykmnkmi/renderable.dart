@@ -1,36 +1,31 @@
 library visitor;
 
+import 'package:meta/meta.dart';
+
 import 'ast.dart';
 
-abstract class Visitor<C> {
-  void visitText(Text text, C context);
+abstract class Visitor<C, R> {
+  R visitText(Text text, C context);
 
-  void visitVariable(Variable variable, C context);
+  R visitVariable(Variable variable, C context);
 
-  void visitAll(List<Node> nodes, C context) {
-    for (Node node in nodes) {
-      node.accept<C>(this, context);
-    }
-  }
+  R visitAll(List<Node> nodes, C context);
 }
 
-class Renderer extends Visitor<Map<String, Object>> {
-  Renderer([StringBuffer buffer]) : _buffer = buffer ?? StringBuffer();
-
-  final StringBuffer _buffer;
-
-  @override
-  void visitText(Text node, _) {
-    _buffer.write(node.text);
-  }
+class Renderer implements Visitor<Map<String, Object>, String> {
+  @literal
+  const Renderer();
 
   @override
-  void visitVariable(Variable node, Map<String, Object> context) {
-    _buffer.write(context[node.name]);
-  }
+  String visitText(Text node, _) => node.text;
 
   @override
-  String toString() {
-    return '$_buffer';
-  }
+  String visitVariable(Variable node, Map<String, Object> context) => '${context[node.name]}';
+
+  @override
+  String visitAll(List<Node> nodes, Map<String, Object> context) =>
+      nodes.map((Node node) => node.accept<Map<String, Object>, String>(this, context)).join();
+
+  @override
+  String toString() => 'Renderer()';
 }

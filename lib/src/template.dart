@@ -19,24 +19,14 @@ class Template implements Renderable {
   final List<Node> nodes;
 
   @override
-  String render([Map<String, Object> context = const <String, Object>{}]) {
-    final Renderer renderer = Renderer();
-    renderer.visitAll(nodes, context);
-    return '$renderer';
-  }
+  String render([Map<String, Object> context = const <String, Object>{}]) => const Renderer().visitAll(nodes, context);
 
   @override
-  String toString() {
-    return 'Template $nodes';
-  }
+  String toString() => 'Template $nodes';
 }
 
 extension TemplateString on String {
-  Template parse() {
-    return Template(this);
-  }
+  Template parse() => Template(this);
 
-  String render([Map<String, Object> context = const <String, Object>{}]) {
-    return parse().render(context);
-  }
+  String render([Map<String, Object> context = const <String, Object>{}]) => parse().render(context);
 }
