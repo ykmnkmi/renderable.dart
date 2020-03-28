@@ -10,7 +10,7 @@ abstract class Renderable {
 
 class Template implements Renderable {
   factory Template(String source) {
-    final List<Node> nodes = Parser().parse(source);
+    final List<Node> nodes = const Parser().parse(source);
     return Template.fromNodes(nodes);
   }
 
@@ -19,7 +19,8 @@ class Template implements Renderable {
   final List<Node> nodes;
 
   @override
-  String render([Map<String, Object> context = const <String, Object>{}]) => const Renderer().visitAll(nodes, context);
+  String render([Map<String, Object> context = const <String, Object>{}]) =>
+      const Evaluator().visitAll(nodes, context).toString();
 
   @override
   String toString() => 'Template $nodes';

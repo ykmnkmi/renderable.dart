@@ -12,20 +12,20 @@ abstract class Visitor<C, R> {
   R visitAll(List<Node> nodes, C context);
 }
 
-class Renderer implements Visitor<Map<String, Object>, String> {
+class Evaluator implements Visitor<Map<String, Object>, Object> {
   @literal
-  const Renderer();
+  const Evaluator();
 
   @override
   String visitText(Text node, _) => node.text;
 
   @override
-  String visitVariable(Variable node, Map<String, Object> context) => '${context[node.name]}';
+  Object visitVariable(Variable node, Map<String, Object> context) => context[node.name];
 
   @override
   String visitAll(List<Node> nodes, Map<String, Object> context) =>
-      nodes.map((Node node) => node.accept<Map<String, Object>, String>(this, context)).join();
+      nodes.map((Node node) => node.accept<Map<String, Object>, Object>(this, context)).join();
 
   @override
-  String toString() => 'Renderer()';
+  String toString() => 'Evaluator()';
 }

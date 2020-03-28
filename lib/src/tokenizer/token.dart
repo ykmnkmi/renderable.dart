@@ -14,45 +14,26 @@ enum TokenType {
 }
 
 abstract class Token {
-  factory Token.whitespace(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.whitespace);
-  }
+  factory Token.whitespace(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.whitespace);
 
-  factory Token.identifier(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.identifier);
-  }
+  factory Token.identifier(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.identifier);
 
-  factory Token.interpolationEnd(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.interpolationEnd);
-  }
+  factory Token.interpolationEnd(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.interpolationEnd);
 
-  factory Token.interpolationStart(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.interpolationStart);
-  }
+  factory Token.interpolationStart(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.interpolationStart);
 
-  factory Token.comment(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.comment);
-  }
+  factory Token.comment(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.comment);
 
-  factory Token.commentEnd(int start) {
-    return SimpleToken(start, TokenType.commentEnd);
-  }
+  factory Token.commentEnd(int start) => SimpleToken(start, TokenType.commentEnd);
 
-  factory Token.commentStart(int start) {
-    return SimpleToken(start, TokenType.commentStart);
-  }
+  factory Token.commentStart(int start) => SimpleToken(start, TokenType.commentStart);
 
-  factory Token.text(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.text);
-  }
+  factory Token.text(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.text);
 
-  factory Token.unexpected(int start, String lexeme) {
-    return LexemeToken(start, lexeme, TokenType.unexpected);
-  }
+  factory Token.unexpected(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.unexpected);
 
-  factory Token.eof(int start) {
-    return SimpleToken(start, TokenType.eof);
-  }
+  factory Token.eof(int start) => SimpleToken(start, TokenType.eof);
 
   int get start;
 
@@ -65,36 +46,25 @@ abstract class Token {
   TokenType get type;
 
   @override
-  int get hashCode {
-    return type.hashCode & start & lexeme.hashCode;
-  }
+  int get hashCode => type.hashCode & start & lexeme.hashCode;
 
   @override
-  bool operator ==(Object other) {
-    return other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
-  }
+  bool operator ==(Object other) =>
+      other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
 
   @override
-  String toString() {
-    return '#$type:$start {$lexeme}';
-  }
+  String toString() => '#$type:$start {$lexeme}';
 }
 
 abstract class BaseToken implements Token {
   @override
-  int get end {
-    return start + length;
-  }
+  int get end => start + length;
 
   @override
-  int get length {
-    return lexeme.length;
-  }
+  int get length => lexeme.length;
 
   @override
-  String toString() {
-    return '#$type:$start:$length {$lexeme}';
-  }
+  String toString() => '#$type:$start:$length {$lexeme}';
 }
 
 class SimpleToken extends BaseToken {
@@ -115,9 +85,7 @@ class SimpleToken extends BaseToken {
   final TokenType type;
 
   @override
-  String get lexeme {
-    return lexemes[type];
-  }
+  String get lexeme => lexemes[type];
 }
 
 class LexemeToken extends BaseToken {

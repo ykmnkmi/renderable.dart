@@ -71,7 +71,7 @@ class Tokenizer {
 
     // template
 
-    root = (interpolation | comment | text).star();
+    root = (interpolation | comment | text).star().end();
   }
 
   Parser<Token> text;
@@ -108,7 +108,7 @@ class Tokenizer {
       } else if (value is Iterable<Token>) {
         yield* value;
       } else {
-        throw TypeError();
+        throw Exception('token or token collection expected.');
       }
     }
   }

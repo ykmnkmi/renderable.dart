@@ -1,5 +1,7 @@
 library parser;
 
+import 'package:meta/meta.dart';
+
 import 'ast.dart';
 import 'tokenizer.dart';
 
@@ -43,6 +45,7 @@ class Scanner {
 }
 
 class Parser {
+  @literal
   const Parser();
 
   List<Node> parse(String source) {
@@ -54,11 +57,11 @@ class Parser {
 
     while ((token = scanner.next()) != null) {
       switch (token.type) {
-        case TokenType.interpolationStart:
-          nodes.add(parseInterpolation(scanner));
-          break;
         case TokenType.commentStart:
           skipComment(scanner);
+          break;
+        case TokenType.interpolationStart:
+          nodes.add(parseInterpolation(scanner));
           break;
         case TokenType.text:
           nodes.add(Text(token.lexeme));
