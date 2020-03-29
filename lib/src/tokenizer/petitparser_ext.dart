@@ -3,12 +3,14 @@ part of '../tokenizer.dart';
 typedef MapWithStartCallback<T, R> = R Function(int start, T value);
 
 extension MapWithStartParserExtension<T> on Parser<T> {
-  Parser<R> mapWithStart<R>(MapWithStartCallback<T, R> callback, {bool hasSideEffects = false}) =>
+  Parser<R> mapWithStart<R>(MapWithStartCallback<T, R> callback,
+          {bool hasSideEffects = false}) =>
       MapWithStartParser<T, R>(this, callback, hasSideEffects);
 }
 
 class MapWithStartParser<T, R> extends DelegateParser<R> {
-  MapWithStartParser(Parser<T> delegate, this.callback, [this.hasSideEffects = false])
+  MapWithStartParser(Parser<T> delegate, this.callback,
+      [this.hasSideEffects = false])
       : assert(callback != null, 'callback must not be null'),
         assert(hasSideEffects != null, 'hasSideEffects must not be null'),
         super(delegate);
@@ -30,13 +32,18 @@ class MapWithStartParser<T, R> extends DelegateParser<R> {
 
   @override
   int fastParseOn(String buffer, int position) {
-    return hasSideEffects ? super.fastParseOn(buffer, position) : delegate.fastParseOn(buffer, position);
+    return hasSideEffects
+        ? super.fastParseOn(buffer, position)
+        : delegate.fastParseOn(buffer, position);
   }
 
   @override
-  MapWithStartParser<T, R> copy() => MapWithStartParser<T, R>(delegate as Parser<T>, callback, hasSideEffects);
+  MapWithStartParser<T, R> copy() =>
+      MapWithStartParser<T, R>(delegate as Parser<T>, callback, hasSideEffects);
 
   @override
   bool hasEqualProperties(MapWithStartParser<T, R> other) =>
-      super.hasEqualProperties(other) && callback == other.callback && hasSideEffects == other.hasSideEffects;
+      super.hasEqualProperties(other) &&
+      callback == other.callback &&
+      hasSideEffects == other.hasSideEffects;
 }

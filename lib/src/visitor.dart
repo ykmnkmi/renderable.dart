@@ -20,11 +20,14 @@ class Evaluator implements Visitor<Map<String, Object>, Object> {
   String visitText(Text node, _) => node.text;
 
   @override
-  Object visitVariable(Variable node, Map<String, Object> context) => context[node.name];
+  Object visitVariable(Variable node, Map<String, Object> context) =>
+      context[node.name];
 
   @override
-  String visitAll(List<Node> nodes, Map<String, Object> context) =>
-      nodes.map((Node node) => node.accept<Map<String, Object>, Object>(this, context)).join();
+  String visitAll(List<Node> nodes, Map<String, Object> context) => nodes
+      .map((Node node) =>
+          node.accept<Map<String, Object>, Object>(this, context))
+      .join();
 
   @override
   String toString() => 'Evaluator()';

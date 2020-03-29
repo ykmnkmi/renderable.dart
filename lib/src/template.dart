@@ -29,5 +29,6 @@ class Template implements Renderable {
 extension TemplateString on String {
   Template parse() => Template(this);
 
-  String render([Map<String, Object> context = const <String, Object>{}]) => parse().render(context);
+  String render([Map<String, Object> context = const <String, Object>{}]) =>
+      parse().render(context);
 }

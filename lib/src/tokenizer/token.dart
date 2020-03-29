@@ -14,24 +14,32 @@ enum TokenType {
 }
 
 abstract class Token {
-  factory Token.whitespace(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.whitespace);
+  factory Token.whitespace(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.whitespace);
 
-  factory Token.identifier(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.identifier);
+  factory Token.identifier(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.identifier);
 
-  factory Token.interpolationEnd(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.interpolationEnd);
+  factory Token.interpolationEnd(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.interpolationEnd);
 
   factory Token.interpolationStart(int start, String lexeme) =>
       LexemeToken(start, lexeme, TokenType.interpolationStart);
 
-  factory Token.comment(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.comment);
+  factory Token.comment(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.comment);
 
-  factory Token.commentEnd(int start) => SimpleToken(start, TokenType.commentEnd);
+  factory Token.commentEnd(int start) =>
+      SimpleToken(start, TokenType.commentEnd);
 
-  factory Token.commentStart(int start) => SimpleToken(start, TokenType.commentStart);
+  factory Token.commentStart(int start) =>
+      SimpleToken(start, TokenType.commentStart);
 
-  factory Token.text(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.text);
+  factory Token.text(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.text);
 
-  factory Token.unexpected(int start, String lexeme) => LexemeToken(start, lexeme, TokenType.unexpected);
+  factory Token.unexpected(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.unexpected);
 
   factory Token.eof(int start) => SimpleToken(start, TokenType.eof);
 
@@ -50,7 +58,10 @@ abstract class Token {
 
   @override
   bool operator ==(Object other) =>
-      other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
+      other is Token &&
+      type == other.type &&
+      start == other.start &&
+      lexeme == other.lexeme;
 
   @override
   String toString() => '#$type:$start {$lexeme}';

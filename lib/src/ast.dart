@@ -12,7 +12,8 @@ class Text implements Node {
   final String text;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) => visitor.visitText(this, context);
+  R accept<C, R>(Visitor<C, R> visitor, C context) =>
+      visitor.visitText(this, context);
 
   @override
   String toString() => 'Text $text';
@@ -24,7 +25,8 @@ class Variable implements Node {
   final String name;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) => visitor.visitVariable(this, context);
+  R accept<C, R>(Visitor<C, R> visitor, C context) =>
+      visitor.visitVariable(this, context);
 
   @override
   String toString() => 'Variable $name';
