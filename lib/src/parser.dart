@@ -5,8 +5,8 @@ import 'package:meta/meta.dart';
 import 'ast.dart';
 import 'tokenizer.dart';
 
-class Scanner {
-  Scanner(Iterable<Token> tokens) : iterator = tokens.iterator;
+class TokenReader {
+  TokenReader(Iterable<Token> tokens) : iterator = tokens.iterator;
 
   final Iterator<Token> iterator;
 
@@ -50,18 +50,18 @@ class Parser {
 
   List<Node> parse(String source) {
     final Iterable<Token> tokens = Tokenizer().tokenize(source);
-    final Scanner scanner = Scanner(tokens);
+    final TokenReader reader = TokenReader(tokens);
     final List<Node> nodes = <Node>[];
 
     Token token;
 
-    while ((token = scanner.next()) != null) {
+    while ((token = reader.next()) != null) {
       switch (token.type) {
         case TokenType.commentStart:
-          skipComment(scanner);
+          skipComment(reader);
           break;
         case TokenType.interpolationStart:
-          nodes.add(parseInterpolation(scanner));
+          nodes.add(parseInterpolation(reader));
           break;
         case TokenType.text:
           nodes.add(Text(token.lexeme));
@@ -74,12 +74,12 @@ class Parser {
     return nodes;
   }
 
-  void skipComment(Scanner scanner) {
+  void skipComment(TokenReader scanner) {
     scanner.skip(TokenType.comment);
     scanner.expected(TokenType.commentEnd);
   }
 
-  Node parseInterpolation(Scanner scanner) {
+  Node parseInterpolation(TokenReader scanner) {
     final Token peek = scanner.peek();
 
     if (peek == null || peek.type == TokenType.interpolationEnd) {
@@ -91,7 +91,7 @@ class Parser {
     return body;
   }
 
-  Node parseExpression(Scanner scanner) {
+  Node parseExpression(TokenReader scanner) {
     Token token = scanner.next();
 
     switch (token.type) {
