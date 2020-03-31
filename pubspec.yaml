@@ -6,7 +6,8 @@ environment:
   sdk: '>=2.6.0 <3.0.0'
 
 dependencies:
-  petitparser: ^3.0.1
+  meta: ^1.1.8
+  string_scanner: ^1.0.5
 
 dev_dependencies:
   pedantic: ^1.9.0

@@ -1,47 +1,52 @@
-part of '../tokenizer.dart';
+part of 'tokenizer.dart';
 
 enum TokenType {
-  whitespace,
-  identifier,
-  interpolationEnd,
-  interpolationStart,
-  comment,
-  commentEnd,
   commentStart,
+  commentEnd,
+  comment,
+  interpolationStart,
+  interpolationEnd,
+  identifier,
+  statementStart,
+  statementEnd,
+  space,
+  keyword,
   text,
-  unexpected,
-  eof,
 }
 
 abstract class Token {
-  factory Token.whitespace(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.whitespace);
-
-  factory Token.identifier(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.identifier);
-
-  factory Token.interpolationEnd(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.interpolationEnd);
-
-  factory Token.interpolationStart(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.interpolationStart);
-
-  factory Token.comment(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.comment);
+  factory Token.commentStart(int start) =>
+      SimpleToken(start, TokenType.commentStart);
 
   factory Token.commentEnd(int start) =>
       SimpleToken(start, TokenType.commentEnd);
 
-  factory Token.commentStart(int start) =>
-      SimpleToken(start, TokenType.commentStart);
+  factory Token.comment(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.comment);
+
+  factory Token.interpolationStart(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.interpolationStart);
+
+  factory Token.interpolationEnd(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.interpolationEnd);
+
+  factory Token.identifier(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.identifier);
+
+  factory Token.statementStart(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.statementStart);
+
+  factory Token.statementEnd(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.statementEnd);
+
+  factory Token.space(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.space);
+
+  factory Token.keyword(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.keyword);
 
   factory Token.text(int start, String lexeme) =>
       LexemeToken(start, lexeme, TokenType.text);
-
-  factory Token.unexpected(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.unexpected);
-
-  factory Token.eof(int start) => SimpleToken(start, TokenType.eof);
 
   int get start;
 
@@ -84,7 +89,6 @@ class SimpleToken extends BaseToken {
     TokenType.interpolationStart: '{{',
     TokenType.commentEnd: '#}',
     TokenType.commentStart: '{#',
-    TokenType.eof: '',
   };
 
   SimpleToken(this.start, this.type);
