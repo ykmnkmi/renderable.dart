@@ -4,14 +4,15 @@ enum TokenType {
   commentStart,
   commentEnd,
   comment,
-  interpolationStart,
-  interpolationEnd,
+  expressionStart,
+  expressionEnd,
   identifier,
   statementStart,
   statementEnd,
   space,
   keyword,
   text,
+  error,
 }
 
 abstract class Token {
@@ -24,11 +25,11 @@ abstract class Token {
   factory Token.comment(int start, String lexeme) =>
       LexemeToken(start, lexeme, TokenType.comment);
 
-  factory Token.interpolationStart(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.interpolationStart);
+  factory Token.expressionStart(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.expressionStart);
 
-  factory Token.interpolationEnd(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.interpolationEnd);
+  factory Token.expressionEnd(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.expressionEnd);
 
   factory Token.identifier(int start, String lexeme) =>
       LexemeToken(start, lexeme, TokenType.identifier);
@@ -47,6 +48,9 @@ abstract class Token {
 
   factory Token.text(int start, String lexeme) =>
       LexemeToken(start, lexeme, TokenType.text);
+  
+  factory Token.error(int start, String lexeme) =>
+      LexemeToken(start, lexeme, TokenType.error);
 
   int get start;
 
@@ -85,10 +89,10 @@ abstract class BaseToken implements Token {
 
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
-    TokenType.interpolationEnd: '}}',
-    TokenType.interpolationStart: '{{',
     TokenType.commentEnd: '#}',
     TokenType.commentStart: '{#',
+    TokenType.expressionEnd: '}}',
+    TokenType.expressionStart: '{{',
   };
 
   SimpleToken(this.start, this.type);

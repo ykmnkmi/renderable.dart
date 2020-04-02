@@ -49,7 +49,7 @@ class Parser {
   const Parser();
 
   List<Node> parse(String source) {
-    final Iterable<Token> tokens = Tokenizer().tokenize(source);
+    final Iterable<Token> tokens = const Tokenizer().tokenize(source);
     final TokenReader reader = TokenReader(tokens);
     final List<Node> nodes = <Node>[];
 
@@ -60,7 +60,7 @@ class Parser {
         case TokenType.commentStart:
           skipComment(reader);
           break;
-        case TokenType.interpolationStart:
+        case TokenType.expressionStart:
           nodes.add(parseInterpolation(reader));
           break;
         case TokenType.text:
@@ -82,12 +82,12 @@ class Parser {
   Node parseInterpolation(TokenReader scanner) {
     final Token peek = scanner.peek();
 
-    if (peek == null || peek.type == TokenType.interpolationEnd) {
+    if (peek == null || peek.type == TokenType.expressionEnd) {
       throw Exception('interpolation body expected.');
     }
 
     final Node body = parseExpression(scanner);
-    scanner.expected(TokenType.interpolationEnd);
+    scanner.expected(TokenType.expressionEnd);
     return body;
   }
 
