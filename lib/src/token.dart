@@ -16,41 +16,10 @@ enum TokenType {
 }
 
 abstract class Token {
-  factory Token.commentStart(int start) =>
-      SimpleToken(start, TokenType.commentStart);
+  factory Token.simple(int start, TokenType type) => SimpleToken(start, type);
 
-  factory Token.commentEnd(int start) =>
-      SimpleToken(start, TokenType.commentEnd);
-
-  factory Token.comment(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.comment);
-
-  factory Token.expressionStart(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.expressionStart);
-
-  factory Token.expressionEnd(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.expressionEnd);
-
-  factory Token.identifier(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.identifier);
-
-  factory Token.statementStart(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.statementStart);
-
-  factory Token.statementEnd(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.statementEnd);
-
-  factory Token.space(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.space);
-
-  factory Token.keyword(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.keyword);
-
-  factory Token.text(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.text);
-  
-  factory Token.error(int start, String lexeme) =>
-      LexemeToken(start, lexeme, TokenType.error);
+  factory Token.lexeme(int start, String lexeme, TokenType type) =>
+      LexemeToken(start, lexeme, type);
 
   int get start;
 
@@ -89,10 +58,11 @@ abstract class BaseToken implements Token {
 
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
-    TokenType.commentEnd: '#}',
     TokenType.commentStart: '{#',
-    TokenType.expressionEnd: '}}',
+    TokenType.commentEnd: '#}',
     TokenType.expressionStart: '{{',
+    TokenType.expressionEnd: '}}',
+    TokenType.space: ' ',
   };
 
   SimpleToken(this.start, this.type);

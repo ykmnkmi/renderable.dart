@@ -9,10 +9,8 @@ abstract class Renderable {
 }
 
 class Template implements Renderable {
-  factory Template(String source) {
-    final List<Node> nodes = const Parser().parse(source);
-    return Template.fromNodes(nodes);
-  }
+  factory Template(String source) =>
+      Template.fromNodes(const Parser().parse(source));
 
   Template.fromNodes(this.nodes);
 
