@@ -16,10 +16,9 @@ enum TokenType {
 }
 
 abstract class Token {
-  factory Token.simple(int start, TokenType type) => SimpleToken(start, type);
+  factory Token(int start, String lexeme, TokenType type) => LexemeToken(start, lexeme, type);
 
-  factory Token.lexeme(int start, String lexeme, TokenType type) =>
-      LexemeToken(start, lexeme, type);
+  factory Token.simple(int start, TokenType type) => SimpleToken(start, type);
 
   int get start;
 
@@ -36,10 +35,7 @@ abstract class Token {
 
   @override
   bool operator ==(Object other) =>
-      other is Token &&
-      type == other.type &&
-      start == other.start &&
-      lexeme == other.lexeme;
+      other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
 
   @override
   String toString() => '#$type:$start {$lexeme}';

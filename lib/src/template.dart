@@ -9,8 +9,7 @@ abstract class Renderable {
 }
 
 class Template implements Renderable {
-  factory Template(String source) =>
-      Template.fromNodes(const Parser().parse(source));
+  factory Template(String source) => Template.fromNodes(const Parser().parse(source));
 
   Template.fromNodes(this.nodes);
 
@@ -27,6 +26,5 @@ class Template implements Renderable {
 extension TemplateString on String {
   Template parse() => Template(this);
 
-  String render([Map<String, Object> context = const <String, Object>{}]) =>
-      parse().render(context);
+  String render([Map<String, Object> context = const <String, Object>{}]) => parse().render(context);
 }

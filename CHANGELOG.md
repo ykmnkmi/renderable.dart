@@ -1,4 +1,4 @@
-## working
+## 0.0.3
 
 - Tokens scanner & parser
 

@@ -24,8 +24,8 @@ class TokenReader {
 
   Token peek() => _peek = next();
 
-  bool skip(TokenType comment) {
-    if (peek().type == comment) {
+  bool skip(TokenType type) {
+    if (peek().type == type) {
       next();
       return true;
     }
@@ -58,47 +58,63 @@ class Parser {
     while ((token = reader.next()) != null) {
       switch (token.type) {
         case TokenType.commentStart:
-          skipComment(reader);
+          comment(reader);
           break;
         case TokenType.expressionStart:
-          nodes.add(parseInterpolation(reader));
+          nodes.add(interpolation(reader));
           break;
         case TokenType.text:
           nodes.add(Text(token.lexeme));
           break;
         default:
-          throw Exception('unexpected token: $token.');
+          error('unexpected token: $token.');
       }
     }
 
     return nodes;
   }
 
-  void skipComment(TokenReader scanner) {
+  void comment(TokenReader scanner) {
     scanner.skip(TokenType.comment);
     scanner.expected(TokenType.commentEnd);
   }
 
-  Node parseInterpolation(TokenReader scanner) {
+  Node interpolation(TokenReader scanner) {
     final Token peek = scanner.peek();
 
     if (peek == null || peek.type == TokenType.expressionEnd) {
-      throw Exception('interpolation body expected.');
+      error('interpolation body expected.');
     }
 
-    final Node body = parseExpression(scanner);
+    final Node body = expression(scanner);
     scanner.expected(TokenType.expressionEnd);
     return body;
   }
 
-  Node parseExpression(TokenReader scanner) {
+  Node expression(TokenReader scanner) {
+    scanner.skip(TokenType.space);
+
     Token token = scanner.next();
+    Node node;
 
     switch (token.type) {
       case TokenType.identifier:
-        return Variable(token.lexeme);
+        node = Variable(token.lexeme);
+        break;
       default:
-        throw Exception('unexpected token: $token.');
+        error('unexpected token: $token.');
     }
+
+    scanner.skip(TokenType.space);
+
+    return node;
   }
+
+  @alwaysThrows
+  void error(String message) {
+    throw Exception(message);
+  }
+
+  @override
+  String toString() => 'Parser()';
 }

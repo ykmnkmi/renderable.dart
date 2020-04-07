@@ -29,7 +29,7 @@ class Tokenizer {
         if (scanner.scan(commentStart)) {
           if (start < end) {
             final String text = scanner.substring(start, end);
-            yield Token.lexeme(start, text, TokenType.text);
+            yield Token(start, text, TokenType.text);
           }
 
           yield Token.simple(scanner.lastMatch.start, TokenType.commentStart);
@@ -52,7 +52,7 @@ class Tokenizer {
             error(scanner, 'expected comment end.');
           }
 
-          yield Token.lexeme(start, text, TokenType.comment);
+          yield Token(start, text, TokenType.comment);
           yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
           start = scanner.lastMatch.end;
           end = start;
@@ -62,7 +62,7 @@ class Tokenizer {
           text = scanner.substring(start, end);
 
           if (text.isNotEmpty) {
-            yield Token.lexeme(start, text, TokenType.text);
+            yield Token(start, text, TokenType.text);
           }
 
           yield Token.simple(end, TokenType.expressionStart);
@@ -72,11 +72,10 @@ class Tokenizer {
             error(scanner, 'expected expression end.');
           }
 
-          yield Token.simple(end, TokenType.expressionEnd);
-
-          end = scanner.position;
+          end = scanner.lastMatch.start;
           start = end;
 
+          yield Token.simple(end, TokenType.expressionEnd);
           break;
         }
 
@@ -86,34 +85,35 @@ class Tokenizer {
       text = scanner.substring(start, end);
 
       if (text.isNotEmpty) {
-        yield Token.lexeme(start, text, TokenType.text);
+        yield Token(start, text, TokenType.text);
       }
     }
   }
 
+  @alwaysThrows
+  void error(StringScanner scanner, String message) {
+    throw Exception('at ${scanner.position}: $message');
+  }
+
   @override
   String toString() => 'Tokenizer()';
-
-  @alwaysThrows
-  static void error(StringScanner scanner, String message) =>
-      throw Exception('at ${scanner.position}: $message');
 }
 
 class ExpressionTokenizer {
   ExpressionTokenizer()
       : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
-        space = RegExp('\s+');
+        space = RegExp(r'\s+');
 
   final Pattern identifier;
   final Pattern space;
 
-  Iterable<Token> tokenize(String expression) =>
-      scan(StringScanner(expression));
+  Iterable<Token> tokenize(String expression) => scan(StringScanner(expression));
 
-  Iterable<Token> scan(StringScanner scanner,
-      {Pattern end = Tokenizer.expressionEnd}) sync* {
+  Iterable<Token> scan(StringScanner scanner, {Pattern end = Tokenizer.expressionEnd}) sync* {
     while (!scanner.isDone) {
-      if (scanner.scan(space)) {
+      if (scanner.scan(identifier)) {
+        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
+      } else if (scanner.scan(space)) {
         yield Token.simple(scanner.lastMatch.start, TokenType.space);
       } else if (scanner.matches(end)) {
         return;
