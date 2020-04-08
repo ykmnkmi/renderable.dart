@@ -48,11 +48,12 @@ class Parser {
   @literal
   const Parser();
 
-  List<Node> parse(String source) {
-    final Iterable<Token> tokens = const Tokenizer().tokenize(source);
-    final TokenReader reader = TokenReader(tokens);
-    final List<Node> nodes = <Node>[];
+  Iterable<Node> parse(String template, {String path}) => scan(const Tokenizer().tokenize(template, path: path));
 
+  @protected
+  Iterable<Node> scan(Iterable<Token> tokens) sync* {
+    TokenReader reader = TokenReader(tokens);
+    ExpressionParser expressionParser = ExpressionParser();
     Token token;
 
     while ((token = reader.next()) != null) {
@@ -61,37 +62,48 @@ class Parser {
           comment(reader);
           break;
         case TokenType.expressionStart:
-          nodes.add(interpolation(reader));
+          yield expressionParser.scan(reader);
           break;
         case TokenType.text:
-          nodes.add(Text(token.lexeme));
+          yield Text(token.lexeme);
           break;
         default:
           error('unexpected token: $token.');
       }
     }
-
-    return nodes;
   }
 
-  void comment(TokenReader scanner) {
-    scanner.skip(TokenType.comment);
-    scanner.expected(TokenType.commentEnd);
+  void comment(TokenReader reader) {
+    reader.skip(TokenType.comment);
+    reader.expected(TokenType.commentEnd);
   }
 
-  Node interpolation(TokenReader scanner) {
-    final Token peek = scanner.peek();
+  @alwaysThrows
+  void error(String message) {
+    throw Exception(message);
+  }
+
+  @override
+  String toString() => 'Parser()';
+}
+
+class ExpressionParser {
+  Node parse(String expression) => scan(TokenReader(ExpressionTokenizer().tokenize(expression)));
+
+  @protected
+  Node scan(TokenReader reader) {
+    Token peek = reader.peek();
 
     if (peek == null || peek.type == TokenType.expressionEnd) {
       error('interpolation body expected.');
     }
 
-    final Node body = expression(scanner);
-    scanner.expected(TokenType.expressionEnd);
-    return body;
+    Node root = this.root(reader);
+    reader.expected(TokenType.expressionEnd);
+    return root;
   }
 
-  Node expression(TokenReader scanner) {
+  Node root(TokenReader scanner) {
     scanner.skip(TokenType.space);
 
     Token token = scanner.next();
@@ -116,5 +128,5 @@ class Parser {
   }
 
   @override
-  String toString() => 'Parser()';
+  String toString() => 'ExpressionParser()';
 }

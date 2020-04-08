@@ -11,7 +11,7 @@ abstract class Renderable {
 class Template implements Renderable {
   factory Template(String source) => Template.fromNodes(const Parser().parse(source));
 
-  Template.fromNodes(this.nodes);
+  Template.fromNodes(Iterable<Node> nodes) : nodes = nodes.toList(growable: false);
 
   final List<Node> nodes;
 
@@ -21,10 +21,4 @@ class Template implements Renderable {
 
   @override
   String toString() => 'Template $nodes';
-}
-
-extension TemplateString on String {
-  Template parse() => Template(this);
-
-  String render([Map<String, Object> context = const <String, Object>{}]) => parse().render(context);
 }

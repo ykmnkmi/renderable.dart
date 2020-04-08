@@ -16,8 +16,11 @@ class Tokenizer {
   @literal
   const Tokenizer();
 
-  Iterable<Token> tokenize(String template, {String path}) sync* {
-    final StringScanner scanner = StringScanner(template, sourceUrl: path);
+  Iterable<Token> tokenize(String template, {String path}) => scan(StringScanner(template, sourceUrl: path));
+
+  @protected
+  Iterable<Token> scan(StringScanner scanner) sync* {
+    ExpressionTokenizer expressionTokenizer = ExpressionTokenizer();
 
     while (!scanner.isDone) {
       int start = scanner.position;
@@ -28,7 +31,7 @@ class Tokenizer {
       while (!scanner.isDone) {
         if (scanner.scan(commentStart)) {
           if (start < end) {
-            final String text = scanner.substring(start, end);
+            text = scanner.substring(start, end);
             yield Token(start, text, TokenType.text);
           }
 
@@ -66,7 +69,7 @@ class Tokenizer {
           }
 
           yield Token.simple(end, TokenType.expressionStart);
-          yield* ExpressionTokenizer().scan(scanner);
+          yield* expressionTokenizer.scan(scanner);
 
           if (!scanner.scan(expressionEnd)) {
             error(scanner, 'expected expression end.');
@@ -109,6 +112,7 @@ class ExpressionTokenizer {
 
   Iterable<Token> tokenize(String expression) => scan(StringScanner(expression));
 
+  @protected
   Iterable<Token> scan(StringScanner scanner, {Pattern end = Tokenizer.expressionEnd}) sync* {
     while (!scanner.isDone) {
       if (scanner.scan(identifier)) {
@@ -122,4 +126,12 @@ class ExpressionTokenizer {
       }
     }
   }
+
+  @alwaysThrows
+  void error(StringScanner scanner, String message) {
+    throw Exception('at ${scanner.position}: $message');
+  }
+
+  @override
+  String toString() => 'ExpressionTokenizer()';
 }

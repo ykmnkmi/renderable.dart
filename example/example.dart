@@ -1,9 +1,9 @@
+import 'dart:io';
+
 import 'package:renderable/renderable.dart';
 
 void main(List<String> arguments) {
   final Map<String, Object> context = <String, Object>{'name': 'jhon'};
-  final Template template = r'hello {{ name }}'.parse();
-
-  print(template.render(context));
-  print(r'hello {{ name }}'.render(context));
+  final Template template = Template('hello {{ name }}');
+  stdout.writeln(template.render(context));
 }
