@@ -5,18 +5,60 @@ import 'package:string_scanner/string_scanner.dart';
 
 part 'token.dart';
 
+class ExpressionTokenizer {
+  final Pattern identifier;
+
+  final Pattern space;
+  
+  ExpressionTokenizer()
+      : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
+        space = RegExp(r'\s+');
+
+  @alwaysThrows
+  void error(StringScanner scanner, String message) {
+    throw Exception('at ${scanner.position}: $message');
+  }
+
+  @protected
+  Iterable<Token> scan(StringScanner scanner, {Pattern end = Tokenizer.expressionEnd}) sync* {
+    while (!scanner.isDone) {
+      if (scanner.scan(identifier)) {
+        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
+      } else if (scanner.scan(space)) {
+        yield Token.simple(scanner.lastMatch.start, TokenType.space);
+      } else if (scanner.matches(end)) {
+        return;
+      } else {
+        break;
+      }
+    }
+  }
+
+  Iterable<Token> tokenize(String expression) => scan(StringScanner(expression));
+
+  @override
+  String toString() => 'ExpressionTokenizer()';
+}
+
 class Tokenizer {
   static const Pattern commentStart = '{#';
+  
   static const Pattern commentEnd = '#}';
+  
   static const Pattern expressionStart = '{{';
+  
   static const Pattern expressionEnd = '}}';
+  
   static const Pattern statementStart = '{%';
+  
   static const Pattern statementEnd = '%}';
 
-  @literal
   const Tokenizer();
 
-  Iterable<Token> tokenize(String template, {String path}) => scan(StringScanner(template, sourceUrl: path));
+  @alwaysThrows
+  void error(StringScanner scanner, String message) {
+    throw Exception('at ${scanner.position}: $message');
+  }
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
@@ -93,45 +135,8 @@ class Tokenizer {
     }
   }
 
-  @alwaysThrows
-  void error(StringScanner scanner, String message) {
-    throw Exception('at ${scanner.position}: $message');
-  }
+  Iterable<Token> tokenize(String template, {String path}) => scan(StringScanner(template, sourceUrl: path));
 
   @override
   String toString() => 'Tokenizer()';
-}
-
-class ExpressionTokenizer {
-  ExpressionTokenizer()
-      : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
-        space = RegExp(r'\s+');
-
-  final Pattern identifier;
-  final Pattern space;
-
-  Iterable<Token> tokenize(String expression) => scan(StringScanner(expression));
-
-  @protected
-  Iterable<Token> scan(StringScanner scanner, {Pattern end = Tokenizer.expressionEnd}) sync* {
-    while (!scanner.isDone) {
-      if (scanner.scan(identifier)) {
-        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
-      } else if (scanner.scan(space)) {
-        yield Token.simple(scanner.lastMatch.start, TokenType.space);
-      } else if (scanner.matches(end)) {
-        return;
-      } else {
-        break;
-      }
-    }
-  }
-
-  @alwaysThrows
-  void error(StringScanner scanner, String message) {
-    throw Exception('at ${scanner.position}: $message');
-  }
-
-  @override
-  String toString() => 'ExpressionTokenizer()';
 }

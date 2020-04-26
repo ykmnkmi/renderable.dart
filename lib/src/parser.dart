@@ -5,48 +5,62 @@ import 'package:meta/meta.dart';
 import 'ast.dart';
 import 'tokenizer.dart';
 
-class TokenReader {
-  TokenReader(Iterable<Token> tokens) : iterator = tokens.iterator;
-
-  final Iterator<Token> iterator;
-
-  Token _peek;
-
-  Token next() {
-    if (_peek != null) {
-      Token token = _peek;
-      _peek = null;
-      return token;
-    }
-
-    return iterator.moveNext() ? iterator.current : null;
+class ExpressionParser {
+  @alwaysThrows
+  void error(String message) {
+    throw Exception(message);
   }
 
-  Token peek() => _peek = next();
+  Node parse(String expression) => scan(TokenReader(ExpressionTokenizer().tokenize(expression)));
 
-  bool skip(TokenType type) {
-    if (peek().type == type) {
-      next();
-      return true;
+  Node root(TokenReader scanner) {
+    scanner.skip(TokenType.space);
+
+    Token token = scanner.next();
+    Node node;
+
+    switch (token.type) {
+      case TokenType.identifier:
+        node = Variable(token.lexeme);
+        break;
+      default:
+        error('unexpected token: $token.');
     }
 
-    return false;
+    scanner.skip(TokenType.space);
+
+    return node;
   }
 
-  Token expected(TokenType type) {
-    final Token token = next();
+  @protected
+  Node scan(TokenReader reader) {
+    Token peek = reader.peek();
 
-    if (token == null || token.type != type) {
-      throw Exception('$type token expected, got ${token.type}.');
+    if (peek == null || peek.type == TokenType.expressionEnd) {
+      error('interpolation body expected.');
     }
 
-    return token;
+    Node root = this.root(reader);
+    reader.expected(TokenType.expressionEnd);
+    return root;
   }
+
+  @override
+  String toString() => 'ExpressionParser()';
 }
 
 class Parser {
-  @literal
   const Parser();
+
+  void comment(TokenReader reader) {
+    reader.skip(TokenType.comment);
+    reader.expected(TokenType.commentEnd);
+  }
+
+  @alwaysThrows
+  void error(String message) {
+    throw Exception(message);
+  }
 
   Iterable<Node> parse(String template, {String path}) => scan(const Tokenizer().tokenize(template, path: path));
 
@@ -73,60 +87,45 @@ class Parser {
     }
   }
 
-  void comment(TokenReader reader) {
-    reader.skip(TokenType.comment);
-    reader.expected(TokenType.commentEnd);
-  }
-
-  @alwaysThrows
-  void error(String message) {
-    throw Exception(message);
-  }
-
   @override
   String toString() => 'Parser()';
 }
 
-class ExpressionParser {
-  Node parse(String expression) => scan(TokenReader(ExpressionTokenizer().tokenize(expression)));
+class TokenReader {
+  final Iterator<Token> iterator;
 
-  @protected
-  Node scan(TokenReader reader) {
-    Token peek = reader.peek();
+  Token _peek;
 
-    if (peek == null || peek.type == TokenType.expressionEnd) {
-      error('interpolation body expected.');
+  TokenReader(Iterable<Token> tokens) : iterator = tokens.iterator;
+
+  Token expected(TokenType type) {
+    Token token = next();
+
+    if (token == null || token.type != type) {
+      throw Exception('$type token expected, got ${token.type}.');
     }
 
-    Node root = this.root(reader);
-    reader.expected(TokenType.expressionEnd);
-    return root;
+    return token;
   }
 
-  Node root(TokenReader scanner) {
-    scanner.skip(TokenType.space);
-
-    Token token = scanner.next();
-    Node node;
-
-    switch (token.type) {
-      case TokenType.identifier:
-        node = Variable(token.lexeme);
-        break;
-      default:
-        error('unexpected token: $token.');
+  Token next() {
+    if (_peek != null) {
+      Token token = _peek;
+      _peek = null;
+      return token;
     }
 
-    scanner.skip(TokenType.space);
-
-    return node;
+    return iterator.moveNext() ? iterator.current : null;
   }
 
-  @alwaysThrows
-  void error(String message) {
-    throw Exception(message);
-  }
+  Token peek() => _peek = next();
 
-  @override
-  String toString() => 'ExpressionParser()';
+  bool skip(TokenType type) {
+    if (peek().type == type) {
+      next();
+      return true;
+    }
+
+    return false;
+  }
 }

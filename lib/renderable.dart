@@ -1,4 +1,4 @@
 library renderable;
 
-export 'src/template.dart';
 export 'src/parser.dart';
+export 'src/template.dart';
