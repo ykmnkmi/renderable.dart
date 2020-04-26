@@ -2,8 +2,16 @@ import 'dart:io';
 
 import 'package:renderable/renderable.dart';
 
+import 'example.g.dart';
+
 void main(List<String> arguments) {
-  final Map<String, Object> context = <String, Object>{'name': 'jhon'};
-  final Template template = Template('hello {{ name }}');
-  stdout.writeln(template.render(context));
+  User user = User('jhon');
+  stdout.writeln(user.render());
+}
+
+@Template.generate('user.html')
+class User {
+  final String name;
+
+  const User(this.name);
 }

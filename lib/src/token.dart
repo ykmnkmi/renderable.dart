@@ -30,6 +30,8 @@ class SimpleToken extends BaseToken {
     TokenType.commentEnd: '#}',
     TokenType.expressionStart: '{{',
     TokenType.expressionEnd: '}}',
+    TokenType.blockStart: '{%',
+    TokenType.blockEnd: '%}',
     TokenType.space: ' ',
   };
 
@@ -46,9 +48,9 @@ class SimpleToken extends BaseToken {
 }
 
 abstract class Token {
-  factory Token(int start, String lexeme, TokenType type) => LexemeToken(start, lexeme, type);
+  factory Token(int start, String lexeme, TokenType type) = LexemeToken;
 
-  factory Token.simple(int start, TokenType type) => SimpleToken(start, type);
+  factory Token.simple(int start, TokenType type) = SimpleToken;
 
   int get end;
 
@@ -77,6 +79,8 @@ enum TokenType {
   comment,
   expressionStart,
   expressionEnd,
+  blockStart,
+  blockEnd,
   identifier,
   statementStart,
   statementEnd,

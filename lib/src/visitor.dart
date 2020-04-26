@@ -1,22 +1,23 @@
 library visitor;
 
 import 'ast.dart';
+import 'utils.dart';
 
-class Renderer implements Visitor<Map<String, Object>, Object> {
+class Renderer<C> implements Visitor<C, Object> {
   const Renderer();
 
   @override
   String toString() => 'Evaluator()';
 
   @override
-  String visitAll(List<Node> nodes, Map<String, Object> context) =>
-      nodes.map((Node node) => node.accept<Map<String, Object>, Object>(this, context)).join();
+  String visitAll(List<Node> nodes, C context) =>
+      nodes.map((Node node) => node.accept<C, Object>(this, context)).join();
 
   @override
-  String visitText(Text node, Map<String, Object> context) => node.text;
+  String visitText(Text node, C context) => node.text;
 
   @override
-  Object visitVariable(Variable node, Map<String, Object> context) => context[node.name];
+  Object visitVariable(Variable node, C context) => getField<Object>(node.name, context);
 }
 
 abstract class Visitor<C, R> {
