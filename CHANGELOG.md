@@ -1,15 +1,20 @@
+## 0.0.5
+
+- рефакторинг
+- добавлен генератор
+
 ## 0.0.4
 
-- Clean
+- рефакторинг
 
 ## 0.0.3
 
-- Tokens scanner & parser
+- добавлен простой сканнер и парсер токенов
 
 ## 0.0.2
 
-- Added simple tokenizer and tokens
+- добавлен простой токенизер
 
 ## 0.0.1
 
-- Initial version, created by Stagehand
+- пустой пакет

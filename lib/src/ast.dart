@@ -18,14 +18,16 @@ class Text implements Node {
   String toString() => 'Text $text';
 }
 
-class Variable implements Node {
+abstract class Expression extends Node {}
+
+class Name implements Expression {
   final String name;
 
-  const Variable(this.name);
+  const Name(this.name);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) => visitor.visitVariable(this, context);
+  R accept<C, R>(Visitor<C, R> visitor, C context) => visitor.visitName(this, context);
 
   @override
-  String toString() => 'Variable $name';
+  String toString() => 'Name $name';
 }

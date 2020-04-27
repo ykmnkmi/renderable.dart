@@ -21,7 +21,7 @@ class ExpressionParser {
 
     switch (token.type) {
       case TokenType.identifier:
-        node = Variable(token.lexeme);
+        node = Name(token.lexeme);
         break;
       default:
         error('unexpected token: $token.');

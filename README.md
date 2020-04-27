@@ -1,3 +1,6 @@
 Renderable
 ==========
-An simple (and not yet powerful) template language for Dart like Jinja or Stencil.
+
+Шаблонизатор для ЯП Dart, за основу взяты Django и Stencil.
+
+В разрабоке...

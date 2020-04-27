@@ -8,7 +8,7 @@ targets:
 builders:
   renderable:
     import: "package:renderable/builder.dart"
-    builder_factories: ["templateGenerator"]
-    build_extensions: {".dart": [".g.part"]}
+    builder_factories: ["rendererGenerator"]
+    build_extensions: {".dart": [".r.g.part"]}
     auto_apply: dependents
     build_to: source

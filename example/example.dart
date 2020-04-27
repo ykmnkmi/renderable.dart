@@ -1,15 +1,13 @@
-import 'dart:io';
-
 import 'package:renderable/renderable.dart';
 
-import 'example.g.dart';
+import 'example.r.g.dart';
 
-void main(List<String> arguments) {
+void main() {
   User user = User('jhon');
-  stdout.writeln(user.render());
+  print(user.render());
 }
 
-@Template.generate('user.html')
+@Renderable(template: 'hello {{ name }}!')
 class User {
   final String name;
 
