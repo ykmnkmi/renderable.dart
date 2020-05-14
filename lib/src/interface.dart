@@ -1,4 +1,5 @@
 abstract class Renderable<C> {
+  /// `path` xor `template`
   const factory Renderable({String path, String template}) = Generated<C>;
 
   String render([C context]);

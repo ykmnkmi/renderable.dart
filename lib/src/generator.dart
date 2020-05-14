@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:path/path.dart' as path;
@@ -23,8 +21,33 @@ void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
 }
 
 String writeRendererFor(String clazz, String template, StringBuffer buffer) {
-  Iterable<Node> astNodes = const Parser().parse(template);
+  final Iterable<Node> astNodes = const Parser().parse(template);
   return RendererCodeGenerator(buffer).visit(astNodes, clazz);
+}
+
+class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
+  @override
+  String generateForAnnotatedElement(Element element, ConstantReader annotation, BuildStep buildStep) {
+    final ConstantReader templatePathField = annotation.read('path');
+    final ConstantReader templateField = annotation.read('template');
+
+    final String root = path.dirname(buildStep.inputId.path);
+    String template;
+
+    if (!templateField.isNull && templatePathField.isNull) {
+      template = templateField.stringValue;
+    } else if (templateField.isNull && !templatePathField.isNull) {
+      template = File(path.join(root, templatePathField.stringValue)).readAsStringSync();
+    } else {
+      throw ArgumentError('one must be not null');
+    }
+
+    final StringBuffer buffer = StringBuffer();
+    final String name = element.name;
+    final String templateName = writeRendererFor(name, template, buffer);
+    writeExtensionFor(name, templateName, buffer);
+    return buffer.toString();
+  }
 }
 
 class RendererCodeGenerator implements Visitor<String, void> {
@@ -33,8 +56,8 @@ class RendererCodeGenerator implements Visitor<String, void> {
   const RendererCodeGenerator(this.buffer);
 
   String visit(Iterable<Node> nodes, String clazz) {
-    String clazzRenderer = '_${clazz}Renderer';
-    String name = clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
+    final String clazzRenderer = '_${clazz}Renderer';
+    final String name = clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
 
     buffer
       ..write('const $clazzRenderer ')
@@ -70,51 +93,12 @@ class RendererCodeGenerator implements Visitor<String, void> {
   }
 
   @override
-  void visitName(Name node, String clazz) {
-    buffer.write('\${context.${node.name}}');
+  void visitVariable(Variable variable, String clazz) {
+    buffer.write('\${context.${variable.name}}');
   }
 
   @override
-  void visitText(Text node, String clazz) {
-    buffer.write(escape(node.text));
-  }
-}
-
-class RenedererGenerator extends Generator {
-  final TypeChecker checker = TypeChecker.fromRuntime(Generated);
-
-  @override
-  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) async {
-    StringBuffer buffer = StringBuffer();
-
-    String base = path.basename(buildStep.inputId.path);
-    buffer..writeln('import \'package:renderable/renderable.dart\';')..writeln()..writeln('import \'$base\';');
-
-    String root = path.dirname(buildStep.inputId.path);
-
-    library.allElements.forEach((Element element) {
-      DartObject annotation = checker.firstAnnotationOf(element);
-
-      if (annotation != null) {
-        DartObject templatePathField = annotation.getField('path');
-        DartObject templateField = annotation.getField('template');
-
-        String template;
-
-        if (!templateField.isNull && templatePathField.isNull) {
-          template = templateField.toStringValue();
-        } else if (templateField.isNull && !templatePathField.isNull) {
-          template = File(path.join(root, templatePathField.toStringValue())).readAsStringSync();
-        } else {
-          throw ArgumentError('one must be not null');
-        }
-
-        String name = element.name;
-        String templateName = writeRendererFor(name, template, buffer);
-        writeExtensionFor(name, templateName, buffer);
-      }
-    });
-
-    return '$buffer';
+  void visitText(Text text, String clazz) {
+    buffer.write(escape(text.text));
   }
 }

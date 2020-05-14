@@ -8,7 +8,8 @@ targets:
 builders:
   renderable:
     import: "package:renderable/builder.dart"
-    builder_factories: ["rendererGenerator"]
-    build_extensions: {".dart": [".r.g.part"]}
+    builder_factories: ["renderableBuilder"]
+    build_extensions: {".dart": [".renderable.g.part"]}
     auto_apply: dependents
     build_to: source
+    applies_builders: ["source_gen|combining_builder"]

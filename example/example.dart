@@ -1,10 +1,11 @@
 import 'package:renderable/renderable.dart';
 
-import 'example.r.g.dart';
+part 'example.g.dart';
 
 void main() {
   User user = User('jhon');
-  print(user.render());
+  // print(userRenderer.render(user)); // сгенерированный шаблон
+  print(user.render()); // сгенерированное расширени, сокращение для варианта выше
 }
 
 @Renderable(template: 'hello {{ name }}!')
