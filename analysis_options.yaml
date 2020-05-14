@@ -11,7 +11,4 @@ analyzer:
 
 linter:
   rules:
-    always_specify_types: true
     avoid_print: true
-    omit_local_variable_types: false
-    prefer_final_locals: false

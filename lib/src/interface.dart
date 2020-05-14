@@ -1,5 +1,4 @@
 abstract class Renderable<C> {
-  /// `path` xor `template`
   const factory Renderable({String path, String template}) = Generated<C>;
 
   String render([C context]);
@@ -20,7 +19,7 @@ class Generated<C> implements Renderable<C> {
 
   @override
   String render([C context]) {
-    // TODO: add error message
+    // TODO: текст ошибки
     throw UnsupportedError('');
   }
 }

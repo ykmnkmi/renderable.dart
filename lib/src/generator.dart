@@ -6,6 +6,7 @@ import 'package:path/path.dart' as path;
 import 'package:source_gen/source_gen.dart';
 
 import 'ast.dart';
+import 'env.dart';
 import 'interface.dart';
 import 'parser.dart';
 import 'visitor.dart';
@@ -21,17 +22,17 @@ void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
 }
 
 String writeRendererFor(String clazz, String template, StringBuffer buffer) {
-  final Iterable<Node> astNodes = const Parser().parse(template);
+  final astNodes = const Parser(Environment.default_).parse(template);
   return RendererCodeGenerator(buffer).visit(astNodes, clazz);
 }
 
 class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
   @override
   String generateForAnnotatedElement(Element element, ConstantReader annotation, BuildStep buildStep) {
-    final ConstantReader templatePathField = annotation.read('path');
-    final ConstantReader templateField = annotation.read('template');
+    final templatePathField = annotation.read('path');
+    final templateField = annotation.read('template');
+    final root = path.dirname(buildStep.inputId.path);
 
-    final String root = path.dirname(buildStep.inputId.path);
     String template;
 
     if (!templateField.isNull && templatePathField.isNull) {
@@ -42,9 +43,9 @@ class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
       throw ArgumentError('one must be not null');
     }
 
-    final StringBuffer buffer = StringBuffer();
-    final String name = element.name;
-    final String templateName = writeRendererFor(name, template, buffer);
+    final buffer = StringBuffer();
+    final name = element.name;
+    final templateName = writeRendererFor(name, template, buffer);
     writeExtensionFor(name, templateName, buffer);
     return buffer.toString();
   }
@@ -56,8 +57,8 @@ class RendererCodeGenerator implements Visitor<String, void> {
   const RendererCodeGenerator(this.buffer);
 
   String visit(Iterable<Node> nodes, String clazz) {
-    final String clazzRenderer = '_${clazz}Renderer';
-    final String name = clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
+    final clazzRenderer = '_${clazz}Renderer';
+    final name = clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
 
     buffer
       ..write('const $clazzRenderer ')
@@ -78,10 +79,10 @@ class RendererCodeGenerator implements Visitor<String, void> {
       ..writeln()
       ..write('@override String render([$clazz context]) ');
 
-    if (nodes.any((Node node) => node is Text || node is Expression)) {
+    if (nodes.any((node) => node is Text || node is Expression)) {
       buffer.write('=> \'');
 
-      for (Node node in nodes) {
+      for (var node in nodes) {
         node.accept(this, clazz);
       }
 

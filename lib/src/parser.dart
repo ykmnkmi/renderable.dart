@@ -3,20 +3,26 @@ library parser;
 import 'package:meta/meta.dart';
 
 import 'ast.dart';
+import 'env.dart';
 import 'tokenizer.dart';
 
-class ExpressionParser {
-  @alwaysThrows
-  void error(String message) {
-    throw Exception(message);
-  }
+@alwaysThrows
+void _error(String message) {
+  throw Exception(message);
+}
 
-  Node parse(String expression) => scan(TokenReader(ExpressionTokenizer().tokenize(expression)));
+@immutable
+class ExpressionParser {
+  final Environment environment;
+
+  const ExpressionParser(this.environment);
+
+  Node parse(String expression) => scan(TokenReader(ExpressionTokenizer(environment).tokenize(expression)));
 
   Node root(TokenReader scanner) {
     scanner.skip(TokenType.space);
 
-    Token token = scanner.next();
+    final token = scanner.next();
     Node node;
 
     switch (token.type) {
@@ -24,7 +30,7 @@ class ExpressionParser {
         node = Variable(token.lexeme);
         break;
       default:
-        error('unexpected token: $token.');
+        _error('unexpected token: $token.');
     }
 
     scanner.skip(TokenType.space);
@@ -34,13 +40,13 @@ class ExpressionParser {
 
   @protected
   Node scan(TokenReader reader) {
-    Token peek = reader.peek();
+    final peek = reader.peek();
 
     if (peek == null || peek.type == TokenType.expressionEnd) {
-      error('interpolation body expected.');
+      _error('interpolation body expected.');
     }
 
-    Node root = this.root(reader);
+    final root = this.root(reader);
     reader.expected(TokenType.expressionEnd);
     return root;
   }
@@ -49,25 +55,24 @@ class ExpressionParser {
   String toString() => 'ExpressionParser()';
 }
 
+@immutable
 class Parser {
-  const Parser();
+  final Environment environment;
+
+  const Parser(this.environment);
 
   void comment(TokenReader reader) {
     reader.skip(TokenType.comment);
     reader.expected(TokenType.commentEnd);
   }
 
-  @alwaysThrows
-  void error(String message) {
-    throw Exception(message);
-  }
-
-  Iterable<Node> parse(String template, {String path}) => scan(const Tokenizer().tokenize(template, path: path));
+  Iterable<Node> parse(String template, {String path}) => scan(Tokenizer(environment).tokenize(template, path: path));
 
   @protected
   Iterable<Node> scan(Iterable<Token> tokens) sync* {
-    TokenReader reader = TokenReader(tokens);
-    ExpressionParser expressionParser = ExpressionParser();
+    final reader = TokenReader(tokens);
+    final expressionParser = ExpressionParser(environment);
+
     Token token;
 
     while ((token = reader.next()) != null) {
@@ -82,7 +87,7 @@ class Parser {
           yield Text(token.lexeme);
           break;
         default:
-          error('unexpected token: $token.');
+          _error('unexpected token: $token.');
       }
     }
   }
@@ -99,7 +104,7 @@ class TokenReader {
   TokenReader(Iterable<Token> tokens) : iterator = tokens.iterator;
 
   Token expected(TokenType type) {
-    Token token = next();
+    final token = next();
 
     if (token == null || token.type != type) {
       throw Exception('$type token expected, got ${token.type}.');
@@ -110,7 +115,7 @@ class TokenReader {
 
   Token next() {
     if (_peek != null) {
-      Token token = _peek;
+      final token = _peek;
       _peek = null;
       return token;
     }

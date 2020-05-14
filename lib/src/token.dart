@@ -1,5 +1,6 @@
 part of 'tokenizer.dart';
 
+@immutable
 abstract class BaseToken implements Token {
   @override
   int get end => start + length;

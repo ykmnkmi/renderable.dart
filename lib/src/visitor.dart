@@ -10,11 +10,17 @@ class Renderer<C> implements Visitor<C, Object> {
   String toString() => 'Renderer<$C>()';
 
   @override
-  String visitAll(Iterable<Node> nodes, C context) =>
-      nodes.map((Node node) => node.accept<C, Object>(this, context)).join();
+  String visitAll(Iterable<Node> nodes, C context) => nodes.map((node) => node.accept<C, Object>(this, context)).join();
 
   @override
-  Object visitVariable(Variable variable, C context) => getField<Object>(variable.name, context);
+  Object visitVariable(Variable variable, C context) {
+    // TODO: стойт ли использовать отдельный класс для рендера словаря?
+    if (context is Map<String, Object>) {
+      return context[variable.name] ?? '';
+    }
+
+    return getField<Object>(variable.name, context) ?? '';
+  }
 
   @override
   String visitText(Text text, C context) => text.text;

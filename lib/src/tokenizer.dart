@@ -3,24 +3,31 @@ library tokenizer;
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
+import 'env.dart';
+
 part 'token.dart';
 
+@alwaysThrows
+void _error(StringScanner scanner, String message) {
+  throw Exception('at ${scanner.position}: $message');
+}
+
+@immutable
 class ExpressionTokenizer {
+  final Environment environment;
+
   final Pattern identifier;
 
   final Pattern space;
-  
-  ExpressionTokenizer()
+
+  ExpressionTokenizer(this.environment)
       : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
         space = RegExp(r'\s+');
 
-  @alwaysThrows
-  void error(StringScanner scanner, String message) {
-    throw Exception('at ${scanner.position}: $message');
-  }
-
   @protected
-  Iterable<Token> scan(StringScanner scanner, {Pattern end = Tokenizer.expressionEnd}) sync* {
+  Iterable<Token> scan(StringScanner scanner, {Pattern end}) sync* {
+    end ??= environment.expressionEnd;
+
     while (!scanner.isDone) {
       if (scanner.scan(identifier)) {
         yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
@@ -40,91 +47,91 @@ class ExpressionTokenizer {
   String toString() => 'ExpressionTokenizer()';
 }
 
+@immutable
 class Tokenizer {
-  static const Pattern commentStart = '{#';
-  
-  static const Pattern commentEnd = '#}';
-  
-  static const Pattern expressionStart = '{{';
-  
-  static const Pattern expressionEnd = '}}';
-  
-  static const Pattern statementStart = '{%';
-  
-  static const Pattern statementEnd = '%}';
+  final Environment environment;
 
-  const Tokenizer();
-
-  @alwaysThrows
-  void error(StringScanner scanner, String message) {
-    throw Exception('at ${scanner.position}: $message');
-  }
+  const Tokenizer(this.environment);
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
-    ExpressionTokenizer expressionTokenizer = ExpressionTokenizer();
+    final expressionTokenizer = ExpressionTokenizer(environment);
+
+    final rules = <String>[environment.commentStart, environment.expressionStart, environment.statementStart];
+    final reversed = (rules.toList(growable: false)..sort((a, b) => b.compareTo(a))).reversed.toList(growable: false);
 
     while (!scanner.isDone) {
-      int start = scanner.position;
-      int end = start;
+      var start = scanner.position;
+      var end = start;
 
       String text;
 
+      inner:
       while (!scanner.isDone) {
-        if (scanner.scan(commentStart)) {
-          if (start < end) {
+        int state;
+
+        for (var rule in reversed) {
+          if (scanner.scan(rule)) {
+            state = rules.indexOf(rule);
+          }
+        }
+
+        switch (state) {
+          case 0:
+            if (start < end) {
+              text = scanner.substring(start, end);
+              yield Token(start, text, TokenType.text);
+            }
+
+            yield Token.simple(scanner.lastMatch.start, TokenType.commentStart);
+
+            start = scanner.lastMatch.end;
+            end = start;
+
+            while (!(scanner.isDone || scanner.matches(environment.commentEnd))) {
+              scanner.position++;
+            }
+
+            end = scanner.position;
+            text = scanner.substring(start, end).trim();
+
+            if (text.isEmpty) {
+              _error(scanner, 'expected comment body.');
+            }
+
+            if (!scanner.scan(environment.commentEnd)) {
+              _error(scanner, 'expected comment end.');
+            }
+
+            yield Token(start, text, TokenType.comment);
+            yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
+            start = scanner.lastMatch.end;
+            end = start;
+            break inner;
+
+          case 1:
             text = scanner.substring(start, end);
-            yield Token(start, text, TokenType.text);
-          }
 
-          yield Token.simple(scanner.lastMatch.start, TokenType.commentStart);
+            if (text.isNotEmpty) {
+              yield Token(start, text, TokenType.text);
+            }
 
-          start = scanner.lastMatch.end;
-          end = start;
+            yield Token.simple(end, TokenType.expressionStart);
+            yield* expressionTokenizer.scan(scanner);
 
-          while (!(scanner.isDone || scanner.matches(commentEnd))) {
-            scanner.position++;
-          }
+            if (!scanner.scan(environment.expressionEnd)) {
+              _error(scanner, 'expected expression end.');
+            }
 
-          end = scanner.position;
-          text = scanner.substring(start, end).trim();
+            end = scanner.lastMatch.start;
+            start = end;
 
-          if (text.isEmpty) {
-            error(scanner, 'expected comment body.');
-          }
+            yield Token.simple(end, TokenType.expressionEnd);
+            break inner;
 
-          if (!scanner.scan(commentEnd)) {
-            error(scanner, 'expected comment end.');
-          }
-
-          yield Token(start, text, TokenType.comment);
-          yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
-          start = scanner.lastMatch.end;
-          end = start;
+          default:
+            end = ++scanner.position;
         }
-
-        if (scanner.scan(expressionStart)) {
-          text = scanner.substring(start, end);
-
-          if (text.isNotEmpty) {
-            yield Token(start, text, TokenType.text);
-          }
-
-          yield Token.simple(end, TokenType.expressionStart);
-          yield* expressionTokenizer.scan(scanner);
-
-          if (!scanner.scan(expressionEnd)) {
-            error(scanner, 'expected expression end.');
-          }
-
-          end = scanner.lastMatch.start;
-          start = end;
-
-          yield Token.simple(end, TokenType.expressionEnd);
-          break;
-        }
-
-        end = ++scanner.position;
       }
 
       text = scanner.substring(start, end);

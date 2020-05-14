@@ -2,8 +2,8 @@ library ast;
 
 import 'visitor.dart';
 
-part 'ast/name.dart';
 part 'ast/text.dart';
+part 'ast/variable.dart';
 
 abstract class Expression extends Node {}
 

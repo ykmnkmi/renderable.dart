@@ -3,9 +3,11 @@ import 'package:renderable/renderable.dart';
 part 'example.g.dart';
 
 void main() {
-  User user = User('jhon');
+  final user = User('jhon');
   // print(userRenderer.render(user)); // сгенерированный шаблон
   print(user.render()); // сгенерированное расширени, сокращение для варианта выше
+
+  print((<String>['as', 'a', 'aa', 'ba']..sort((a, b) => b.compareTo(a))));
 }
 
 @Renderable(template: 'hello {{ name }}!')
