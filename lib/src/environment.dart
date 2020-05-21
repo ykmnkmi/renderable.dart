@@ -1,9 +1,11 @@
 import 'package:meta/meta.dart';
 
+import 'mirror.dart' as mirror;
+
+typedef FieldGetter = Object? Function(String field, Object? object);
+
 @immutable
 class Environment {
-  static const Environment default_ = Environment();
-
   final String commentStart;
 
   final String commentEnd;
@@ -16,6 +18,8 @@ class Environment {
 
   final String statementEnd;
 
+  final FieldGetter getField;
+
   const Environment({
     this.commentStart = '{#',
     this.commentEnd = '#}',
@@ -23,6 +27,7 @@ class Environment {
     this.expressionEnd = '}}',
     this.statementStart = '{%',
     this.statementEnd = '%}',
+    this.getField = mirror.getField,
   })  : assert(commentStart != expressionStart),
         assert(expressionStart != statementStart),
         assert(statementStart != commentStart);

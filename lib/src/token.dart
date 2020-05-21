@@ -27,13 +27,13 @@ class LexemeToken extends BaseToken {
 
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
-    TokenType.commentStart: '{#',
-    TokenType.commentEnd: '#}',
+    TokenType.statementStart: '{%',
+    TokenType.statementEnd: '%}',
     TokenType.expressionStart: '{{',
     TokenType.expressionEnd: '}}',
-    TokenType.blockStart: '{%',
-    TokenType.blockEnd: '%}',
     TokenType.space: ' ',
+    TokenType.commentStart: '{#',
+    TokenType.commentEnd: '#}',
   };
 
   @override
@@ -67,7 +67,7 @@ abstract class Token {
   TokenType get type;
 
   @override
-  bool operator ==(Object other) =>
+  bool? operator ==(Object? other) =>
       other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
 
   @override
@@ -75,18 +75,15 @@ abstract class Token {
 }
 
 enum TokenType {
+  statementStart,
+  statementEnd,
+  expressionStart,
+  expressionEnd,
+  word,
+  space,
   commentStart,
   commentEnd,
   comment,
-  expressionStart,
-  expressionEnd,
-  blockStart,
-  blockEnd,
-  identifier,
-  statementStart,
-  statementEnd,
-  space,
-  keyword,
   text,
   error,
 }

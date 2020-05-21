@@ -2,8 +2,7 @@ targets:
   $default:
     builders:
       renderable:
-        generate_for:
-        - example/*
+        generate_for: ["example/*"]
 
 builders:
   renderable:

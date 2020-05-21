@@ -6,7 +6,7 @@ import 'package:path/path.dart' as path;
 import 'package:source_gen/source_gen.dart';
 
 import 'ast.dart';
-import 'env.dart';
+import 'environment.dart';
 import 'interface.dart';
 import 'parser.dart';
 import 'visitor.dart';
@@ -22,7 +22,7 @@ void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
 }
 
 String writeRendererFor(String clazz, String template, StringBuffer buffer) {
-  final astNodes = const Parser(Environment.default_).parse(template);
+  final astNodes = const Parser(Environment()).parse(template);
   return RendererCodeGenerator(buffer).visit(astNodes, clazz);
 }
 
@@ -72,7 +72,7 @@ class RendererCodeGenerator implements Visitor<String, void> {
   }
 
   @override
-  void visitAll(Iterable<Node> nodes, String clazz) {
+  void visitAll(Iterable<Node> nodes, [String? clazz]) {
     nodes = nodes.toList(growable: false);
 
     buffer
@@ -82,7 +82,7 @@ class RendererCodeGenerator implements Visitor<String, void> {
     if (nodes.any((node) => node is Text || node is Expression)) {
       buffer.write('=> \'');
 
-      for (var node in nodes) {
+      for (final node in nodes) {
         node.accept(this, clazz);
       }
 
@@ -94,12 +94,12 @@ class RendererCodeGenerator implements Visitor<String, void> {
   }
 
   @override
-  void visitVariable(Variable variable, String clazz) {
-    buffer.write('\${context.${variable.name}}');
+  void visitText(Text text, [String? clazz]) {
+    buffer.write(escape(text.text));
   }
 
   @override
-  void visitText(Text text, String clazz) {
-    buffer.write(escape(text.text));
+  void visitVariable(Variable variable, [String? clazz]) {
+    buffer.write('\${context.${variable.name}}');
   }
 }

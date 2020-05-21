@@ -3,7 +3,7 @@ library tokenizer;
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
-import 'env.dart';
+import 'environment.dart';
 
 part 'token.dart';
 
@@ -25,12 +25,12 @@ class ExpressionTokenizer {
         space = RegExp(r'\s+');
 
   @protected
-  Iterable<Token> scan(StringScanner scanner, {Pattern end}) sync* {
+  Iterable<Token> scan(StringScanner scanner, {String? end}) sync* {
     end ??= environment.expressionEnd;
 
     while (!scanner.isDone) {
       if (scanner.scan(identifier)) {
-        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
+        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.word);
       } else if (scanner.scan(space)) {
         yield Token.simple(scanner.lastMatch.start, TokenType.space);
       } else if (scanner.matches(end)) {
@@ -58,7 +58,8 @@ class Tokenizer {
     final expressionTokenizer = ExpressionTokenizer(environment);
 
     final rules = <String>[environment.commentStart, environment.expressionStart, environment.statementStart];
-    final reversed = (rules.toList(growable: false)..sort((a, b) => b.compareTo(a))).reversed.toList(growable: false);
+    final reversed = rules.toList(growable: false);
+    reversed.sort((a, b) => b.compareTo(a));
 
     while (!scanner.isDone) {
       var start = scanner.position;
@@ -68,11 +69,12 @@ class Tokenizer {
 
       inner:
       while (!scanner.isDone) {
-        int state;
+        int? state;
 
-        for (var rule in reversed) {
+        for (final rule in reversed) {
           if (scanner.scan(rule)) {
             state = rules.indexOf(rule);
+            break;
           }
         }
 
@@ -107,6 +109,7 @@ class Tokenizer {
             yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
             start = scanner.lastMatch.end;
             end = start;
+
             break inner;
 
           case 1:
@@ -129,6 +132,30 @@ class Tokenizer {
             yield Token.simple(end, TokenType.expressionEnd);
             break inner;
 
+          case 2:
+            text = scanner.substring(start, end);
+
+            if (text.isNotEmpty) {
+              yield Token(start, text, TokenType.text);
+            }
+
+            yield Token.simple(end, TokenType.statementStart);
+
+            while (!(scanner.isDone || scanner.matches(environment.statementEnd))) {
+              scanner.position++;
+            }
+
+            if (!scanner.scan(environment.statementEnd)) {
+              _error(scanner, 'expected statement end.');
+            }
+
+            start = scanner.lastMatch.end;
+            end = start;
+
+            yield Token.simple(scanner.lastMatch.start, TokenType.statementEnd);
+
+            break inner;
+
           default:
             end = ++scanner.position;
         }
@@ -142,7 +169,7 @@ class Tokenizer {
     }
   }
 
-  Iterable<Token> tokenize(String template, {String path}) => scan(StringScanner(template, sourceUrl: path));
+  Iterable<Token> tokenize(String template, {String? path}) => scan(StringScanner(template, sourceUrl: path));
 
   @override
   String toString() => 'Tokenizer()';
