@@ -6,8 +6,12 @@ class Text implements Node {
   const Text(this.text);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, [C? context]) => visitor.visitText(this, context);
+  R accept<C, R>(Visitor<C, R> visitor, [C context]) {
+    return visitor.visitText(this, context);
+  }
 
   @override
-  String toString() => 'Text $text';
+  String toString() {
+    return 'Text ${repr(text)}';
+  }
 }

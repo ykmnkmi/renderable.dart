@@ -6,8 +6,12 @@ class Variable implements Expression {
   const Variable(this.name);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, [C? context]) => visitor.visitVariable(this, context);
+  R accept<C, R>(Visitor<C, R> visitor, [C context]) {
+    return visitor.visitVariable(this, context);
+  }
 
   @override
-  String toString() => 'Variable $name';
+  String toString() {
+    return 'Variable $name';
+  }
 }

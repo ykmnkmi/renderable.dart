@@ -1,8 +1,8 @@
 include: package:pedantic/analysis_options.yaml
 
 analyzer:
-  enable-experiment:
-    - non-nullable
+  # enable-experiment:
+  #   - non-nullable
   exclude:
     - example/**
   strong-mode:

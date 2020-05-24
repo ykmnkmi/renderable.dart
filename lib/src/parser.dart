@@ -6,11 +6,6 @@ import 'ast.dart';
 import 'environment.dart';
 import 'tokenizer.dart';
 
-@alwaysThrows
-void _error(String message) {
-  throw Exception(message);
-}
-
 @immutable
 class ExpressionParser {
   final Environment environment;
@@ -26,24 +21,24 @@ class ExpressionParser {
     final peek = reader.peek();
 
     if (peek == null || peek.type == TokenType.expressionEnd) {
-      _error('interpolation body expected.');
+      error('interpolation body expected.');
     }
 
     reader.skip(TokenType.space);
 
     final token = reader.next();
-    late Node node;
+    Node node;
 
     if (token != null) {
       switch (token.type) {
-        case TokenType.word:
+        case TokenType.identifier:
           node = Variable(token.lexeme);
           break;
         default:
-          _error('unexpected token: $token.');
+          error('unexpected token: $token.');
       }
     } else {
-      _error('expected tokens');
+      error('expected tokens');
     }
 
     reader.skip(TokenType.space);
@@ -53,7 +48,14 @@ class ExpressionParser {
   }
 
   @override
-  String toString() => 'ExpressionParser()';
+  String toString() {
+    return 'ExpressionParser ()';
+  }
+
+  @alwaysThrows
+  static void error(String message) {
+    throw Exception(message);
+  }
 }
 
 @immutable
@@ -62,7 +64,7 @@ class Parser {
 
   const Parser(this.environment);
 
-  Iterable<Node> parse(String template, {String? path}) {
+  Iterable<Node> parse(String template, {String path}) {
     return scan(Tokenizer(environment).tokenize(template, path: path));
   }
 
@@ -81,15 +83,25 @@ class Parser {
         case TokenType.expressionStart:
           yield expressionParser.scan(reader);
           break;
+        case TokenType.statementStart:
+          yield scanStatement(reader);
+          break;
         case TokenType.text:
           yield Text(token.lexeme);
           break;
         default:
-          _error('unexpected token: $token.');
+          error('unexpected token: $token.');
       }
 
       token = reader.next();
     }
+  }
+
+  Node scanStatement(TokenReader reader) {
+    reader.skip(TokenType.space);
+    
+    final tag = reader.expected(TokenType.identifier);
+    throw tag;
   }
 
   void skipComment(TokenReader reader) {
@@ -98,13 +110,20 @@ class Parser {
   }
 
   @override
-  String toString() => 'Parser()';
+  String toString() {
+    return 'Parser ()';
+  }
+
+  @alwaysThrows
+  static void error(String message) {
+    throw Exception(message);
+  }
 }
 
 class TokenReader {
   final Iterator<Token> iterator;
 
-  Token? _peek;
+  Token _peek;
 
   TokenReader(Iterable<Token> tokens) : iterator = tokens.iterator;
 
@@ -112,13 +131,13 @@ class TokenReader {
     final token = next();
 
     if (token == null || token.type != type) {
-      throw Exception('$type token expected, got ${token?.type}.');
+      throw Exception('$type token expected, got ${token.type}.');
     }
 
     return token;
   }
 
-  Token? next() {
+  Token next() {
     if (_peek != null) {
       final token = _peek;
       _peek = null;
@@ -128,7 +147,7 @@ class TokenReader {
     return iterator.moveNext() ? iterator.current : null;
   }
 
-  Token? peek() {
+  Token peek() {
     return _peek = next();
   }
 

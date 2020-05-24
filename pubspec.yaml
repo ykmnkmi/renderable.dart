@@ -14,5 +14,7 @@ dependencies:
   string_scanner: any
 
 dev_dependencies:
+  code_builder: any
+  dart_style: any
   build_runner: any
   pedantic: any

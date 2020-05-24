@@ -1,6 +1,6 @@
 import 'dart:mirrors';
 
-T? getField<T>(String field, Object? object) {
+T getField<T>(String field, Object object) {
   if (object == null) {
     return null;
   }

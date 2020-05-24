@@ -2,7 +2,6 @@ library visitor;
 
 import 'ast.dart';
 import 'environment.dart';
-import 'mirror.dart';
 
 class Renderer<C> implements Visitor<C, Object> {
   final Environment environment;
@@ -10,30 +9,40 @@ class Renderer<C> implements Visitor<C, Object> {
   Renderer(this.environment);
 
   @override
-  String toString() => 'Renderer<$C>()';
+  String toString() {
+    return 'Renderer<$C>()';
+  }
 
   @override
-  String visitAll(Iterable<Node> nodes, [C? context]) =>
-      nodes.map((node) => node.accept<C, Object>(this, context)).join();
+  String visitAll(Iterable<Node> nodes, [C context]) {
+    /* TODO: profile join */
+    return nodes.map((node) => node.accept<C, Object>(this, context)).join();
+  }
 
   @override
-  String visitText(Text text, [C? context]) => text.text;
+  String visitText(Text text, [C context]) {
+    return text.text;
+  }
 
   @override
-  Object visitVariable(Variable variable, [C? context]) {
+  Object visitVariable(Variable variable, [C context]) {
     // TODO: стойт ли использовать отдельный класс для рендера словаря?
+    Object value;
+
     if (context is Map<String, Object>) {
-      return context[variable.name] ?? '';
+      value = context[variable.name];
+    } else {
+      value = environment.getField(variable.name, context);
     }
 
-    return getField<Object>(variable.name, context) ?? '';
+    return environment.finalize(value);
   }
 }
 
 abstract class Visitor<C, R> {
-  R visitAll(Iterable<Node> nodes, [C? context]);
+  R visitAll(Iterable<Node> nodes, [C context]);
 
-  R visitText(Text text, [C? context]);
+  R visitText(Text text, [C context]);
 
-  R visitVariable(Variable variable, [C? context]);
+  R visitVariable(Variable variable, [C context]);
 }

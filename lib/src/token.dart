@@ -9,7 +9,9 @@ abstract class BaseToken implements Token {
   int get length => lexeme.length;
 
   @override
-  String toString() => '#$type:$start:$length {$lexeme}';
+  String toString() {
+    return '#$type:$start:$length ${repr(lexeme)}';
+  }
 }
 
 class LexemeToken extends BaseToken {
@@ -45,7 +47,9 @@ class SimpleToken extends BaseToken {
   SimpleToken(this.start, this.type);
 
   @override
-  String get lexeme => lexemes[type];
+  String get lexeme {
+    return lexemes[type];
+  }
 }
 
 abstract class Token {
@@ -56,7 +60,9 @@ abstract class Token {
   int get end;
 
   @override
-  int get hashCode => type.hashCode & start & lexeme.hashCode;
+  int get hashCode {
+    return type.hashCode & start & lexeme.hashCode;
+  }
 
   int get length;
 
@@ -67,11 +73,14 @@ abstract class Token {
   TokenType get type;
 
   @override
-  bool? operator ==(Object? other) =>
-      other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
+  bool operator ==(Object other) {
+    return other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
+  }
 
   @override
-  String toString() => '#$type:$start {$lexeme}';
+  String toString() {
+    return '#$type:$start ${repr(lexeme)}';
+  }
 }
 
 enum TokenType {
@@ -79,7 +88,7 @@ enum TokenType {
   statementEnd,
   expressionStart,
   expressionEnd,
-  word,
+  identifier,
   space,
   commentStart,
   commentEnd,

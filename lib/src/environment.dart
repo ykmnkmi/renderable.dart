@@ -1,8 +1,10 @@
 import 'package:meta/meta.dart';
 
-import 'mirror.dart' as mirror;
+import 'default.dart' as d;
 
-typedef FieldGetter = Object? Function(String field, Object? object);
+typedef FieldGetter = Object Function(String field, Object object);
+
+typedef Finalizer = Object Function(Object value);
 
 @immutable
 class Environment {
@@ -20,6 +22,8 @@ class Environment {
 
   final FieldGetter getField;
 
+  final Finalizer finalize;
+
   const Environment({
     this.commentStart = '{#',
     this.commentEnd = '#}',
@@ -27,7 +31,8 @@ class Environment {
     this.expressionEnd = '}}',
     this.statementStart = '{%',
     this.statementEnd = '%}',
-    this.getField = mirror.getField,
+    this.getField = d.getField,
+    this.finalize = d.finalizer,
   })  : assert(commentStart != expressionStart),
         assert(expressionStart != statementStart),
         assert(statementStart != commentStart);

@@ -4,11 +4,12 @@ import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
 import 'environment.dart';
+import 'util.dart';
 
 part 'token.dart';
 
 @alwaysThrows
-void _error(StringScanner scanner, String message) {
+void error(StringScanner scanner, String message) {
   throw Exception('at ${scanner.position}: $message');
 }
 
@@ -25,12 +26,12 @@ class ExpressionTokenizer {
         space = RegExp(r'\s+');
 
   @protected
-  Iterable<Token> scan(StringScanner scanner, {String? end}) sync* {
+  Iterable<Token> scan(StringScanner scanner, {String end}) sync* {
     end ??= environment.expressionEnd;
 
     while (!scanner.isDone) {
       if (scanner.scan(identifier)) {
-        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.word);
+        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
       } else if (scanner.scan(space)) {
         yield Token.simple(scanner.lastMatch.start, TokenType.space);
       } else if (scanner.matches(end)) {
@@ -41,10 +42,14 @@ class ExpressionTokenizer {
     }
   }
 
-  Iterable<Token> tokenize(String expression) => scan(StringScanner(expression));
+  Iterable<Token> tokenize(String expression) {
+    return scan(StringScanner(expression));
+  }
 
   @override
-  String toString() => 'ExpressionTokenizer()';
+  String toString() {
+    return 'ExpressionTokenizer ()';
+  }
 }
 
 @immutable
@@ -69,7 +74,7 @@ class Tokenizer {
 
       inner:
       while (!scanner.isDone) {
-        int? state;
+        int state;
 
         for (final rule in reversed) {
           if (scanner.scan(rule)) {
@@ -98,15 +103,16 @@ class Tokenizer {
             text = scanner.substring(start, end).trim();
 
             if (text.isEmpty) {
-              _error(scanner, 'expected comment body.');
+              error(scanner, 'expected comment body.');
             }
 
             if (!scanner.scan(environment.commentEnd)) {
-              _error(scanner, 'expected comment end.');
+              error(scanner, 'expected comment end.');
             }
 
             yield Token(start, text, TokenType.comment);
             yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
+            
             start = scanner.lastMatch.end;
             end = start;
 
@@ -123,13 +129,14 @@ class Tokenizer {
             yield* expressionTokenizer.scan(scanner);
 
             if (!scanner.scan(environment.expressionEnd)) {
-              _error(scanner, 'expected expression end.');
+              error(scanner, 'expected expression end.');
             }
 
             end = scanner.lastMatch.start;
             start = end;
 
             yield Token.simple(end, TokenType.expressionEnd);
+            
             break inner;
 
           case 2:
@@ -141,12 +148,10 @@ class Tokenizer {
 
             yield Token.simple(end, TokenType.statementStart);
 
-            while (!(scanner.isDone || scanner.matches(environment.statementEnd))) {
-              scanner.position++;
-            }
+            yield* expressionTokenizer.scan(scanner);
 
             if (!scanner.scan(environment.statementEnd)) {
-              _error(scanner, 'expected statement end.');
+              error(scanner, 'expected statement end.');
             }
 
             start = scanner.lastMatch.end;
@@ -169,8 +174,12 @@ class Tokenizer {
     }
   }
 
-  Iterable<Token> tokenize(String template, {String? path}) => scan(StringScanner(template, sourceUrl: path));
+  Iterable<Token> tokenize(String template, {String path}) {
+    return scan(StringScanner(template, sourceUrl: path));
+  }
 
   @override
-  String toString() => 'Tokenizer()';
+  String toString() {
+    return 'Tokenizer ()';
+  }
 }

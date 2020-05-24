@@ -1,7 +1,7 @@
 class Generated<C> implements Renderable<C> {
-  final String? path;
+  final String path;
 
-  final String? template;
+  final String template;
 
   const Generated({this.path, this.template});
 
@@ -11,19 +11,19 @@ class Generated<C> implements Renderable<C> {
   }
 
   @override
-  bool? operator ==(Object? other) {
+  bool operator ==(Object other) {
     return other is Generated && path == other.path;
   }
 
   @override
-  String render([C? context]) {
+  String render([C context]) {
     // TODO: текст ошибки
     throw UnsupportedError('');
   }
 }
 
 abstract class Renderable<C> {
-  const factory Renderable({String? path, String? template}) = Generated<C>;
+  const factory Renderable({String path, String template}) = Generated<C>;
 
-  String render([C? context]);
+  String render([C context]);
 }

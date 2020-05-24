@@ -72,7 +72,7 @@ class RendererCodeGenerator implements Visitor<String, void> {
   }
 
   @override
-  void visitAll(Iterable<Node> nodes, [String? clazz]) {
+  void visitAll(Iterable<Node> nodes, [String clazz]) {
     nodes = nodes.toList(growable: false);
 
     buffer
@@ -94,12 +94,12 @@ class RendererCodeGenerator implements Visitor<String, void> {
   }
 
   @override
-  void visitText(Text text, [String? clazz]) {
+  void visitText(Text text, [String clazz]) {
     buffer.write(escape(text.text));
   }
 
   @override
-  void visitVariable(Variable variable, [String? clazz]) {
+  void visitVariable(Variable variable, [String clazz]) {
     buffer.write('\${context.${variable.name}}');
   }
 }
