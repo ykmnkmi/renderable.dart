@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:analyzer/dart/element/element.dart';
@@ -11,8 +10,6 @@ import 'environment.dart';
 import 'interface.dart';
 import 'parser.dart';
 import 'visitor.dart';
-
-String escape(String text) => text.replaceAll('\$', '\\\$').replaceAll('\'', '\\\'');
 
 void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
   buffer
@@ -102,7 +99,7 @@ class RendererCodeGenerator implements Visitor<String, void> {
 
   @override
   void visitVariable(Variable variable, [String clazz]) {
-    buffer.write('\${context.${escape(variable.name)}}');
+    buffer.write('\${context.${variable.name}}');
   }
 
   @override

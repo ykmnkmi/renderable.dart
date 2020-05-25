@@ -27,9 +27,3 @@ abstract class Renderable<C> {
 
   String render([C context]);
 }
-
-class Isolated {
-  final String method;
-
-  const Isolated(this.method);
-}
