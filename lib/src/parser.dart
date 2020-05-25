@@ -12,27 +12,23 @@ class ExpressionParser {
 
   const ExpressionParser(this.environment);
 
-  Node parse(String expression) {
-    return scan(TokenReader(ExpressionTokenizer(environment).tokenize(expression)));
+  Expression parse(String expression) {
+    final tokens = ExpressionTokenizer(environment).tokenize(expression);
+    final reader = TokenReader(tokens);
+    return scan(reader);
   }
 
   @protected
-  Node scan(TokenReader reader) {
-    final peek = reader.peek();
-
-    if (peek == null || peek.type == TokenType.expressionEnd) {
-      error('interpolation body expected.');
-    }
-
+  Expression scan(TokenReader reader) {
     reader.skip(TokenType.space);
 
     final token = reader.next();
-    Node node;
+    Expression node;
 
     if (token != null) {
       switch (token.type) {
         case TokenType.identifier:
-          node = Variable(token.lexeme);
+          node = Variable(token.value);
           break;
         default:
           error('unexpected token: $token.');
@@ -42,7 +38,6 @@ class ExpressionParser {
     }
 
     reader.skip(TokenType.space);
-    reader.expected(TokenType.expressionEnd);
 
     return node;
   }
@@ -62,51 +57,179 @@ class ExpressionParser {
 class Parser {
   final Environment environment;
 
-  const Parser(this.environment);
+  final List<List<Token>> endTokensStack;
+
+  final List<String> tagsStack;
+
+  Parser(this.environment)
+      : endTokensStack = <List<Token>>[],
+        tagsStack = <String>[];
 
   Iterable<Node> parse(String template, {String path}) {
-    return scan(Tokenizer(environment).tokenize(template, path: path));
+    final tokens = Tokenizer(environment).tokenize(template, path: path);
+    return scan(tokens);
   }
 
-  @protected
-  Iterable<Node> scan(Iterable<Token> tokens) sync* {
-    final reader = TokenReader(tokens);
-    final expressionParser = ExpressionParser(environment);
+  Iterable<Node> parseBody(TokenReader reader, [List<Token> endTokens]) {
+    final nodes = subParse(reader, endTokens ?? const <Token>[]);
+    return nodes;
+  }
 
-    var token = reader.next();
+  Node parseIf(TokenReader reader) {
+    const elseToken = Token(0, 'else', TokenType.identifier);
+    const endIfToken = Token(0, 'endif', TokenType.identifier);
 
-    while (token != null) {
-      switch (token.type) {
-        case TokenType.commentStart:
-          skipComment(reader);
-          break;
-        case TokenType.expressionStart:
-          yield expressionParser.scan(reader);
-          break;
-        case TokenType.statementStart:
-          yield scanStatement(reader);
-          break;
-        case TokenType.text:
-          yield Text(token.lexeme);
-          break;
-        default:
-          error('unexpected token: $token.');
+    final pairs = <Expression, List<Node>>{};
+    List<Node> orElse;
+
+    while (true) {
+      if (reader.isNext(TokenType.statementEnd)) {
+        error('expect if statement body');
       }
 
-      token = reader.next();
+      final condition = ExpressionParser(environment).scan(reader);
+      reader.expected(TokenType.statementEnd);
+
+      final body = parseBody(reader, <Token>[elseToken, endIfToken]).toList();
+
+      final token = reader.next();
+
+      if (token.same(elseToken)) {
+        reader.skip(TokenType.space);
+        reader.expected(TokenType.statementEnd);
+
+        pairs[condition] = body;
+        orElse = parseBody(reader, <Token>[endIfToken]).toList();
+      } else {
+        pairs[condition] = body;
+      }
+
+      break;
+    }
+
+    reader.expected(TokenType.identifier);
+    reader.skip(TokenType.space);
+    reader.expected(TokenType.statementEnd);
+
+    return IfStatement(pairs, orElse);
+  }
+
+  Node parseStatement(TokenReader reader) {
+    reader.skip(TokenType.space);
+
+    final tagToken = reader.expected(TokenType.identifier);
+    final tag = tagToken.value;
+    tagsStack.add(tag);
+
+    var popTag = true;
+
+    reader.skip(TokenType.space);
+
+    try {
+      switch (tag) {
+        case 'if':
+          return parseIf(reader);
+        default:
+          popTag = false;
+          tagsStack.removeLast();
+          error('unknown tag: ${tag}');
+      }
+    } finally {
+      if (popTag) {
+        tagsStack.removeLast();
+      }
     }
   }
 
-  Node scanStatement(TokenReader reader) {
-    reader.skip(TokenType.space);
-    
-    final tag = reader.expected(TokenType.identifier);
-    throw tag;
+  @protected
+  Iterable<Node> scan(Iterable<Token> tokens) {
+    final reader = TokenReader(tokens);
+    return parseBody(reader);
   }
 
   void skipComment(TokenReader reader) {
     reader.skip(TokenType.comment);
     reader.expected(TokenType.commentEnd);
+  }
+
+  List<Node> subParse(TokenReader reader, List<Token> endTokens) {
+    final buffer = StringBuffer();
+    final nodes = <Node>[];
+
+    if (endTokens.isNotEmpty) {
+      endTokensStack.add(endTokens);
+    }
+
+    final void Function() flush = () {
+      if (buffer.isNotEmpty) {
+        nodes.add(Text(buffer.toString()));
+        buffer.clear();
+      }
+    };
+
+    try {
+      while (reader.moveNext()) {
+        final token = reader.current;
+
+        switch (token.type) {
+          case TokenType.text:
+            buffer.write(token.value);
+
+            break;
+
+          case TokenType.commentStart:
+            flush();
+
+            skipComment(reader);
+
+            break;
+
+          case TokenType.expressionStart:
+            flush();
+
+            final expression = ExpressionParser(environment).scan(reader);
+            nodes.add(expression);
+
+            reader.expected(TokenType.expressionEnd);
+
+            break;
+
+          case TokenType.statementStart:
+            flush();
+
+            reader.skip(TokenType.space);
+
+            if (endTokens.isNotEmpty && testAll(reader, endTokens)) {
+              return nodes;
+            }
+
+            nodes.add(parseStatement(reader));
+
+            break;
+
+          default:
+            throw Exception('unexpected token: $token, ${reader.next()}');
+        }
+      }
+    } finally {
+      if (endTokens.isNotEmpty) {
+        endTokensStack.removeLast();
+      }
+    }
+
+    return nodes;
+  }
+
+  bool testAll(TokenReader reader, List<Token> endTokens) {
+    final current = reader.peek();
+
+    for (final token in endTokens) {
+      if (token.same(current)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -127,6 +250,8 @@ class TokenReader {
 
   TokenReader(Iterable<Token> tokens) : iterator = tokens.iterator;
 
+  Token get current => iterator.current;
+
   Token expected(TokenType type) {
     final token = next();
 
@@ -135,6 +260,10 @@ class TokenReader {
     }
 
     return token;
+  }
+
+  bool moveNext() {
+    return iterator.moveNext();
   }
 
   Token next() {
@@ -147,13 +276,23 @@ class TokenReader {
     return iterator.moveNext() ? iterator.current : null;
   }
 
+  bool isNext(TokenType type) {
+    _peek = next();
+    return _peek.type == type;
+  }
+
   Token peek() {
     return _peek = next();
   }
 
-  bool skip(TokenType type) {
+  bool skip(TokenType type, [bool all = false]) {
     if (peek()?.type == type) {
       next();
+
+      if (all) {
+        skip(type);
+      }
+
       return true;
     }
 

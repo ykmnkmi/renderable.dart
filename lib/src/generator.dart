@@ -22,8 +22,9 @@ void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
 }
 
 String writeRendererFor(String clazz, String template, StringBuffer buffer) {
-  final astNodes = const Parser(Environment()).parse(template);
-  return RendererCodeGenerator(buffer).visit(astNodes, clazz);
+  final environment = const Environment();
+  final body = Parser(environment).parse(template);
+  return RendererCodeGenerator(buffer).visit(body, clazz);
 }
 
 class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
@@ -101,5 +102,10 @@ class RendererCodeGenerator implements Visitor<String, void> {
   @override
   void visitVariable(Variable variable, [String clazz]) {
     buffer.write('\${context.${variable.name}}');
+  }
+
+  @override
+  void visitIf(IfStatement ifStatement, [String clazz]) {
+    // TODO: implement visitIf
   }
 }

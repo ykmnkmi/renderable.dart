@@ -26,3 +26,31 @@ String repr(Object object, [bool reprString = true]) {
     return object.toString();
   }
 }
+
+bool toBool(Object value) {
+  if (value == null) {
+    return false;
+  }
+
+  if (value is bool) {
+    return value;
+  }
+
+  if (value is num) {
+    return value != 0.0;
+  }
+
+  if (value is String) {
+    return value.isNotEmpty;
+  }
+
+  if (value is Iterable) {
+    return value.isNotEmpty;
+  }
+
+  if (value is Map) {
+    return value.isNotEmpty;
+  }
+
+  return true;
+}

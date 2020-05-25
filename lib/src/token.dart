@@ -2,15 +2,22 @@ part of 'tokenizer.dart';
 
 @immutable
 abstract class BaseToken implements Token {
+  const BaseToken();
+
   @override
   int get end => start + length;
 
   @override
-  int get length => lexeme.length;
+  int get length => value.length;
+
+  @override
+  bool same(Token other) {
+    return type == other.type && value == other.value;
+  }
 
   @override
   String toString() {
-    return '#$type:$start:$length ${repr(lexeme)}';
+    return '#$type:$start:$length ${repr(value)}';
   }
 }
 
@@ -19,12 +26,12 @@ class LexemeToken extends BaseToken {
   final int start;
 
   @override
-  final String lexeme;
+  final String value;
 
   @override
   final TokenType type;
 
-  LexemeToken(this.start, this.lexeme, this.type);
+  const LexemeToken(this.start, this.value, this.type);
 }
 
 class SimpleToken extends BaseToken {
@@ -44,42 +51,44 @@ class SimpleToken extends BaseToken {
   @override
   final TokenType type;
 
-  SimpleToken(this.start, this.type);
+  const SimpleToken(this.start, this.type);
 
   @override
-  String get lexeme {
+  String get value {
     return lexemes[type];
   }
 }
 
 abstract class Token {
-  factory Token(int start, String lexeme, TokenType type) = LexemeToken;
+  const factory Token(int start, String lexeme, TokenType type) = LexemeToken;
 
-  factory Token.simple(int start, TokenType type) = SimpleToken;
+  const factory Token.simple(int start, TokenType type) = SimpleToken;
 
   int get end;
 
   @override
   int get hashCode {
-    return type.hashCode & start & lexeme.hashCode;
+    return type.hashCode & start & value.hashCode;
   }
 
   int get length;
-
-  String get lexeme;
 
   int get start;
 
   TokenType get type;
 
+  String get value;
+
   @override
   bool operator ==(Object other) {
-    return other is Token && type == other.type && start == other.start && lexeme == other.lexeme;
+    return other is Token && type == other.type && start == other.start && value == other.value;
   }
+
+  bool same(Token other);
 
   @override
   String toString() {
-    return '#$type:$start ${repr(lexeme)}';
+    return '#$type:$start ${repr(value)}';
   }
 }
 

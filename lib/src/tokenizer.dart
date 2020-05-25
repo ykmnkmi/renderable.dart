@@ -60,8 +60,6 @@ class Tokenizer {
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
-    final expressionTokenizer = ExpressionTokenizer(environment);
-
     final rules = <String>[environment.commentStart, environment.expressionStart, environment.statementStart];
     final reversed = rules.toList(growable: false);
     reversed.sort((a, b) => b.compareTo(a));
@@ -112,7 +110,7 @@ class Tokenizer {
 
             yield Token(start, text, TokenType.comment);
             yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
-            
+
             start = scanner.lastMatch.end;
             end = start;
 
@@ -126,7 +124,7 @@ class Tokenizer {
             }
 
             yield Token.simple(end, TokenType.expressionStart);
-            yield* expressionTokenizer.scan(scanner);
+            yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.expressionEnd)) {
               error(scanner, 'expected expression end.');
@@ -136,7 +134,7 @@ class Tokenizer {
             start = end;
 
             yield Token.simple(end, TokenType.expressionEnd);
-            
+
             break inner;
 
           case 2:
@@ -148,7 +146,7 @@ class Tokenizer {
 
             yield Token.simple(end, TokenType.statementStart);
 
-            yield* expressionTokenizer.scan(scanner);
+            yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.statementEnd)) {
               error(scanner, 'expected statement end.');

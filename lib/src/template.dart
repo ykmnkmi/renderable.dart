@@ -34,7 +34,8 @@ class Template<C> implements Renderable<C> {
       finalize: finalize,
     );
 
-    return Template<C>.fromNodes(Parser(environment).parse(source), environment);
+    final nodes = Parser(environment).parse(source);
+    return Template<C>.fromNodes(nodes, environment);
   }
 
   Template.fromNodes(Iterable<Node> nodes, [Environment environment])
