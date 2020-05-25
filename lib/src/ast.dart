@@ -3,7 +3,6 @@ library ast;
 import 'util.dart';
 import 'visitor.dart';
 
-part 'ast/interpolation.dart';
 part 'ast/statement/if.dart';
 part 'ast/text.dart';
 part 'ast/variable.dart';
