@@ -44,7 +44,7 @@ class Template<C> implements Renderable<C> {
 
   @override
   String render([C context]) {
-    /* TODO: profile */
+    /* TODO: profile render */
     return Renderer<C>(environment).visitAll(nodes, context).toString();
   }
 

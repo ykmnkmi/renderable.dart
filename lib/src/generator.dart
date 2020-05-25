@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:analyzer/dart/element/element.dart';
@@ -23,8 +24,8 @@ void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
 
 String writeRendererFor(String clazz, String template, StringBuffer buffer) {
   final environment = const Environment();
-  final body = Parser(environment).parse(template);
-  return RendererCodeGenerator(buffer).visit(body, clazz);
+  final nodes = Parser(environment).parse(template);
+  return RendererCodeGenerator(buffer).visit(nodes, clazz);
 }
 
 class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
@@ -96,12 +97,12 @@ class RendererCodeGenerator implements Visitor<String, void> {
 
   @override
   void visitText(Text text, [String clazz]) {
-    buffer.write(escape(text.text));
+    buffer.write(text.text);
   }
 
   @override
   void visitVariable(Variable variable, [String clazz]) {
-    buffer.write('\${context.${variable.name}}');
+    buffer.write('\${context.${escape(variable.name)}}');
   }
 
   @override

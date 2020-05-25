@@ -211,6 +211,8 @@ class Parser {
             throw Exception('unexpected token: $token, ${reader.next()}');
         }
       }
+
+      flush();
     } finally {
       if (endTokens.isNotEmpty) {
         endTokensStack.removeLast();

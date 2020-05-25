@@ -35,6 +35,8 @@ class Renderer<C> implements Visitor<C, String> {
     if (orElse != null && orElse.isNotEmpty) {
       return visitAll(orElse);
     }
+
+    return '';
   }
 
   @override

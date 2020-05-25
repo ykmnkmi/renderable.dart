@@ -8,7 +8,7 @@ void main() {
   print(user.render()); // сгенерированное расширени, сокращение для варианта выше
 }
 
-@Renderable(template: 'hello {{ name }}!')
+@Renderable(path: 'hello_user.html')
 class User {
   final String name;
 
