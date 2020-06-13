@@ -89,7 +89,7 @@ class RendererCodeGenerator implements Visitor<String, void> {
       return;
     }
 
-    throw UnimplementedError();
+    buffer..writeln('{')..writeln('}');
   }
 
   @override

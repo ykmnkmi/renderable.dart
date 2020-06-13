@@ -1,9 +1,9 @@
 name: renderable
 description: An simple (and not yet powerful) template language for Dart like Jinja or Stencil.
-version: 0.0.5
+version: 0.0.6
 
 environment:
-  sdk: '>=2.8.2 <3.0.0'
+  sdk: '>=2.8.4 <3.0.0'
 
 dependencies:
   analyzer: any
@@ -14,7 +14,6 @@ dependencies:
   string_scanner: any
 
 dev_dependencies:
-  code_builder: any
-  dart_style: any
   build_runner: any
   pedantic: any
+  test: any

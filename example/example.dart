@@ -8,7 +8,7 @@ void main() {
   print(user.render()); // сгенерированное расширени, сокращение для варианта выше
 }
 
-@Renderable(path: 'hello_user.html')
+@Renderable(path: 'user.html')
 class User {
   final String name;
 
