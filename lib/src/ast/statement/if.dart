@@ -1,19 +1,19 @@
 part of '../../ast.dart';
 
 class IfStatement extends Statement {
-  final Map<Expression, List<Node>> pairs;
+  final Map<Expression, Node> pairs;
 
-  final List<Node> orElse;
+  final Node orElse;
 
   IfStatement(this.pairs, [this.orElse]);
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C context]) {
-    return visitor.visitIf(this);
+    return visitor.visitIf(this, context);
   }
 
   @override
   String toString() {
-    return 'If ()';
+    return 'If';
   }
 }

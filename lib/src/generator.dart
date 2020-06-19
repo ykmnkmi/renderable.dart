@@ -11,18 +11,14 @@ import 'interface.dart';
 import 'parser.dart';
 import 'visitor.dart';
 
-void writeExtensionFor(String clazz, String templateName, StringBuffer buffer) {
+void writeExtensionFor(StringBuffer buffer, String clazz) {
+  final clazzRenderer = '_${clazz}Renderer';
+  final name = getRendererName(clazzRenderer);
   buffer
     ..writeln('extension ${clazz}Renderer on $clazz {')
-    ..writeln('String render() => ${templateName}.render(this);')
+    ..writeln('String render() => ${name}.render(this);')
     ..writeln('}')
     ..writeln();
-}
-
-String writeRendererFor(String clazz, String template, StringBuffer buffer) {
-  final environment = const Environment();
-  final nodes = Parser(environment).parse(template);
-  return RendererCodeGenerator(buffer).visit(nodes, clazz);
 }
 
 class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
@@ -44,52 +40,48 @@ class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
 
     final buffer = StringBuffer();
     final name = element.name;
-    final templateName = writeRendererFor(name, template, buffer);
-    writeExtensionFor(name, templateName, buffer);
+    final environment = Environment();
+    final node = Parser(environment).parse(template);
+    RendererGenerator(buffer, name, node);
+    writeExtensionFor(buffer, name);
     return buffer.toString();
   }
 }
 
-class RendererCodeGenerator implements Visitor<String, void> {
+class RendererGenerator extends Visitor<String, void> {
   final StringBuffer buffer;
 
-  const RendererCodeGenerator(this.buffer);
-
-  String visit(Iterable<Node> nodes, String clazz) {
+  RendererGenerator(this.buffer, String clazz, Node node) {
     final clazzRenderer = '_${clazz}Renderer';
-    final name = clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
-
+    final name = getRendererName(clazz);
     buffer
       ..write('const $clazzRenderer ')
       ..write(name)
       ..writeln(' = $clazzRenderer();')
       ..writeln('class $clazzRenderer implements Renderable<$clazz> {')
-      ..writeln('const $clazzRenderer();');
-    visitAll(nodes, clazz);
+      ..writeln('const $clazzRenderer();')
+      ..writeln();
+
+    visit(node, clazz);
+
     buffer..writeln('}')..writeln();
-    return name;
   }
 
   @override
   void visitAll(Iterable<Node> nodes, [String clazz]) {
-    nodes = nodes.toList(growable: false);
-
-    buffer
-      ..writeln()
-      ..write('@override String render([$clazz context]) ');
-
-    if (nodes.any((node) => node is Text || node is Expression)) {
-      buffer.write('=> \'');
-
-      for (final node in nodes) {
-        node.accept(this, clazz);
-      }
-
-      buffer.write('\';');
-      return;
+    for (var node in nodes) {
+      node.accept(this, clazz);
     }
+  }
 
-    buffer..writeln('{')..writeln('}');
+  @override
+  void visitIf(IfStatement ifStatement, [String clazz]) {
+    // TODO: implement visitIf
+  }
+
+  @override
+  void visitInterpolation(Interpolation interpolation, [String clazz]) {
+    // TODO: implement visitInterpolation
   }
 
   @override
@@ -101,9 +93,8 @@ class RendererCodeGenerator implements Visitor<String, void> {
   void visitVariable(Variable variable, [String clazz]) {
     buffer.write('\${context.${variable.name}}');
   }
+}
 
-  @override
-  void visitIf(IfStatement ifStatement, [String clazz]) {
-    // TODO: implement visitIf
-  }
+String getRendererName(String clazzRenderer) {
+  return clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
 }

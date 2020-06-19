@@ -65,22 +65,22 @@ class Parser {
       : endTokensStack = <List<Token>>[],
         tagsStack = <String>[];
 
-  Iterable<Node> parse(String template, {String path}) {
+  Node parse(String template, {String path}) {
     final tokens = Tokenizer(environment).tokenize(template, path: path);
     return scan(tokens);
   }
 
-  Iterable<Node> parseBody(TokenReader reader, [List<Token> endTokens]) {
+  Node parseBody(TokenReader reader, [List<Token> endTokens]) {
     final nodes = subParse(reader, endTokens ?? const <Token>[]);
-    return nodes;
+    return Interpolation.orNode(nodes);
   }
 
   Node parseIf(TokenReader reader) {
     const elseToken = Token(0, 'else', TokenType.identifier);
     const endIfToken = Token(0, 'endif', TokenType.identifier);
 
-    final pairs = <Expression, List<Node>>{};
-    List<Node> orElse;
+    final pairs = <Expression, Node>{};
+    Node orElse;
 
     while (true) {
       if (reader.isNext(TokenType.statementEnd)) {
@@ -90,7 +90,7 @@ class Parser {
       final condition = ExpressionParser(environment).scan(reader);
       reader.expected(TokenType.statementEnd);
 
-      final body = parseBody(reader, <Token>[elseToken, endIfToken]).toList();
+      final body = parseBody(reader, <Token>[elseToken, endIfToken]);
 
       final token = reader.next();
 
@@ -99,7 +99,7 @@ class Parser {
         reader.expected(TokenType.statementEnd);
 
         pairs[condition] = body;
-        orElse = parseBody(reader, <Token>[endIfToken]).toList();
+        orElse = parseBody(reader, <Token>[endIfToken]);
       } else {
         pairs[condition] = body;
       }
@@ -142,7 +142,7 @@ class Parser {
   }
 
   @protected
-  Iterable<Node> scan(Iterable<Token> tokens) {
+  Node scan(Iterable<Token> tokens) {
     final reader = TokenReader(tokens);
     return parseBody(reader);
   }

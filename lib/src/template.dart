@@ -8,7 +8,7 @@ import 'parser.dart';
 import 'visitor.dart';
 
 class Template<C> implements Renderable<C> {
-  final List<Node> nodes;
+  final Node node;
 
   final Environment environment;
 
@@ -34,22 +34,20 @@ class Template<C> implements Renderable<C> {
       finalize: finalize,
     );
 
-    final nodes = Parser(environment).parse(source);
-    return Template<C>.fromNodes(nodes, environment);
+    final node = Parser(environment).parse(source);
+    return Template<C>.fromNode(node, environment);
   }
 
-  Template.fromNodes(Iterable<Node> nodes, [Environment environment])
-      : environment = environment ?? const Environment(),
-        nodes = nodes.toList(growable: false);
+  Template.fromNode(this.node, [Environment environment]) : environment = environment ?? const Environment();
 
   @override
   String render([C context]) {
     /* TODO: profile render */
-    return Renderer<C>(environment).visitAll(nodes, context).toString();
+    return Renderer<C>(environment).visit(node, context);
   }
 
   @override
   String toString() {
-    return 'Template $nodes';
+    return 'Template $node';
   }
 }
