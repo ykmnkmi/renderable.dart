@@ -2,12 +2,11 @@ library template;
 
 import 'ast.dart';
 import 'environment.dart';
-import 'interface.dart';
 import 'default.dart' as d;
 import 'parser.dart';
 import 'visitor.dart';
 
-class Template<C> implements Renderable<C> {
+class Template {
   final Node node;
 
   final Environment environment;
@@ -35,15 +34,13 @@ class Template<C> implements Renderable<C> {
     );
 
     final node = Parser(environment).parse(source);
-    return Template<C>.fromNode(node, environment);
+    return Template.fromNode(node, environment);
   }
 
-  Template.fromNode(this.node, [Environment environment]) : environment = environment ?? const Environment();
+  Template.fromNode(this.node, [this.environment = const Environment()]);
 
-  @override
-  String render([C context]) {
-    /* TODO: profile render */
-    return Renderer<C>(environment).visit(node, context);
+  String render([Map<String, Object> context]) {
+    return Renderer<Map<String, Object>>(environment).visit(node, context);
   }
 
   @override

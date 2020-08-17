@@ -7,21 +7,60 @@ import 'package:source_gen/source_gen.dart';
 
 import 'ast.dart';
 import 'environment.dart';
-import 'interface.dart';
 import 'parser.dart';
+import 'util.dart';
 import 'visitor.dart';
+
+String getRendererName(String clazzRenderer) {
+  return clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
+}
 
 void writeExtensionFor(StringBuffer buffer, String clazz) {
   final clazzRenderer = '_${clazz}Renderer';
   final name = getRendererName(clazzRenderer);
-  buffer
-    ..writeln('extension ${clazz}Renderer on $clazz {')
-    ..writeln('String render() => ${name}.render(this);')
-    ..writeln('}')
-    ..writeln();
+  buffer.writeln('extension ${clazz}Renderer on $clazz {');
+  buffer.writeln('String render() => ${name}.render(this);');
+  buffer.writeln('}');
+  buffer.writeln();
 }
 
-class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
+class RendererGenerator extends Visitor<String, void> {
+  const RendererGenerator(this.buffer);
+
+  final StringBuffer buffer;
+
+  @override
+  void visitText(Text text, [String clazz]) {
+    buffer.write('return ${repr(text.text)};');
+  }
+
+  @override
+  void visitVariable(Variable variable, [String clazz]) {
+    buffer.write('\${context.${variable.name}}');
+  }
+
+  @override
+  void visitInterpolation(Interpolation interpolation, [String clazz]) {
+    // TODO: implement visitInterpolation
+  }
+
+  @override
+  void visitIf(IfStatement ifStatement, [String clazz]) {
+    // TODO: implement visitIf
+  }
+
+  @override
+  void visitAll(Iterable<Node> nodes, [String clazz]) {
+    for (final node in nodes) {
+      node.accept(this, clazz);
+    }
+  }
+
+  @override
+  void visit(Node node, [String context]) {}
+}
+
+class RenderableGenerator extends GeneratorForAnnotation<Renderable> {
   @override
   String generateForAnnotatedElement(Element element, ConstantReader annotation, BuildStep buildStep) {
     final templatePathField = annotation.read('path');
@@ -42,59 +81,18 @@ class RenderableGenerator extends GeneratorForAnnotation<Renderable<Object>> {
     final name = element.name;
     final environment = Environment();
     final node = Parser(environment).parse(template);
-    RendererGenerator(buffer, name, node);
+    final clazzRenderer = '_${name}Renderer';
+    final clazz = getRendererName(clazzRenderer);
+    buffer.write('const $clazzRenderer ');
+    buffer.write(name);
+    buffer.writeln(' = $clazzRenderer();');
+    buffer.writeln('class $clazzRenderer implements Renderable<$clazz> {');
+    buffer.writeln('const $clazzRenderer();');
+    buffer.writeln();
+    RendererGenerator(buffer).visit(node);
+    buffer.writeln('}');
+    buffer.writeln();
     writeExtensionFor(buffer, name);
     return buffer.toString();
   }
-}
-
-class RendererGenerator extends Visitor<String, void> {
-  final StringBuffer buffer;
-
-  RendererGenerator(this.buffer, String clazz, Node node) {
-    final clazzRenderer = '_${clazz}Renderer';
-    final name = getRendererName(clazz);
-    buffer
-      ..write('const $clazzRenderer ')
-      ..write(name)
-      ..writeln(' = $clazzRenderer();')
-      ..writeln('class $clazzRenderer implements Renderable<$clazz> {')
-      ..writeln('const $clazzRenderer();')
-      ..writeln();
-
-    visit(node, clazz);
-
-    buffer..writeln('}')..writeln();
-  }
-
-  @override
-  void visitAll(Iterable<Node> nodes, [String clazz]) {
-    for (var node in nodes) {
-      node.accept(this, clazz);
-    }
-  }
-
-  @override
-  void visitIf(IfStatement ifStatement, [String clazz]) {
-    // TODO: implement visitIf
-  }
-
-  @override
-  void visitInterpolation(Interpolation interpolation, [String clazz]) {
-    // TODO: implement visitInterpolation
-  }
-
-  @override
-  void visitText(Text text, [String clazz]) {
-    buffer.write(text.text);
-  }
-
-  @override
-  void visitVariable(Variable variable, [String clazz]) {
-    buffer.write('\${context.${variable.name}}');
-  }
-}
-
-String getRendererName(String clazzRenderer) {
-  return clazzRenderer.substring(1, 2).toLowerCase() + clazzRenderer.substring(2);
 }

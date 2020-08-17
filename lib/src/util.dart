@@ -1,11 +1,11 @@
 String repr(Object object, [bool reprString = true]) {
-  if (object is Iterable) {
+  if (object is Iterable<Object>) {
     final buffer = StringBuffer();
     buffer.write('[');
     buffer.writeAll(object.map<String>(repr), ', ');
     buffer.write(']');
     return buffer.toString();
-  } else if (object is Map) {
+  } else if (object is Map<Object, Object>) {
     final buffer = StringBuffer();
     buffer.write('{');
     buffer.writeAll(object.entries.map<String>((entry) {
@@ -44,11 +44,11 @@ bool toBool(Object value) {
     return value.isNotEmpty;
   }
 
-  if (value is Iterable) {
+  if (value is Iterable<Object>) {
     return value.isNotEmpty;
   }
 
-  if (value is Map) {
+  if (value is Map<Object, Object>) {
     return value.isNotEmpty;
   }
 

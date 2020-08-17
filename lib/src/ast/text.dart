@@ -1,9 +1,9 @@
 part of '../ast.dart';
 
 class Text implements Node {
-  final String text;
-
   const Text(this.text);
+
+  final String text;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C context]) {

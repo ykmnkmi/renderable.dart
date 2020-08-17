@@ -8,22 +8,21 @@ import 'util.dart';
 
 part 'token.dart';
 
-@alwaysThrows
-void error(StringScanner scanner, String message) {
-  throw Exception('at ${scanner.position}: $message');
-}
-
 @immutable
 class ExpressionTokenizer {
+  ExpressionTokenizer(this.environment)
+      : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
+        space = RegExp(r'\s+');
+
   final Environment environment;
 
   final Pattern identifier;
 
   final Pattern space;
 
-  ExpressionTokenizer(this.environment)
-      : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
-        space = RegExp(r'\s+');
+  Iterable<Token> tokenize(String expression) {
+    return scan(StringScanner(expression));
+  }
 
   @protected
   Iterable<Token> scan(StringScanner scanner, {String end}) sync* {
@@ -42,21 +41,26 @@ class ExpressionTokenizer {
     }
   }
 
-  Iterable<Token> tokenize(String expression) {
-    return scan(StringScanner(expression));
-  }
-
   @override
   String toString() {
-    return 'ExpressionTokenizer ()';
+    return 'ExpressionTokenizer()';
   }
 }
 
 @immutable
 class Tokenizer {
-  final Environment environment;
+  @alwaysThrows
+  static void error(StringScanner scanner, String message) {
+    throw Exception('at ${scanner.position}: $message');
+  }
 
   const Tokenizer(this.environment);
+
+  final Environment environment;
+
+  Iterable<Token> tokenize(String template, {String path}) {
+    return scan(StringScanner(template, sourceUrl: path));
+  }
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
@@ -172,12 +176,8 @@ class Tokenizer {
     }
   }
 
-  Iterable<Token> tokenize(String template, {String path}) {
-    return scan(StringScanner(template, sourceUrl: path));
-  }
-
   @override
   String toString() {
-    return 'Tokenizer ()';
+    return 'Tokenizer()';
   }
 }

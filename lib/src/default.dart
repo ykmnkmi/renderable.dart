@@ -1,6 +1,12 @@
 import 'util.dart';
 
-export 'mirror.dart' show getField;
+Object getItem(Map<String, Object> map, String key) {
+  return map[key];
+}
+
+Object getField(Object instance, String field) {
+  throw UnimplementedError();
+}
 
 Object finalizer(Object value) {
   value ??= '';
