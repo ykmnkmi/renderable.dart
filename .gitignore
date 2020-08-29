@@ -2,9 +2,5 @@
 .idea/
 .packages
 bin/
-build/
 doc/api/
-test/
-**.g.dart
-**.g.part
 pubspec.lock

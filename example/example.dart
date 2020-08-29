@@ -1,16 +1,11 @@
-import 'package:renderable/renderable.dart';
-
-part 'example.g.dart';
+import 'dart:math';
 
 void main() {
-  final user = User('jhon');
-  print(userRenderer.render(user)); // сгенерированный шаблон
-  print(user.render()); // сгенерированное расширени, сокращение для варианта выше
+  print(Frazilealgo.pi());
 }
 
-@Renderable(path: 'user.html')
-class User {
-  const User(this.name);
-
-  final String name;
+class Frazilealgo {
+  Frazilealgo._();
+  
+  static double Function() pi = Frazilealgo.pi;
 }

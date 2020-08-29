@@ -2,13 +2,15 @@ targets:
   $default:
     builders:
       renderable:
-        generate_for: ["example/*"]
+        generate_for:
+          - example/*
 
 builders:
   renderable:
     import: "package:renderable/builder.dart"
-    builder_factories: ["renderableBuilder"]
-    build_extensions: {".dart": [".renderable.g.part"]}
+    builder_factories:
+      - htmlTemplateBuilder
     auto_apply: dependents
+    build_extensions:
+      .html: [".html.dart"]
     build_to: source
-    applies_builders: ["source_gen|combining_builder"]
