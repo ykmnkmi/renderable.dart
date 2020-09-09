@@ -193,8 +193,8 @@ class Parser {
   }
 
   Node parseIf(TokenReader reader) {
-    const elseToken = Token(0, 'else', TokenType.identifier);
-    const endIfToken = Token(0, 'endif', TokenType.identifier);
+    const elseToken = Token(0, TokenType.identifier, 'else');
+    const endIfToken = Token(0, TokenType.identifier, 'endif');
 
     final pairs = <Expression, Node>{};
     Node orElse;
@@ -234,8 +234,8 @@ class Parser {
   bool testAll(TokenReader reader, List<Token> endTokens) {
     final current = reader.peek();
 
-    for (final token in endTokens) {
-      if (token.same(current)) {
+    for (final endToken in endTokens) {
+      if (endToken.same(current)) {
         return true;
       }
     }

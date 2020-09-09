@@ -1,5 +1,7 @@
 library visitor;
 
+import 'package:meta/meta.dart';
+
 import 'ast.dart';
 import 'environment.dart';
 import 'util.dart';
@@ -22,8 +24,9 @@ abstract class Visitor<C, R> {
   }
 }
 
-class Renderer<C> extends Visitor<C, String> {
-  Renderer(this.environment);
+@immutable
+abstract class BaseRenderer<C> extends Visitor<C, String> {
+  BaseRenderer(this.environment);
 
   final Environment environment;
 
@@ -33,18 +36,7 @@ class Renderer<C> extends Visitor<C, String> {
   }
 
   @override
-  String visitVariable(Variable variable, [C context]) {
-    // TODO: стойт ли использовать отдельный класс для рендера словаря?
-    Object value;
-
-    if (context is Map<String, Object>) {
-      value = context[variable.name];
-    } else {
-      value = environment.getField(context, variable.name);
-    }
-
-    return environment.finalize(value).toString();
-  }
+  String visitVariable(Variable variable, [C context]);
 
   @override
   String visitInterpolation(Interpolation interpolation, [C context]) {
@@ -78,5 +70,15 @@ class Renderer<C> extends Visitor<C, String> {
   @override
   String toString() {
     return 'Renderer<$C>()';
+  }
+}
+
+class MapRenderer extends BaseRenderer<Map<String, Object>> {
+  MapRenderer(Environment environment) : super(environment);
+
+  @override
+  String visitVariable(Variable variable, [Map<String, Object> context]) {
+    final value = context[variable.name];
+    return environment.finalize(value).toString();
   }
 }

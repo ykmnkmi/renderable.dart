@@ -6,12 +6,16 @@ import 'default.dart' as d;
 import 'parser.dart';
 import 'visitor.dart';
 
-class Template {
-  final Node node;
+abstract class Template {
+  String render();
+}
 
+class RuntimeTemplate {
   final Environment environment;
 
-  factory Template(
+  final Node node;
+
+  factory RuntimeTemplate(
     String source, {
     String commentStart = '{#',
     String commentEnd = '#}',
@@ -34,13 +38,16 @@ class Template {
     );
 
     final node = Parser(environment).parse(source);
-    return Template.fromNode(node, environment);
+    return RuntimeTemplate.fromNode(node, environment);
   }
 
-  Template.fromNode(this.node, [this.environment = const Environment()]);
+  RuntimeTemplate.fromNode(this.node, [this.environment = const Environment()]);
 
-  String render([Map<String, Object> context]) {
-    return Renderer<Map<String, Object>>(environment).visit(node, context);
+  @override
+  String render({Map<String, Object> context}) {
+    // TODO: profile
+    // TODO: add to template?
+    return MapRenderer(environment).visit(node, context);
   }
 
   @override

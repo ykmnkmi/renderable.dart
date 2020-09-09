@@ -25,12 +25,12 @@ class ExpressionTokenizer {
   }
 
   @protected
-  Iterable<Token> scan(StringScanner scanner, {String end}) sync* {
+  Iterable<Token> scan(StringScanner scanner, {Pattern end}) sync* {
     end ??= environment.expressionEnd;
 
     while (!scanner.isDone) {
       if (scanner.scan(identifier)) {
-        yield Token(scanner.lastMatch.start, scanner.lastMatch[0], TokenType.identifier);
+        yield Token(scanner.lastMatch.start, TokenType.identifier, scanner.lastMatch[0]);
       } else if (scanner.scan(space)) {
         yield Token.simple(scanner.lastMatch.start, TokenType.space);
       } else if (scanner.matches(end)) {
@@ -89,7 +89,7 @@ class Tokenizer {
           case 0:
             if (start < end) {
               text = scanner.substring(start, end);
-              yield Token(start, text, TokenType.text);
+              yield Token(start, TokenType.text, text);
             }
 
             yield Token.simple(scanner.lastMatch.start, TokenType.commentStart);
@@ -112,7 +112,7 @@ class Tokenizer {
               error(scanner, 'expected comment end.');
             }
 
-            yield Token(start, text, TokenType.comment);
+            yield Token(start, TokenType.comment, text);
             yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
 
             start = scanner.lastMatch.end;
@@ -124,7 +124,7 @@ class Tokenizer {
             text = scanner.substring(start, end);
 
             if (text.isNotEmpty) {
-              yield Token(start, text, TokenType.text);
+              yield Token(start, TokenType.text, text);
             }
 
             yield Token.simple(end, TokenType.expressionStart);
@@ -145,7 +145,7 @@ class Tokenizer {
             text = scanner.substring(start, end);
 
             if (text.isNotEmpty) {
-              yield Token(start, text, TokenType.text);
+              yield Token(start, TokenType.text, text);
             }
 
             yield Token.simple(end, TokenType.statementStart);
@@ -171,7 +171,7 @@ class Tokenizer {
       text = scanner.substring(start, end);
 
       if (text.isNotEmpty) {
-        yield Token(start, text, TokenType.text);
+        yield Token(start, TokenType.text, text);
       }
     }
   }

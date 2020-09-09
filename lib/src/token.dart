@@ -1,7 +1,7 @@
 part of 'tokenizer.dart';
 
 abstract class Token {
-  const factory Token(int start, String lexeme, TokenType type) = LexemeToken;
+  const factory Token(int start, TokenType type,String lexeme) = LexemeToken;
 
   const factory Token.simple(int start, TokenType type) = SimpleToken;
 
@@ -52,10 +52,14 @@ abstract class BaseToken implements Token {
   const BaseToken();
 
   @override
-  int get end => start + length;
+  int get end {
+    return start + length;
+  }
 
   @override
-  int get length => value.length;
+  int get length {
+    return value.length;
+  }
 
   @override
   bool same(Token other) {
@@ -69,7 +73,7 @@ abstract class BaseToken implements Token {
 }
 
 class LexemeToken extends BaseToken {
-  const LexemeToken(this.start, this.value, this.type);
+  const LexemeToken(this.start, this.type, this.value);
 
   @override
   final int start;
@@ -83,13 +87,7 @@ class LexemeToken extends BaseToken {
 
 class SimpleToken extends BaseToken {
   static final Map<TokenType, String> lexemes = <TokenType, String>{
-    TokenType.statementStart: '{%',
-    TokenType.statementEnd: '%}',
-    TokenType.expressionStart: '{{',
-    TokenType.expressionEnd: '}}',
     TokenType.space: ' ',
-    TokenType.commentStart: '{#',
-    TokenType.commentEnd: '#}',
   };
 
   const SimpleToken(this.start, this.type);

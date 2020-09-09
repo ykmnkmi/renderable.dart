@@ -1,11 +1,5 @@
-import 'dart:math';
+import 'user.html.dart';
 
 void main() {
-  print(Frazilealgo.pi());
-}
-
-class Frazilealgo {
-  Frazilealgo._();
-  
-  static double Function() pi = Frazilealgo.pi;
+  print(UserTemplate().render(name: 'jhon'));
 }
