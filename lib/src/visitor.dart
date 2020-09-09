@@ -24,7 +24,6 @@ abstract class Visitor<C, R> {
   }
 }
 
-@immutable
 abstract class BaseRenderer<C> extends Visitor<C, String> {
   BaseRenderer(this.environment);
 
@@ -40,7 +39,7 @@ abstract class BaseRenderer<C> extends Visitor<C, String> {
 
   @override
   String visitInterpolation(Interpolation interpolation, [C context]) {
-    return visitAll(interpolation.nodes, context);
+    return visitAll(interpolation.children, context);
   }
 
   @override

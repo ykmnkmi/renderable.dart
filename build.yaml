@@ -13,4 +13,4 @@ builders:
     auto_apply: dependents
     build_extensions:
       .html: [".html.dart"]
-    build_to: source
+    build_to: cache

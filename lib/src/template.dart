@@ -2,7 +2,6 @@ library template;
 
 import 'ast.dart';
 import 'environment.dart';
-import 'default.dart' as d;
 import 'parser.dart';
 import 'visitor.dart';
 
@@ -23,8 +22,9 @@ class RuntimeTemplate {
     String expressionEnd = '}}',
     String statementStart = '{%',
     String statementEnd = '%}',
-    FieldGetter getField = d.getField,
-    Finalizer finalize = d.finalizer,
+    ItemGetter getItem = defaultGetItem,
+    FieldGetter getField = defaultGetField,
+    Finalizer finalize = defaultFinalizer,
   }) {
     final environment = Environment(
       commentStart: commentStart,
@@ -33,6 +33,7 @@ class RuntimeTemplate {
       expressionEnd: expressionEnd,
       statementStart: statementStart,
       statementEnd: statementEnd,
+      getItem: getItem,
       getField: getField,
       finalize: finalize,
     );

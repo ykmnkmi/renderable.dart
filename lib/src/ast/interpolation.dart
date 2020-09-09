@@ -1,9 +1,9 @@
 part of '../ast.dart';
 
 class Interpolation implements Node {
-  const Interpolation(this.nodes);
+  const Interpolation(this.children);
 
-  final List<Node> nodes;
+  final List<Node> children;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C context]) {
@@ -12,6 +12,6 @@ class Interpolation implements Node {
 
   @override
   String toString() {
-    return 'Interpolation ${repr(nodes)}';
+    return 'Interpolation ${repr(children)}';
   }
 }

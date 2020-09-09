@@ -14,6 +14,6 @@ class IfStatement extends Statement {
 
   @override
   String toString() {
-    return 'If';
+    return 'If $pairs';
   }
 }

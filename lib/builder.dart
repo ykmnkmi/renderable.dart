@@ -44,59 +44,93 @@ class HtmlTemplateBuilder extends Builder {
       final environment = const Environment();
       final node = Parser(environment).parse(source, path: inputId.path);
 
-      final context = TemplateBuilderContext(buffer);
-      const TemplateBuilder().visit(node, context);
-
-      print(node);
-
-      context.build();
-
+      final builder = TemplateBuilder(buffer);
+      builder.visit(node);
       buffer.writeln('}');
       buildStep.writeAsString(buildStep.inputId.changeExtension('.html.dart'), formatter.format(buffer.toString()));
     });
   }
 }
 
-abstract class NodeType {
-  static const int string = 1 << 0;
-  static const int varialble = 1 << 1;
-}
-
-class TemplateBuilderContext {
-  TemplateBuilderContext(this.buffer)
-      : ids = <String>[],
-        types = <String, int>{},
+class TemplateBuilder extends Visitor<Null, void> {
+  TemplateBuilder(this.buffer)
+      : body = StringBuffer(),
+        texts = <String>[],
         names = <String>{},
-        statics = StringBuffer(),
-        accepted = false,
-        lastID = 0;
+        accepted = false;
 
   final StringBuffer buffer;
 
-  final List<String> ids;
+  final StringBuffer body;
 
-  final Map<String, int> types;
+  final List<String> texts;
 
   final Set<String> names;
 
-  final StringBuffer statics;
-
   bool accepted;
 
-  int lastID;
+  @override
+  void visitText(Text node, [Null context]) {
+    var id = texts.indexOf(node.text);
 
-  void addVariable(String name) {
-    names.add(name);
-    ids.add(name);
-    types[name] = NodeType.varialble;
+    if (id == -1) {
+      id = texts.length;
+      texts.add(node.text);
+    }
+
+    body.writeln('buffer.write(_t$id);');
   }
 
-  void addText(String value) {
-    final id = getID();
-    ids.add(id);
-    types[id] = NodeType.string;
-    statics.writeln('static const String _s$id = ${wrapString(value)};');
-    statics.writeln();
+  @override
+  void visitVariable(Variable node, [Null context]) {
+    names.add(node.name);
+    body.writeln('buffer.write(${node.name});');
+  }
+
+  @override
+  void visitAll(Iterable<Node> nodes, [Null context]) {
+    for (final node in nodes) {
+      node.accept(this);
+    }
+  }
+
+  @override
+  void visitInterpolation(Interpolation node, [Null context]) {
+    visitAll(node.children);
+  }
+
+  void writeIf(Expression check, Node node, [bool isElse = false]) {
+    body.write('if (');
+
+    if (check is Variable) {
+      body.write(check.name + ' != null');
+    } else {
+      body.write(false);
+    }
+
+    body.writeln(') {');
+    node.accept(this);
+    body.writeln('}');
+  }
+
+  @override
+  void visitIf(IfStatement node, [Null context]) {
+    final entries = node.pairs.entries.toList();
+    final first = entries.removeAt(0);
+
+    writeIf(first.key, first.value);
+
+    for (final entry in entries) {
+      body.writeln('else if (true) {');
+      entry.value.accept(this);
+      body.write('}');
+    }
+
+    if (node.orElse != null) {
+      body.writeln('else {');
+      node.orElse.accept(this);
+      body.write('}');
+    }
   }
 
   String wrapString(String value) {
@@ -116,73 +150,33 @@ class TemplateBuilderContext {
     return wrapper + value + wrapper;
   }
 
-  String getID() {
-    final id = lastID.toString();
-    ++lastID;
-    return id;
-  }
-
-  void build() {
-    final arguments = names.isNotEmpty ? ('{' + names.map((name) => 'Object $name,').join(' ') + '}') : '';
-    buffer.writeln('String render($arguments) {');
-    buffer.writeln('final buffer = StringBuffer();');
-
-    for (final id in ids) {
-      switch (types[id]) {
-        case NodeType.string:
-          buffer.writeln('buffer.write(_s$id);');
-          break;
-        case NodeType.varialble:
-          buffer.writeln('buffer.write($id);');
-          break;
-      }
-    }
-
-    buffer.writeln('return buffer.toString();');
-    buffer.writeln('}');
-
-    buffer.write(statics);
-  }
-}
-
-class TemplateBuilder extends Visitor<TemplateBuilderContext, void> {
-  const TemplateBuilder();
-
   @override
-  void visitText(Text text, [TemplateBuilderContext context]) {
-    context.addText(text.text);
-  }
-
-  @override
-  void visitVariable(Variable variable, [TemplateBuilderContext context]) {
-    context.addVariable(variable.name);
-  }
-
-  @override
-  void visitIf(IfStatement ifStatement, [TemplateBuilderContext context]) {}
-
-  @override
-  void visitInterpolation(Interpolation interpolation, [TemplateBuilderContext context]) {}
-
-  @override
-  void visitAll(Iterable<Node> nodes, [TemplateBuilderContext context]) {
-    for (final node in nodes) {
-      node.accept(this, context);
-    }
-  }
-
-  @override
-  void visit(Node node, [TemplateBuilderContext context]) {
-    if (context.accepted) {
+  void visit(Node node, [Null context]) {
+    if (accepted) {
       // TODO: do something ...
       throw Exception('why!');
     }
 
-    context.accepted = true;
-    if (node is Interpolation) {
-      visitAll(node.nodes, context);
-    } else {
-      node.accept(this, context);
+    accepted = true;
+    node.accept(this);
+
+    buffer.write('String render(');
+
+    if (names.isNotEmpty) {
+      buffer.write('{');
+      buffer.writeAll(names.map<String>((name) => 'dynamic $name,'), ' ');
+      buffer.write('}');
+    }
+
+    buffer.write(') {');
+    buffer.writeln('final buffer = StringBuffer();');
+    buffer.write(body);
+    buffer.writeln('return buffer.toString();');
+    buffer.writeln('}');
+
+    for (var i = 0; i < texts.length; i++) {
+      buffer.writeln('static const String _t$i = ${wrapString(texts[i])};');
+      buffer.writeln();
     }
   }
 }

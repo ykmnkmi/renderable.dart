@@ -1,12 +1,30 @@
 import 'package:meta/meta.dart';
 
-import 'default.dart' as $default;
+import 'util.dart';
 
 typedef ItemGetter = Object Function(Map<String, Object> map, String key);
 
+Object defaultGetItem(Map<String, Object> map, String key) {
+  return map[key];
+}
+
 typedef FieldGetter = Object Function(Object object, String field);
 
+Object defaultGetField(Object instance, String field) {
+  throw UnimplementedError();
+}
+
 typedef Finalizer = Object Function(Object value);
+
+Object defaultFinalizer(Object value) {
+  value ??= '';
+
+  if (value is String) {
+    return value;
+  }
+
+  return repr(value, false);
+}
 
 @immutable
 class Environment {
@@ -17,9 +35,9 @@ class Environment {
     this.expressionEnd = '}}',
     this.statementStart = '{%',
     this.statementEnd = '%}',
-    this.getItem = $default.getItem,
-    this.getField = $default.getField,
-    this.finalize = $default.finalizer,
+    this.getItem = defaultGetItem,
+    this.getField = defaultGetField,
+    this.finalize = defaultFinalizer,
   })  : assert(commentStart != commentEnd),
         assert(expressionStart != expressionEnd),
         assert(statementStart != expressionEnd);
