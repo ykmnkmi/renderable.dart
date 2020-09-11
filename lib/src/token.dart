@@ -29,7 +29,7 @@ abstract class Token {
 
   @override
   String toString() {
-    return '#$type:$start ${repr(value)}';
+    return '#$type:$start $value';
   }
 }
 
@@ -68,7 +68,7 @@ abstract class BaseToken implements Token {
 
   @override
   String toString() {
-    return '#$type:$start:$length ${repr(value)}';
+    return '#$type:$start:$length $value';
   }
 }
 

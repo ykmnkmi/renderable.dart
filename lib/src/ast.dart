@@ -1,6 +1,5 @@
 library ast;
 
-import 'util.dart';
 import 'visitor.dart';
 
 part 'ast/interpolation.dart';

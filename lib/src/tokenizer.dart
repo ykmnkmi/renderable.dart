@@ -4,7 +4,6 @@ import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
 import 'environment.dart';
-import 'util.dart';
 
 part 'token.dart';
 

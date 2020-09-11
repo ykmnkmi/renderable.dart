@@ -1,65 +1,38 @@
 library visitor;
 
-import 'package:meta/meta.dart';
-
 import 'ast.dart';
 import 'environment.dart';
-import 'util.dart';
 
 abstract class Visitor<C, R> {
   const Visitor();
 
-  R visitText(Text text, [C context]);
+  R visitText(Text node, [C context]);
 
-  R visitVariable(Variable variable, [C context]);
-
-  R visitInterpolation(Interpolation interpolation, [C context]);
-
-  R visitIf(IfStatement ifStatement, [C context]);
+  R visitVariable(Variable node, [C context]);
 
   R visitAll(Iterable<Node> nodes, [C context]);
+
+  R visitInterpolation(Interpolation node, [C context]);
+
+  R visitIf(IfStatement node, [C context]);
 
   R visit(Node node, [C context]) {
     return node.accept(this, context);
   }
 }
 
-abstract class BaseRenderer<C> extends Visitor<C, String> {
+abstract class BaseRenderer<E extends Environment, C> extends Visitor<C, String> {
   BaseRenderer(this.environment);
 
-  final Environment environment;
+  final E environment;
 
   @override
-  String visitText(Text text, [C context]) {
-    return text.text;
+  String visitText(Text node, [C context]) {
+    return node.text;
   }
 
   @override
-  String visitVariable(Variable variable, [C context]);
-
-  @override
-  String visitInterpolation(Interpolation interpolation, [C context]) {
-    return visitAll(interpolation.children, context);
-  }
-
-  @override
-  String visitIf(IfStatement ifStatement, [C context]) {
-    final pairs = ifStatement.pairs;
-
-    for (final pair in pairs.entries) {
-      if (toBool(pair.key.accept(this, context))) {
-        return pair.value.accept(this, context);
-      }
-    }
-
-    final orElse = ifStatement.orElse;
-
-    if (orElse != null) {
-      return orElse.accept(this, context);
-    }
-
-    return '';
-  }
+  String visitVariable(Variable node, [C context]);
 
   @override
   String visitAll(Iterable<Node> nodes, [C context]) {
@@ -67,17 +40,15 @@ abstract class BaseRenderer<C> extends Visitor<C, String> {
   }
 
   @override
-  String toString() {
-    return 'Renderer<$C>()';
+  String visitInterpolation(Interpolation node, [C context]) {
+    return visitAll(node.children, context);
   }
-}
-
-class MapRenderer extends BaseRenderer<Map<String, Object>> {
-  MapRenderer(Environment environment) : super(environment);
 
   @override
-  String visitVariable(Variable variable, [Map<String, Object> context]) {
-    final value = context[variable.name];
-    return environment.finalize(value).toString();
+  String visitIf(IfStatement node, [C context]);
+
+  @override
+  String toString() {
+    return 'Renderer<$C>()';
   }
 }

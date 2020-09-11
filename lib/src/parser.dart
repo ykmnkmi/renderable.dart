@@ -256,7 +256,9 @@ class TokenReader {
 
   Token _peek;
 
-  Token get current => iterator.current;
+  Token get current {
+    return iterator.current;
+  }
 
   bool isNext(TokenType type) {
     _peek = next();
@@ -281,12 +283,12 @@ class TokenReader {
     return _peek = next();
   }
 
-  bool skip(TokenType type, [bool skipNext = false]) {
+  bool skip(TokenType type, [bool skipNexts = false]) {
     if (peek()?.type == type) {
       next();
 
-      if (skipNext) {
-        skip(type, skipNext);
+      if (skipNexts) {
+        skip(type, skipNexts);
       }
 
       return true;

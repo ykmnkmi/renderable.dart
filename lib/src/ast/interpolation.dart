@@ -12,6 +12,6 @@ class Interpolation implements Node {
 
   @override
   String toString() {
-    return 'Interpolation ${repr(children)}';
+    return 'Interpolation $children';
   }
 }

@@ -10,11 +10,15 @@ import 'src/parser.dart';
 import 'src/visitor.dart';
 
 Builder htmlTemplateBuilder(BuilderOptions options) {
-  return HtmlTemplateBuilder();
+  return HtmlTemplateBuilder(options.config);
 }
 
 class HtmlTemplateBuilder extends Builder {
-  HtmlTemplateBuilder() : formatter = DartFormatter();
+  HtmlTemplateBuilder([Map<String, Object> config = const <String, Object>{}])
+      : environment = Environment.fromMap(config),
+        formatter = DartFormatter();
+
+  final Environment environment;
 
   final DartFormatter formatter;
 
@@ -34,30 +38,23 @@ class HtmlTemplateBuilder extends Builder {
     name += 'Template';
 
     final buffer = StringBuffer();
-    buffer.writeln('import \'package:renderable/renderable.dart\';');
-    buffer.writeln();
-    buffer.writeln('class $name implements Template {');
-    buffer.writeln('const $name();');
-    buffer.writeln();
-
     return buildStep.readAsString(buildStep.inputId).then<void>((source) {
-      final environment = const Environment();
       final node = Parser(environment).parse(source, path: inputId.path);
-
-      final builder = TemplateBuilder(buffer);
+      final builder = TemplateBuilder(name, buffer);
       builder.visit(node);
-      buffer.writeln('}');
       buildStep.writeAsString(buildStep.inputId.changeExtension('.html.dart'), formatter.format(buffer.toString()));
     });
   }
 }
 
 class TemplateBuilder extends Visitor<Null, void> {
-  TemplateBuilder(this.buffer)
+  TemplateBuilder(this.name, this.buffer)
       : body = StringBuffer(),
         texts = <String>[],
         names = <String>{},
         accepted = false;
+
+  final String name;
 
   final StringBuffer buffer;
 
@@ -100,6 +97,10 @@ class TemplateBuilder extends Visitor<Null, void> {
   }
 
   void writeIf(Expression check, Node node, [bool isElse = false]) {
+    if (isElse) {
+      body.write('else ');
+    }
+
     body.write('if (');
 
     if (check is Variable) {
@@ -115,22 +116,24 @@ class TemplateBuilder extends Visitor<Null, void> {
 
   @override
   void visitIf(IfStatement node, [Null context]) {
+    body.writeln();
+
     final entries = node.pairs.entries.toList();
     final first = entries.removeAt(0);
 
     writeIf(first.key, first.value);
 
     for (final entry in entries) {
-      body.writeln('else if (true) {');
-      entry.value.accept(this);
-      body.write('}');
+      writeIf(entry.key, entry.value);
     }
 
     if (node.orElse != null) {
       body.writeln('else {');
       node.orElse.accept(this);
-      body.write('}');
+      body.writeln('}');
     }
+
+    body.writeln();
   }
 
   String wrapString(String value) {
@@ -159,6 +162,13 @@ class TemplateBuilder extends Visitor<Null, void> {
 
     accepted = true;
     node.accept(this);
+
+    buffer.writeln('import \'package:renderable/renderable.dart\';');
+    buffer.writeln();
+
+    buffer.writeln('class $name implements Template {');
+    buffer.writeln('const $name();');
+    buffer.writeln();
 
     buffer.write('String render(');
 
