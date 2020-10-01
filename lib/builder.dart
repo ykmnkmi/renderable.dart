@@ -14,13 +14,63 @@ Builder htmlTemplateBuilder(BuilderOptions options) {
 }
 
 class HtmlTemplateBuilder extends Builder {
-  HtmlTemplateBuilder([Map<String, Object> config = const <String, Object>{}])
-      : environment = Environment.fromMap(config),
-        formatter = DartFormatter();
+  HtmlTemplateBuilder([Map<String, Object> config = const <String, Object>{}]) : formatter = DartFormatter() {
+    String commentStart;
+    String commentEnd;
 
-  final Environment environment;
+    if (config.containsKey('comment_start')) {
+      commentStart = config['comment_start'] as String;
+    } else {
+      commentStart = '{#';
+    }
+
+    if (config.containsKey('comment_end')) {
+      commentEnd = config['comment_end'] as String;
+    } else {
+      commentEnd = '#}';
+    }
+
+    String expressionStart, expressionEnd;
+
+    if (config.containsKey('expression_start')) {
+      expressionStart = config['expression_start'] as String;
+    } else {
+      expressionStart = '{{';
+    }
+
+    if (config.containsKey('expression_end')) {
+      expressionEnd = config['expression_end'] as String;
+    } else {
+      expressionEnd = '}}';
+    }
+
+    String statementStart;
+    String statementEnd;
+
+    if (config.containsKey('statement_start')) {
+      statementStart = config['statement_start'] as String;
+    } else {
+      statementStart = '{%';
+    }
+
+    if (config.containsKey('statement_end')) {
+      statementEnd = config['statement_end'] as String;
+    } else {
+      statementEnd = '%}';
+    }
+
+    environment = Environment(
+        commentStart: commentStart,
+        commentEnd: commentEnd,
+        expressionStart: expressionStart,
+        expressionEnd: expressionEnd,
+        statementStart: statementStart,
+        statementEnd: statementEnd);
+  }
 
   final DartFormatter formatter;
+
+  Environment environment;
 
   @override
   Map<String, List<String>> get buildExtensions {
@@ -96,13 +146,14 @@ class TemplateBuilder extends Visitor<Null, void> {
     visitAll(node.children);
   }
 
-  void writeIf(Expression check, Node node, [bool isElse = false]) {
-    if (isElse) {
+  void writeIf(Test check, Node node, [bool isElif = false]) {
+    if (isElif) {
       body.write('else ');
     }
 
     body.write('if (');
 
+    // TODO: replace with test
     if (check is Variable) {
       body.write(check.name + ' != null');
     } else {
@@ -174,7 +225,7 @@ class TemplateBuilder extends Visitor<Null, void> {
 
     if (names.isNotEmpty) {
       buffer.write('{');
-      buffer.writeAll(names.map<String>((name) => 'dynamic $name,'), ' ');
+      buffer.writeAll(names.map<String>((name) => 'Object $name'), ', ');
       buffer.write('}');
     }
 
@@ -188,5 +239,7 @@ class TemplateBuilder extends Visitor<Null, void> {
       buffer.writeln('static const String _t$i = ${wrapString(texts[i])};');
       buffer.writeln();
     }
+
+    buffer.writeln('}');
   }
 }

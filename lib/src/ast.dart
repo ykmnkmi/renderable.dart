@@ -6,7 +6,7 @@ part 'ast/interpolation.dart';
 part 'ast/text.dart';
 part 'ast/variable.dart';
 
-part 'ast/statement/if.dart';
+part 'ast/statements/if.dart';
 
 abstract class Node {
   static Node orList(List<Node> nodes) {

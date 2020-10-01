@@ -3,7 +3,7 @@ targets:
     builders:
       renderable:
         generate_for:
-          - example/*
+          - example/**
 
 builders:
   renderable:
@@ -13,4 +13,4 @@ builders:
     auto_apply: dependents
     build_extensions:
       .html: [".html.dart"]
-    build_to: cache
+    build_to: source
