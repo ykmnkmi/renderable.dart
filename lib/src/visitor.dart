@@ -1,54 +1,21 @@
 library visitor;
 
 import 'ast.dart';
-import 'environment.dart';
 
-abstract class Visitor<C, R> {
+abstract class Visitor {
   const Visitor();
 
-  R visitText(Text node, [C context]);
-
-  R visitVariable(Variable node, [C context]);
-
-  R visitAll(Iterable<Node> nodes, [C context]);
-
-  R visitInterpolation(Interpolation node, [C context]);
-
-  R visitIf(IfStatement node, [C context]);
-
-  R visit(Node node, [C context]) {
-    return node.accept(this, context);
-  }
-}
-
-abstract class BaseRenderer<E extends Environment, C> extends Visitor<C, String> {
-  BaseRenderer(this.environment);
-
-  final E environment;
-
-  @override
-  String visitText(Text node, [C context]) {
-    return node.text;
+  void visit(Node node) {
+    node.accept(this);
   }
 
-  @override
-  String visitVariable(Variable node, [C context]);
+  void visitAll(Iterable<Node> nodes);
 
-  @override
-  String visitAll(Iterable<Node> nodes, [C context]) {
-    return nodes.map<String>((node) => node.accept<C, String>(this, context)).join();
-  }
+  void visitIf(IfStatement node);
 
-  @override
-  String visitInterpolation(Interpolation node, [C context]) {
-    return visitAll(node.children, context);
-  }
+  void visitInterpolation(Interpolation node);
 
-  @override
-  String visitIf(IfStatement node, [C context]);
+  void visitText(Text node);
 
-  @override
-  String toString() {
-    return 'Renderer<$C>()';
-  }
+  void visitVariable(Variable node);
 }

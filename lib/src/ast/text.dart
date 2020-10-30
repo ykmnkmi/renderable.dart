@@ -6,8 +6,8 @@ class Text implements Node {
   final String text;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, [C context]) {
-    return visitor.visitText(this, context);
+  void accept(Visitor visitor) {
+    return visitor.visitText(this);
   }
 
   @override

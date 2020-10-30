@@ -1,15 +1,15 @@
 part of '../../ast.dart';
 
 class IfStatement extends Statement {
-  IfStatement(this.pairs, [this.orElse]);
+  IfStatement(this.pairs, [this.orElse]) : assert(pairs.isNotEmpty);
 
   final Map<Test, Node> pairs;
 
   final Node orElse;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, [C context]) {
-    return visitor.visitIf(this, context);
+  void accept(Visitor visitor) {
+    return visitor.visitIf(this);
   }
 
   @override
@@ -18,13 +18,13 @@ class IfStatement extends Statement {
     final pairs = this.pairs.entries.toList(growable: false);
 
     buffer.write(pairs.first.key);
-    buffer.write(': ');
+    buffer.write(' ');
     buffer.write(pairs.first.value);
 
     for (final pair in pairs.skip(1)) {
-      buffer.write('Else If ');
+      buffer.write(' Else If ');
       buffer.write(pair.key);
-      buffer.write(': ');
+      buffer.write('  ');
       buffer.write(pair.value);
     }
 

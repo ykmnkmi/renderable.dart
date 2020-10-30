@@ -6,8 +6,8 @@ class Interpolation implements Node {
   final List<Node> children;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, [C context]) {
-    return visitor.visitInterpolation(this, context);
+  accept(Visitor visitor) {
+    return visitor.visitInterpolation(this);
   }
 
   @override

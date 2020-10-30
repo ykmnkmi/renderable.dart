@@ -196,7 +196,7 @@ class Parser {
     const elseToken = Token(0, TokenType.identifier, 'else');
     const endIfToken = Token(0, TokenType.identifier, 'endif');
 
-    final pairs = <Expression, Node>{};
+    final pairs = <Test, Node>{};
     Node orElse;
 
     while (true) {
@@ -204,7 +204,16 @@ class Parser {
         error('expect if statement body');
       }
 
-      final condition = ExpressionParser(environment).scan(reader);
+      final conditionExpression = ExpressionParser(environment).scan(reader);
+
+      Test condition;
+
+      if (conditionExpression is Test) {
+        condition = conditionExpression;
+      } else {
+        condition = Test('defined', conditionExpression);
+      }
+
       reader.expected(TokenType.statementEnd);
 
       final body = parseBody(reader, <Token>[elseToken, endIfToken]);

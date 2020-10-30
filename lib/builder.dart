@@ -97,7 +97,7 @@ class HtmlTemplateBuilder extends Builder {
   }
 }
 
-class TemplateBuilder extends Visitor<Null, void> {
+class TemplateBuilder extends Visitor {
   TemplateBuilder(this.name, this.buffer)
       : body = StringBuffer(),
         texts = <String>[],
@@ -117,95 +117,7 @@ class TemplateBuilder extends Visitor<Null, void> {
   bool accepted;
 
   @override
-  void visitText(Text node, [Null context]) {
-    var id = texts.indexOf(node.text);
-
-    if (id == -1) {
-      id = texts.length;
-      texts.add(node.text);
-    }
-
-    body.writeln('buffer.write(_t$id);');
-  }
-
-  @override
-  void visitVariable(Variable node, [Null context]) {
-    names.add(node.name);
-    body.writeln('buffer.write(${node.name});');
-  }
-
-  @override
-  void visitAll(Iterable<Node> nodes, [Null context]) {
-    for (final node in nodes) {
-      node.accept(this);
-    }
-  }
-
-  @override
-  void visitInterpolation(Interpolation node, [Null context]) {
-    visitAll(node.children);
-  }
-
-  void writeIf(Test check, Node node, [bool isElif = false]) {
-    if (isElif) {
-      body.write('else ');
-    }
-
-    body.write('if (');
-
-    // TODO: replace with test
-    if (check is Variable) {
-      body.write(check.name + ' != null');
-    } else {
-      body.write(false);
-    }
-
-    body.writeln(') {');
-    node.accept(this);
-    body.writeln('}');
-  }
-
-  @override
-  void visitIf(IfStatement node, [Null context]) {
-    body.writeln();
-
-    final entries = node.pairs.entries.toList();
-    final first = entries.removeAt(0);
-
-    writeIf(first.key, first.value);
-
-    for (final entry in entries) {
-      writeIf(entry.key, entry.value);
-    }
-
-    if (node.orElse != null) {
-      body.writeln('else {');
-      node.orElse.accept(this);
-      body.writeln('}');
-    }
-
-    body.writeln();
-  }
-
-  String wrapString(String value) {
-    final multiline = value.contains(r'\n') || value.contains(r'\r\n');
-    final hasSingleQuote = value.contains(r"'");
-    final hasDoubleQuote = value.contains(r'"');
-    var wrapper = hasSingleQuote ? '"' : "'";
-
-    if (hasSingleQuote && hasDoubleQuote) {
-      value = value.replaceAll(r'"', r'\"');
-    }
-
-    if (multiline) {
-      wrapper = wrapper * 3;
-    }
-
-    return wrapper + value + wrapper;
-  }
-
-  @override
-  void visit(Node node, [Null context]) {
+  void visit(Node node) {
     if (accepted) {
       // TODO: do something ...
       throw Exception('why!');
@@ -241,5 +153,91 @@ class TemplateBuilder extends Visitor<Null, void> {
     }
 
     buffer.writeln('}');
+  }
+
+  @override
+  void visitAll(Iterable<Node> nodes) {
+    for (final node in nodes) {
+      node.accept(this);
+    }
+  }
+
+  @override
+  void visitInterpolation(Interpolation node) {
+    visitAll(node.children);
+  }
+
+  @override
+  void visitIf(IfStatement node) {
+    body.writeln();
+
+    final entries = node.pairs.entries.toList();
+    final first = entries.removeAt(0);
+
+    writeIf(first.key, first.value);
+
+    for (final entry in entries) {
+      writeIf(entry.key, entry.value);
+    }
+
+    if (node.orElse != null) {
+      body.writeln('else {');
+      node.orElse.accept(this);
+      body.writeln('}');
+    }
+
+    body.writeln();
+  }
+
+  @override
+  void visitText(Text node) {
+    var id = texts.indexOf(node.text);
+
+    if (id == -1) {
+      id = texts.length;
+      texts.add(node.text);
+    }
+
+    body.writeln('buffer.write(_t$id);');
+  }
+
+  @override
+  void visitVariable(Variable node) {
+    names.add(node.name);
+    body.writeln('buffer.write(${node.name});');
+  }
+
+  String wrapString(String value) {
+    final multiline = value.contains(r'\n') || value.contains(r'\r\n');
+    final hasSingleQuote = value.contains(r"'");
+    final hasDoubleQuote = value.contains(r'"');
+    var wrapper = hasSingleQuote ? '"' : "'";
+
+    if (hasSingleQuote && hasDoubleQuote) {
+      value = value.replaceAll(r'"', r'\"');
+    }
+
+    if (multiline) {
+      wrapper = wrapper * 3;
+    }
+
+    return wrapper + value + wrapper;
+  }void writeIf(Test check, Node node, [bool isElif = false]) {
+    if (isElif) {
+      body.write('else ');
+    }
+
+    body.write('if (');
+
+    // TODO: replace with test
+    if (check is Variable) {
+      body.write(check.name + ' != null');
+    } else {
+      body.write(false);
+    }
+
+    body.writeln(') {');
+    node.accept(this);
+    body.writeln('}');
   }
 }

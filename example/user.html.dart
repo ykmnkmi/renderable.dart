@@ -7,7 +7,7 @@ class UserTemplate implements Template {
     final buffer = StringBuffer();
     buffer.write(_t0);
 
-    if (name != null) {
+    if (false) {
       buffer.write(name);
     } else {
       buffer.write(_t1);

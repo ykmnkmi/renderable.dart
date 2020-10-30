@@ -6,8 +6,8 @@ class Variable implements Expression {
   final String name;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, [C context]) {
-    return visitor.visitVariable(this, context);
+  void accept(Visitor visitor) {
+    return visitor.visitVariable(this);
   }
 
   @override
