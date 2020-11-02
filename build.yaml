@@ -10,7 +10,7 @@ builders:
     import: "package:renderable/builder.dart"
     builder_factories:
       - htmlTemplateBuilder
-    auto_apply: dependents
+    auto_apply: root_package
     build_extensions:
       .html: [".html.dart"]
     build_to: source

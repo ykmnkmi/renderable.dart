@@ -14,7 +14,7 @@ Builder htmlTemplateBuilder(BuilderOptions options) {
 }
 
 class HtmlTemplateBuilder extends Builder {
-  HtmlTemplateBuilder([Map<String, Object> config = const <String, Object>{}]) : formatter = DartFormatter() {
+  HtmlTemplateBuilder([Map<String, Object> config]) : formatter = DartFormatter() {
     String commentStart;
     String commentEnd;
 
@@ -89,9 +89,7 @@ class HtmlTemplateBuilder extends Builder {
 
     final buffer = StringBuffer();
     return buildStep.readAsString(buildStep.inputId).then<void>((source) {
-      final node = Parser(environment).parse(source, path: inputId.path);
-      final builder = TemplateBuilder(name, buffer);
-      builder.visit(node);
+      TemplateBuilder(name, buffer).visit(Parser(environment).parse(source, path: inputId.path));
       buildStep.writeAsString(buildStep.inputId.changeExtension('.html.dart'), formatter.format(buffer.toString()));
     });
   }
@@ -119,8 +117,7 @@ class TemplateBuilder extends Visitor {
   @override
   void visit(Node node) {
     if (accepted) {
-      // TODO: do something ...
-      throw Exception('why!');
+      throw 'why!';
     }
 
     accepted = true;
@@ -222,7 +219,9 @@ class TemplateBuilder extends Visitor {
     }
 
     return wrapper + value + wrapper;
-  }void writeIf(Test check, Node node, [bool isElif = false]) {
+  }
+
+  void writeIf(Test check, Node node, [bool isElif = false]) {
     if (isElif) {
       body.write('else ');
     }
