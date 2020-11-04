@@ -6,14 +6,15 @@ import 'ast.dart';
 import 'environment.dart';
 import 'tokenizer.dart';
 
+@alwaysThrows
+void error(String message) {
+  // TODO: wrap exception
+  throw Exception(message);
+}
+
 @immutable
 class ExpressionParser {
-  @alwaysThrows
-  static void error(String message) {
-    throw Exception(message);
-  }
-
-  const ExpressionParser(this.environment);
+  ExpressionParser(this.environment);
 
   final Environment environment;
 
@@ -25,7 +26,7 @@ class ExpressionParser {
 
   @protected
   Expression scan(TokenReader reader) {
-    reader.skip(TokenType.space);
+    reader.skip(TokenType.space, true);
 
     final token = reader.next();
     Expression node;
@@ -49,17 +50,12 @@ class ExpressionParser {
 
   @override
   String toString() {
-    return 'ExpressionParser ()';
+    return 'ExpressionParser()';
   }
 }
 
 @immutable
 class Parser {
-  @alwaysThrows
-  static void error(String message) {
-    throw Exception(message);
-  }
-
   Parser(this.environment)
       : endTokensStack = <List<Token>>[],
         tagsStack = <String>[];
@@ -292,12 +288,12 @@ class TokenReader {
     return _peek = next();
   }
 
-  bool skip(TokenType type, [bool skipNexts = false]) {
+  bool skip(TokenType type, [bool all = false]) {
     if (peek()?.type == type) {
       next();
 
-      if (skipNexts) {
-        skip(type, skipNexts);
+      if (all) {
+        skip(type, all);
       }
 
       return true;

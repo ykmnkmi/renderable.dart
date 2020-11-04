@@ -7,6 +7,11 @@ import 'environment.dart';
 
 part 'token.dart';
 
+@alwaysThrows
+void error(StringScanner scanner, String message) {
+  scanner.error(message);
+}
+
 @immutable
 class ExpressionTokenizer {
   ExpressionTokenizer(this.environment)
@@ -28,14 +33,14 @@ class ExpressionTokenizer {
     end ??= environment.expressionEnd;
 
     while (!scanner.isDone) {
-      if (scanner.scan(identifier)) {
-        yield Token(scanner.lastMatch.start, TokenType.identifier, scanner.lastMatch[0]);
-      } else if (scanner.scan(space)) {
+      if (scanner.scan(space)) {
         yield Token.simple(scanner.lastMatch.start, TokenType.space);
+      } else if (scanner.scan(identifier)) {
+        yield Token(scanner.lastMatch.start, TokenType.identifier, scanner.lastMatch[0]);
       } else if (scanner.matches(end)) {
         return;
       } else {
-        break;
+        error(scanner, 'unexpected char');
       }
     }
   }
@@ -48,11 +53,6 @@ class ExpressionTokenizer {
 
 @immutable
 class Tokenizer {
-  @alwaysThrows
-  static void error(StringScanner scanner, String message) {
-    throw Exception('at ${scanner.position}: $message');
-  }
-
   const Tokenizer(this.environment);
 
   final Environment environment;
