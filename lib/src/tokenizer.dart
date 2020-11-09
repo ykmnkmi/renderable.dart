@@ -7,22 +7,64 @@ import 'environment.dart';
 
 part 'token.dart';
 
+const Map<String, TokenType> operators = <String, TokenType>{
+  '-': TokenType.sub,
+  ',': TokenType.comma,
+  ';': TokenType.semicolon,
+  ':': TokenType.colon,
+  '!=': TokenType.ne,
+  '.': TokenType.dot,
+  '(': TokenType.lParen,
+  ')': TokenType.rParen,
+  '[': TokenType.lBracket,
+  ']': TokenType.rBracket,
+  '{': TokenType.lBrace,
+  '}': TokenType.rBracket,
+  '*': TokenType.mul,
+  '**': TokenType.pow,
+  '/': TokenType.div,
+  '//': TokenType.floorDiv,
+  '%': TokenType.mod,
+  '+': TokenType.add,
+  '<': TokenType.lt,
+  '<=': TokenType.lteq,
+  '=': TokenType.assign,
+  '==': TokenType.eq,
+  '>': TokenType.gt,
+  '>=': TokenType.gteq,
+  '|': TokenType.pipe,
+  '~': TokenType.tilde,
+};
+
 @alwaysThrows
 void error(StringScanner scanner, String message) {
   scanner.error(message);
 }
 
 @immutable
+@doNotStore
 class ExpressionTokenizer {
   ExpressionTokenizer(this.environment)
-      : identifier = RegExp('[a-zA-Z][a-zA-Z0-9]*'),
-        space = RegExp(r'\s+');
+      : spaceRe = RegExp(r'\s+'),
+        nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
+        stringRe = RegExp(r"('([^'\\]*(?:\\.[^'\\]*)*)'" r'|"([^"\\]*(?:\\.[^"\\]*)*)")', dotAll: true),
+        integerRe = RegExp(r'\d+'),
+        floatRe = RegExp(r'\.\d+[eE][+\-]?\d+|\.\d+'),
+        operatorsRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;');
 
   final Environment environment;
 
-  final Pattern identifier;
+  final Pattern spaceRe;
 
-  final Pattern space;
+  final Pattern nameRe;
+
+  final Pattern stringRe;
+
+  final Pattern integerRe;
+
+  final Pattern floatRe;
+
+  final Pattern operatorsRe;
 
   Iterable<Token> tokenize(String expression) {
     return scan(StringScanner(expression));
@@ -30,13 +72,26 @@ class ExpressionTokenizer {
 
   @protected
   Iterable<Token> scan(StringScanner scanner, {Pattern end}) sync* {
-    end ??= environment.expressionEnd;
+    end ??= environment.variableEnd;
 
     while (!scanner.isDone) {
-      if (scanner.scan(space)) {
-        yield Token.simple(scanner.lastMatch.start, TokenType.space);
-      } else if (scanner.scan(identifier)) {
-        yield Token(scanner.lastMatch.start, TokenType.identifier, scanner.lastMatch[0]);
+      if (scanner.scan(spaceRe)) {
+        yield Token.simple(scanner.lastMatch.start, TokenType.whitespace);
+      } else if (scanner.scan(nameRe)) {
+        yield Token(scanner.lastMatch.start, TokenType.name, scanner.lastMatch[0]);
+      } else if (scanner.scan(stringRe)) {
+        yield Token(scanner.lastMatch.start, TokenType.string, scanner.lastMatch[0]);
+      } else if (scanner.scan(integerRe)) {
+        final start = scanner.lastMatch.start;
+        final integer = scanner.lastMatch[0];
+
+        if (scanner.scan(floatRe)) {
+          yield Token(start, TokenType.float, integer + scanner.lastMatch[0]);
+        } else {
+          yield Token(start, TokenType.integer, integer);
+        }
+      } else if (scanner.scan(operatorsRe)) {
+        yield Token.simple(scanner.lastMatch.start, operators[scanner.lastMatch[0]]);
       } else if (scanner.matches(end)) {
         return;
       } else {
@@ -63,7 +118,7 @@ class Tokenizer {
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
-    final rules = <String>[environment.commentStart, environment.expressionStart, environment.statementStart];
+    final rules = <String>[environment.commentStart, environment.variableStart, environment.blockStart];
     final reversed = rules.toList(growable: false);
     reversed.sort((a, b) => b.compareTo(a));
 
@@ -85,7 +140,7 @@ class Tokenizer {
         }
 
         switch (state) {
-          case 0:
+          case 0: // comment
             if (start < end) {
               text = scanner.substring(start, end);
               yield Token(start, TokenType.text, text);
@@ -119,7 +174,7 @@ class Tokenizer {
 
             break inner;
 
-          case 1:
+          case 1: // expression
             text = scanner.substring(start, end);
 
             if (text.isNotEmpty) {
@@ -129,8 +184,8 @@ class Tokenizer {
             yield Token.simple(end, TokenType.expressionStart);
             yield* ExpressionTokenizer(environment).scan(scanner);
 
-            if (!scanner.scan(environment.expressionEnd)) {
-              error(scanner, 'expected expression end.');
+            if (!scanner.scan(environment.variableEnd)) {
+              error(scanner, 'expected expression end');
             }
 
             end = scanner.lastMatch.start;
@@ -140,7 +195,7 @@ class Tokenizer {
 
             break inner;
 
-          case 2:
+          case 2: // statement
             text = scanner.substring(start, end);
 
             if (text.isNotEmpty) {
@@ -151,8 +206,8 @@ class Tokenizer {
 
             yield* ExpressionTokenizer(environment).scan(scanner);
 
-            if (!scanner.scan(environment.statementEnd)) {
-              error(scanner, 'expected statement end.');
+            if (!scanner.scan(environment.blockEnd)) {
+              error(scanner, 'expected statement end');
             }
 
             start = scanner.lastMatch.end;
@@ -163,7 +218,8 @@ class Tokenizer {
             break inner;
 
           default:
-            end = ++scanner.position;
+            scanner.position += 1;
+            end = scanner.position;
         }
       }
 

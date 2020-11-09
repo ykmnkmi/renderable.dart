@@ -12,6 +12,6 @@ class Text implements Node {
 
   @override
   String toString() {
-    return 'Text "${text.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}"';
+    return 'Text("${text.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
   }
 }

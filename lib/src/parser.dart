@@ -19,33 +19,40 @@ class ExpressionParser {
   final Environment environment;
 
   Expression parse(String expression) {
-    final tokens = ExpressionTokenizer(environment).tokenize(expression);
+    final tokens = ExpressionTokenizer(environment).tokenize(expression.trim());
     final reader = TokenReader(tokens);
     return scan(reader);
   }
 
   @protected
   Expression scan(TokenReader reader) {
-    reader.skip(TokenType.space, true);
-
     final token = reader.next();
-    Expression node;
 
     if (token != null) {
-      switch (token.type) {
-        case TokenType.identifier:
-          node = Variable(token.value);
-          break;
-        default:
-          error('unexpected token: $token.');
-      }
+      return primary(reader);
     } else {
       error('expected tokens');
     }
+  }
 
-    reader.skip(TokenType.space);
+  Expression primary(TokenReader reader) {
+    final token = reader.current;
 
-    return node;
+    switch (token.type) {
+      case TokenType.name:
+        if (token.value == 'null') return Literal<Null>(null);
+        if (token.value == 'false') return Literal<bool>(false);
+        if (token.value == 'true') return Literal<bool>(true);
+        return Variable(token.value);
+      case TokenType.string:
+        return Literal<String>(token.value);
+      case TokenType.integer:
+        return Literal<int>(int.parse(token.value));
+      case TokenType.float:
+        return Literal<double>(double.parse(token.value));
+      default:
+        error('unexpected token: $token');
+    }
   }
 
   @override
@@ -127,7 +134,7 @@ class Parser {
           case TokenType.statementStart:
             flush();
 
-            reader.skip(TokenType.space);
+            reader.skip(TokenType.whitespace);
 
             if (endTokens.isNotEmpty && testAll(reader, endTokens)) {
               return nodes;
@@ -162,15 +169,15 @@ class Parser {
   }
 
   Node parseStatement(TokenReader reader) {
-    reader.skip(TokenType.space);
+    reader.skip(TokenType.whitespace);
 
-    final tagToken = reader.expected(TokenType.identifier);
+    final tagToken = reader.expected(TokenType.name);
     final tag = tagToken.value;
     tagsStack.add(tag);
 
     var popTag = true;
 
-    reader.skip(TokenType.space);
+    reader.skip(TokenType.whitespace);
 
     try {
       switch (tag) {
@@ -189,8 +196,8 @@ class Parser {
   }
 
   Node parseIf(TokenReader reader) {
-    const elseToken = Token(0, TokenType.identifier, 'else');
-    const endIfToken = Token(0, TokenType.identifier, 'endif');
+    const elseToken = Token(0, TokenType.name, 'else');
+    const endIfToken = Token(0, TokenType.name, 'endif');
 
     final pairs = <Test, Node>{};
     Node orElse;
@@ -217,7 +224,7 @@ class Parser {
       final token = reader.next();
 
       if (token.same(elseToken)) {
-        reader.skip(TokenType.space);
+        reader.skip(TokenType.whitespace);
         reader.expected(TokenType.statementEnd);
 
         pairs[condition] = body;
@@ -229,8 +236,8 @@ class Parser {
       break;
     }
 
-    reader.expected(TokenType.identifier);
-    reader.skip(TokenType.space);
+    reader.expected(TokenType.name);
+    reader.skip(TokenType.whitespace);
     reader.expected(TokenType.statementEnd);
 
     return IfStatement(pairs, orElse);

@@ -62,10 +62,10 @@ class HtmlTemplateBuilder extends Builder {
     environment = Environment(
         commentStart: commentStart,
         commentEnd: commentEnd,
-        expressionStart: expressionStart,
-        expressionEnd: expressionEnd,
-        statementStart: statementStart,
-        statementEnd: statementEnd);
+        variableStart: expressionStart,
+        variableEnd: expressionEnd,
+        blockStart: statementStart,
+        blockEnd: statementEnd);
   }
 
   final DartFormatter formatter;

@@ -2,7 +2,9 @@ library ast;
 
 import 'visitor.dart';
 
+part 'ast/comment.dart';
 part 'ast/interpolation.dart';
+part 'ast/literal.dart';
 part 'ast/text.dart';
 part 'ast/variable.dart';
 
