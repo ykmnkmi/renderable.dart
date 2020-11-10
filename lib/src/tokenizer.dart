@@ -80,7 +80,7 @@ class ExpressionTokenizer {
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch.start, TokenType.name, scanner.lastMatch[0]);
       } else if (scanner.scan(stringRe)) {
-        yield Token(scanner.lastMatch.start, TokenType.string, scanner.lastMatch[0]);
+        yield Token(scanner.lastMatch.start, TokenType.string, scanner.lastMatch[2] ?? scanner.lastMatch[3]);
       } else if (scanner.scan(integerRe)) {
         final start = scanner.lastMatch.start;
         final integer = scanner.lastMatch[0];
@@ -146,7 +146,7 @@ class Tokenizer {
               yield Token(start, TokenType.text, text);
             }
 
-            yield Token.simple(scanner.lastMatch.start, TokenType.commentStart);
+            yield Token.simple(scanner.lastMatch.start, TokenType.commentBegin);
 
             start = scanner.lastMatch.end;
             end = start;
@@ -181,7 +181,7 @@ class Tokenizer {
               yield Token(start, TokenType.text, text);
             }
 
-            yield Token.simple(end, TokenType.expressionStart);
+            yield Token.simple(end, TokenType.variableBegin);
             yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.variableEnd)) {
@@ -191,7 +191,7 @@ class Tokenizer {
             end = scanner.lastMatch.start;
             start = end;
 
-            yield Token.simple(end, TokenType.expressionEnd);
+            yield Token.simple(end, TokenType.variableEnd);
 
             break inner;
 
@@ -202,7 +202,7 @@ class Tokenizer {
               yield Token(start, TokenType.text, text);
             }
 
-            yield Token.simple(end, TokenType.statementStart);
+            yield Token.simple(end, TokenType.blockBegin);
 
             yield* ExpressionTokenizer(environment).scan(scanner);
 
@@ -213,7 +213,7 @@ class Tokenizer {
             start = scanner.lastMatch.end;
             end = start;
 
-            yield Token.simple(scanner.lastMatch.start, TokenType.statementEnd);
+            yield Token.simple(scanner.lastMatch.start, TokenType.blockEnd);
 
             break inner;
 

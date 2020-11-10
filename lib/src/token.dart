@@ -71,13 +71,13 @@ enum TokenType {
   comma,
   comment,
   commentEnd,
-  commentStart,
+  commentBegin,
   div,
   dot,
   eq,
   error,
-  expressionEnd,
-  expressionStart,
+  variableEnd,
+  variableBegin,
   float,
   floorDiv,
   gt,
@@ -99,8 +99,8 @@ enum TokenType {
   rBracket,
   rParen,
   semicolon,
-  statementEnd,
-  statementStart,
+  blockEnd,
+  blockBegin,
   string,
   sub,
   text,
@@ -124,6 +124,7 @@ abstract class BaseToken implements Token {
 
   @override
   bool same(Token other) {
+    if (other.type == null) return value == other.value;
     return type == other.type && value == other.value;
   }
 
