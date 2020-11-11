@@ -1,6 +1,6 @@
 library visitor;
 
-import 'ast.dart';
+import 'nodes.dart';
 
 abstract class Visitor {
   const Visitor();
@@ -11,11 +11,13 @@ abstract class Visitor {
 
   void visitAll(Iterable<Node> nodes);
 
+  void visitAttribute(Attribute node);
+
   void visitDictLiteral(DictLiteral node);
 
-  void visitIf(IfStatement node);
+  void visitIf(If node);
 
-  void visitInterpolation(Interpolation node);
+  void visitItem(Item node);
 
   void visitListLiteral(ListLiteral node);
 
@@ -23,9 +25,15 @@ abstract class Visitor {
 
   void visitName(Name node);
 
+  void visitOutput(Output node);
+
   void visitPair(Pair node);
+
+  void visitTest(Test node);
 
   void visitText(Text node);
 
   void visitTupleLiteral(TupleLiteral node);
+
+  void visitUnary(Unary node);
 }

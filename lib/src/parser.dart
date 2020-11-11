@@ -2,21 +2,38 @@ library parser;
 
 import 'package:meta/meta.dart';
 
-import 'ast.dart';
+import 'nodes.dart';
 import 'environment.dart';
+import 'reader.dart';
 import 'tokenizer.dart';
-
-@alwaysThrows
-void error(String message) {
-  // TODO: wrap exception
-  throw Exception(message);
-}
+import 'utils.dart';
 
 @immutable
 class ExpressionParser {
+  @alwaysThrows
+  static void fail(String message) {
+    throw TemplateSyntaxError(message);
+  }
+
   ExpressionParser(this.environment);
 
   final Environment environment;
+
+  @protected
+  bool isTupleEnd(TokenReader reader, [List<String> extraEndRules]) {
+    switch (reader.current.type) {
+      case TokenType.variableEnd:
+      case TokenType.blockEnd:
+      case TokenType.rParen:
+        return true;
+      default:
+        if (extraEndRules != null && extraEndRules.isNotEmpty) {
+          return extraEndRules.any(reader.current.test);
+        }
+
+        return false;
+    }
+  }
 
   Expression parse(String expression) {
     final tokens = ExpressionTokenizer(environment).tokenize(expression.trim());
@@ -26,16 +43,39 @@ class ExpressionParser {
 
   @protected
   Expression scan(TokenReader reader) {
-    while (reader.moveNext()) {
-      return root(reader);
+    return parseRoot(reader);
+  }
+
+  Expression parseRoot(TokenReader reader, {bool withCondExpr = true}) {
+    return parsePrimary(reader);
+  }
+
+  Expression parseUnary(TokenReader reader, {bool withFilter = true}) {
+    Expression expression;
+
+    switch (reader.current.type) {
+      case TokenType.sub:
+        expression = parseUnary(reader, withFilter: false);
+        expression = Negative(expression);
+        break;
+      case TokenType.add:
+        expression = parseUnary(reader, withFilter: false);
+        expression = Positive(expression);
+        break;
+      default:
+        expression = parsePrimary(reader);
     }
+
+    expression = parsePostfix(reader, expression);
+
+    if (withFilter) {
+      expression = parseFilterExpression(reader, expression);
+    }
+
+    return expression;
   }
 
-  Expression root(TokenReader reader, {bool withCondExpr = true}) {
-    return primary(reader);
-  }
-
-  Expression primary(TokenReader reader) {
+  Expression parsePrimary(TokenReader reader) {
     final token = reader.current;
 
     Expression expression;
@@ -79,14 +119,14 @@ class ExpressionParser {
         break;
       case TokenType.lParen:
         reader.moveNext();
-        expression = tuple(reader);
+        expression = parseTuple(reader);
         reader.expected(TokenType.rParen);
         break;
       case TokenType.lBracket:
-        expression = list(reader);
+        expression = parseList(reader);
         break;
       case TokenType.lBrace:
-        expression = dict(reader);
+        expression = parseDict(reader);
         break;
       default:
         error('unexpected token: $token');
@@ -95,15 +135,15 @@ class ExpressionParser {
     return expression;
   }
 
-  Expression tuple(TokenReader reader, {bool simplified = false, bool withCondExpr = true, List<Token> extraEndRules, bool explicitParentheses = false}) {
+  Expression parseTuple(TokenReader reader, {bool simplified = false, bool withCondExpr = true, List<String> extraEndRules, bool explicitParentheses = false}) {
     Expression Function(TokenReader) parse;
 
     if (simplified) {
-      parse = primary;
+      parse = parsePrimary;
     } else if (withCondExpr) {
-      parse = root;
+      parse = parseRoot;
     } else {
-      parse = (reader) => root(reader, withCondExpr: false);
+      parse = (reader) => parseRoot(reader, withCondExpr: false);
     }
 
     final items = <Expression>[];
@@ -140,7 +180,7 @@ class ExpressionParser {
     return TupleLiteral(items);
   }
 
-  Expression list(TokenReader reader) {
+  Expression parseList(TokenReader reader) {
     final items = <Expression>[];
     reader.expect(TokenType.lBracket);
 
@@ -153,14 +193,14 @@ class ExpressionParser {
         break;
       }
 
-      items.add(root(reader));
+      items.add(parseRoot(reader));
     }
 
     reader.expect(TokenType.rBracket);
     return ListLiteral(items);
   }
 
-  Expression dict(TokenReader reader) {
+  Expression parseDict(TokenReader reader) {
     final items = <Pair>[];
     reader.expect(TokenType.lBrace);
 
@@ -173,9 +213,9 @@ class ExpressionParser {
         break;
       }
 
-      final key = root(reader);
+      final key = parseRoot(reader);
       reader.expect(TokenType.colon);
-      final value = root(reader);
+      final value = parseRoot(reader);
       items.add(Pair(key, value));
     }
 
@@ -183,19 +223,70 @@ class ExpressionParser {
     return DictLiteral(items);
   }
 
-  bool isTupleEnd(TokenReader reader, [List<Token> extraEndRules]) {
-    switch (reader.current.type) {
-      case TokenType.variableEnd:
-      case TokenType.blockEnd:
-      case TokenType.rParen:
-        return true;
-      default:
-        if (extraEndRules != null && extraEndRules.isNotEmpty) {
-          return extraEndRules.any((rule) => reader.current.same(rule));
+  Expression parsePostfix(TokenReader reader, Expression expression) {
+    while (true) {
+      if (reader.current.type == TokenType.dot || reader.current.type == TokenType.lBracket) {
+        expression = parseSubscript(reader, expression);
+      } else if (reader.current.type == TokenType.lParen) {
+        expression = parseCall(reader, expression);
+      } else {
+        break;
+      }
+    }
+
+    return expression;
+  }
+
+  Expression parseFilterExpression(TokenReader reader, Expression expression) {
+    while (true) {
+      if (reader.current.type == TokenType.pipe) {
+        expression = parseFilter(reader, expression);
+      } else if (reader.current.type == TokenType.name && reader.current.value == 'is') {
+        expression = parseTest(reader, expression);
+      } else if (reader.current.type == TokenType.lParen) {
+        expression = parseCall(reader, expression);
+      } else {
+        break;
+      }
+    }
+
+    return expression;
+  }
+
+  Expression parseSubscript(TokenReader reader, Expression expression) {
+    final token = reader.current;
+
+    if (token.type == TokenType.dot) {
+      final attributeToken = reader.next();
+
+      if (attributeToken.type == TokenType.name) {
+        return Attribute(attributeToken.value, expression);
+      } else if (attributeToken.type != TokenType.integer) {
+        fail('expected name or number');
+      }
+
+      return Item(Constant<int>(int.parse(attributeToken.value)), expression);
+    } else if (token.type == TokenType.dot) {
+      final arguments = <Expression>[];
+
+      while (reader.current.type != TokenType.rBracket) {
+        if (arguments.isNotEmpty) {
+          reader.expect(TokenType.comma);
         }
 
-        return false;
+        arguments.add(parseSubscribed(reader));
+      }
+
+      reader.expect(TokenType.rBracket);
+
+      if (arguments.length == 1) {
+        return Item(arguments.first, expression);
+      } else {
+        return Item(TupleLiteral(arguments), expression);
+      }
     }
+
+    fail('expected subscript expression');
   }
 
   @override
@@ -207,12 +298,12 @@ class ExpressionParser {
 @immutable
 class Parser {
   Parser(this.environment)
-      : endTokensStack = <List<Token>>[],
+      : endRulesStack = <List<String>>[],
         tagsStack = <String>[];
 
   final Environment environment;
 
-  final List<List<Token>> endTokensStack;
+  final List<List<String>> endRulesStack;
 
   final List<String> tagsStack;
 
@@ -227,17 +318,17 @@ class Parser {
     return parseBody(reader);
   }
 
-  Node parseBody(TokenReader reader, [List<Token> endTokens]) {
-    final nodes = subParse(reader, endTokens ?? const <Token>[]);
+  Node parseBody(TokenReader reader, [List<String> endRules]) {
+    final nodes = subParse(reader, endRules);
     return Node.orList(nodes);
   }
 
-  List<Node> subParse(TokenReader reader, List<Token> endTokens) {
+  List<Node> subParse(TokenReader reader, List<String> endRules) {
     final buffer = StringBuffer();
     final nodes = <Node>[];
 
-    if (endTokens.isNotEmpty) {
-      endTokensStack.add(endTokens);
+    if (endRules.isNotEmpty) {
+      endRulesStack.add(endRules);
     }
 
     final void Function() flush = () {
@@ -279,7 +370,7 @@ class Parser {
 
             reader.skip(TokenType.whiteSpace);
 
-            if (endTokens.isNotEmpty && testAll(reader, endTokens)) {
+            if (endRules.isNotEmpty && testAll(reader, endRules)) {
               return nodes;
             }
 
@@ -294,8 +385,8 @@ class Parser {
 
       flush();
     } finally {
-      if (endTokens.isNotEmpty) {
-        endTokensStack.removeLast();
+      if (endRules.isNotEmpty) {
+        endRulesStack.removeLast();
       }
     }
 
@@ -339,9 +430,6 @@ class Parser {
   }
 
   Node parseIf(TokenReader reader) {
-    const elseToken = Token(0, TokenType.name, 'else');
-    const endIfToken = Token(0, TokenType.name, 'endif');
-
     final pairs = <Test, Node>{};
     Node orElse;
 
@@ -362,16 +450,16 @@ class Parser {
 
       reader.expected(TokenType.blockEnd);
 
-      final body = parseBody(reader, <Token>[elseToken, endIfToken]);
+      final body = parseBody(reader, <String>['name:else', 'name:elif']);
 
       final token = reader.next();
 
-      if (token.same(elseToken)) {
+      if (token.test('name:else')) {
         reader.skip(TokenType.whiteSpace);
         reader.expected(TokenType.blockEnd);
 
         pairs[condition] = body;
-        orElse = parseBody(reader, <Token>[endIfToken]);
+        orElse = parseBody(reader, <String>['name:elif']);
       } else {
         pairs[condition] = body;
       }
@@ -383,14 +471,14 @@ class Parser {
     reader.skip(TokenType.whiteSpace);
     reader.expected(TokenType.blockEnd);
 
-    return IfStatement(pairs, orElse);
+    return If(pairs, orElse);
   }
 
-  bool testAll(TokenReader reader, List<Token> endTokens) {
+  bool testAll(TokenReader reader, List<String> endRules) {
     final current = reader.peek();
 
-    for (final endToken in endTokens) {
-      if (endToken.same(current)) {
+    for (final rule in endRules) {
+      if (current.test(rule)) {
         return true;
       }
     }
@@ -401,79 +489,5 @@ class Parser {
   @override
   String toString() {
     return 'Parser()';
-  }
-}
-
-class TokenReader {
-  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator;
-
-  final Iterator<Token> _iterator;
-
-  Token _peek;
-
-  Token get current {
-    return _iterator.current;
-  }
-
-  bool isNext(TokenType type) {
-    _peek = next();
-    return _peek == null ? false : _peek.type == type;
-  }
-
-  bool moveNext() {
-    if (_peek != null) {
-      _peek = null;
-      return true;
-    }
-
-    return _iterator.moveNext();
-  }
-
-  Token next() {
-    if (_peek != null) {
-      final token = _peek;
-      _peek = null;
-      return token;
-    }
-
-    return _iterator.moveNext() ? _iterator.current : null;
-  }
-
-  Token peek() {
-    return _peek = next();
-  }
-
-  bool skip(TokenType type, [bool all = false]) {
-    if (peek()?.type == type) {
-      next();
-
-      if (all) {
-        skip(type, all);
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  Token expect(TokenType type) {
-    if (this.current == null || this.current.type != type) {
-      error('expected token $type, got ${this.current}');
-    }
-
-    final current = this.current;
-    moveNext();
-    return current;
-  }
-
-  Token expected(TokenType type) {
-    final token = next();
-
-    if (token == null || token.type != type) {
-      error('expected token $type, got $token');
-    }
-
-    return token;
   }
 }

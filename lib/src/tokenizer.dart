@@ -4,10 +4,11 @@ import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
 import 'environment.dart';
+import 'utils.dart';
 
 part 'token.dart';
 
-const Map<String, TokenType> operators = <String, TokenType>{
+const Map<String, String> operators = <String, String>{
   '-': TokenType.sub,
   ',': TokenType.comma,
   ';': TokenType.semicolon,
@@ -35,11 +36,6 @@ const Map<String, TokenType> operators = <String, TokenType>{
   '|': TokenType.pipe,
   '~': TokenType.tilde,
 };
-
-@alwaysThrows
-void error(StringScanner scanner, String message) {
-  scanner.error(message);
-}
 
 @immutable
 @doNotStore
@@ -95,7 +91,7 @@ class ExpressionTokenizer {
       } else if (scanner.matches(end)) {
         return;
       } else {
-        error(scanner, 'unexpected char');
+        error('unexpected char');
       }
     }
   }
@@ -159,11 +155,11 @@ class Tokenizer {
             text = scanner.substring(start, end).trim();
 
             if (text.isEmpty) {
-              error(scanner, 'expected comment body.');
+              error('expected comment body.');
             }
 
             if (!scanner.scan(environment.commentEnd)) {
-              error(scanner, 'expected comment end.');
+              error('expected comment end.');
             }
 
             yield Token(start, TokenType.comment, text);
@@ -185,7 +181,7 @@ class Tokenizer {
             yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.variableEnd)) {
-              error(scanner, 'expected expression end');
+              error('expected expression end');
             }
 
             end = scanner.lastMatch.start;
@@ -207,7 +203,7 @@ class Tokenizer {
             yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.blockEnd)) {
-              error(scanner, 'expected statement end');
+              error('expected statement end');
             }
 
             start = scanner.lastMatch.end;

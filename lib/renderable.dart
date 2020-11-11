@@ -1,8 +1,9 @@
-export 'src/ast.dart';
+export 'src/nodes.dart';
 export 'src/environment.dart';
 export 'src/filters.dart';
-export 'src/parser.dart' hide error;
+export 'src/parser.dart';
+export 'src/reader.dart';
 export 'src/template.dart';
 export 'src/tests.dart';
-export 'src/tokenizer.dart' hide error;
+export 'src/tokenizer.dart';
 export 'src/visitor.dart';

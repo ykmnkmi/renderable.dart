@@ -1,7 +1,51 @@
 part of 'tokenizer.dart';
 
+abstract class TokenType {
+  static const String add = 'add';
+  static const String assign = 'assign';
+  static const String colon = 'colon';
+  static const String comma = 'comma';
+  static const String comment = 'comment';
+  static const String commentEnd = 'commentend';
+  static const String commentBegin = 'commentbegin';
+  static const String div = 'div';
+  static const String dot = 'dot';
+  static const String eq = 'eq';
+  static const String error = 'error';
+  static const String variableEnd = 'variableend';
+  static const String variableBegin = 'variablebegin';
+  static const String float = 'float';
+  static const String floorDiv = 'floordiv';
+  static const String gt = 'gt';
+  static const String gteq = 'gteq';
+  static const String integer = 'integer';
+  static const String lBrace = 'lbrace';
+  static const String lBracket = 'lbracket';
+  static const String lParen = 'lparen';
+  static const String lt = 'lt';
+  static const String lteq = 'lteq';
+  static const String mod = 'mod';
+  static const String mul = 'mul';
+  static const String name = 'name';
+  static const String ne = 'ne';
+  static const String operator = 'operator';
+  static const String pipe = 'pipe';
+  static const String pow = 'pow';
+  static const String rBrace = 'rbrace';
+  static const String rBracket = 'rbracket';
+  static const String rParen = 'rparen';
+  static const String semicolon = 'semicolon';
+  static const String blockEnd = 'blockend';
+  static const String blockBegin = 'blockbegin';
+  static const String string = 'string';
+  static const String sub = 'sub';
+  static const String text = 'text';
+  static const String tilde = 'tilde';
+  static const String whiteSpace = 'whitespace';
+}
+
 abstract class Token {
-  static final Map<TokenType, String> lexemes = <TokenType, String>{
+  static final Map<String, String> lexemes = <String, String>{
     TokenType.add: '+',
     TokenType.assign: '=',
     TokenType.colon: ':',
@@ -31,9 +75,9 @@ abstract class Token {
     TokenType.whiteSpace: ' ',
   };
 
-  const factory Token(int start, TokenType type, String lexeme) = LexemeToken;
+  const factory Token(int start, String type, String lexeme) = LexemeToken;
 
-  const factory Token.simple(int start, TokenType type) = SimpleToken;
+  const factory Token.simple(int start, String type) = SimpleToken;
 
   @override
   int get hashCode {
@@ -46,7 +90,7 @@ abstract class Token {
 
   int get length;
 
-  TokenType get type;
+  String get type;
 
   String get value;
 
@@ -56,56 +100,12 @@ abstract class Token {
     return other is Token && type == other.type && start == other.start && value == other.value;
   }
 
-  bool same(Token other);
+  bool test(String expression);
 
   @override
   String toString() {
     return '#$type:$start $value';
   }
-}
-
-enum TokenType {
-  add,
-  assign,
-  colon,
-  comma,
-  comment,
-  commentEnd,
-  commentBegin,
-  div,
-  dot,
-  eq,
-  error,
-  variableEnd,
-  variableBegin,
-  float,
-  floorDiv,
-  gt,
-  gteq,
-  integer,
-  lBrace,
-  lBracket,
-  lParen,
-  lt,
-  lteq,
-  mod,
-  mul,
-  name,
-  ne,
-  operator,
-  pipe,
-  pow,
-  rBrace,
-  rBracket,
-  rParen,
-  semicolon,
-  blockEnd,
-  blockBegin,
-  string,
-  sub,
-  text,
-  tilde,
-  whiteSpace,
 }
 
 @immutable
@@ -123,9 +123,15 @@ abstract class BaseToken implements Token {
   }
 
   @override
-  bool same(Token other) {
-    if (other.type == null) return value == other.value;
-    return type == other.type && value == other.value;
+  bool test(String expression) {
+    if (type == expression) {
+      return true;
+    } else if (expression.contains(':')) {
+      final parts = expression.split(':').take(2);
+      return type == parts.first && value == parts.last;
+    }
+
+    return false;
   }
 
   @override
@@ -141,7 +147,7 @@ class LexemeToken extends BaseToken {
   final int start;
 
   @override
-  final TokenType type;
+  final String type;
 
   @override
   final String value;
@@ -154,7 +160,7 @@ class SimpleToken extends BaseToken {
   final int start;
 
   @override
-  final TokenType type;
+  final String type;
 
   @override
   String get value {

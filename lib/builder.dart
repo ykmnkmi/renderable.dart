@@ -4,7 +4,7 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
-import 'src/ast.dart';
+import 'src/nodes.dart';
 import 'src/environment.dart';
 import 'src/parser.dart';
 import 'src/visitor.dart';
@@ -160,12 +160,12 @@ class TemplateBuilder extends Visitor {
   }
 
   @override
-  void visitInterpolation(Interpolation node) {
-    visitAll(node.children);
+  void visitOutput(Output node) {
+    visitAll(node.items);
   }
 
   @override
-  void visitIf(IfStatement node) {
+  void visitIf(If node) {
     body.writeln();
 
     final entries = node.pairs.entries.toList();
