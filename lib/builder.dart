@@ -199,7 +199,7 @@ class TemplateBuilder extends Visitor {
   }
 
   @override
-  void visitVariable(Variable node) {
+  void visitName(Name node) {
     names.add(node.name);
     body.writeln('buffer.write(${node.name});');
   }
@@ -229,7 +229,7 @@ class TemplateBuilder extends Visitor {
     body.write('if (');
 
     // TODO: replace with test
-    if (check is Variable) {
+    if (check is Name) {
       body.write(check.name + ' != null');
     } else {
       body.write(false);

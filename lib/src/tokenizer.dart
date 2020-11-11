@@ -19,7 +19,7 @@ const Map<String, TokenType> operators = <String, TokenType>{
   '[': TokenType.lBracket,
   ']': TokenType.rBracket,
   '{': TokenType.lBrace,
-  '}': TokenType.rBracket,
+  '}': TokenType.rBrace,
   '*': TokenType.mul,
   '**': TokenType.pow,
   '/': TokenType.div,
@@ -45,7 +45,7 @@ void error(StringScanner scanner, String message) {
 @doNotStore
 class ExpressionTokenizer {
   ExpressionTokenizer(this.environment)
-      : spaceRe = RegExp(r'\s+'),
+      : whiteSpaceRe = RegExp(r'\s+'),
         nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
         stringRe = RegExp(r"('([^'\\]*(?:\\.[^'\\]*)*)'" r'|"([^"\\]*(?:\\.[^"\\]*)*)")', dotAll: true),
         integerRe = RegExp(r'\d+'),
@@ -54,7 +54,7 @@ class ExpressionTokenizer {
 
   final Environment environment;
 
-  final Pattern spaceRe;
+  final Pattern whiteSpaceRe;
 
   final Pattern nameRe;
 
@@ -75,8 +75,8 @@ class ExpressionTokenizer {
     end ??= environment.variableEnd;
 
     while (!scanner.isDone) {
-      if (scanner.scan(spaceRe)) {
-        yield Token.simple(scanner.lastMatch.start, TokenType.whitespace);
+      if (scanner.scan(whiteSpaceRe)) {
+        // yield Token.simple(scanner.lastMatch.start, TokenType.whiteSpace);
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch.start, TokenType.name, scanner.lastMatch[0]);
       } else if (scanner.scan(stringRe)) {

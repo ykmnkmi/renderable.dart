@@ -6,8 +6,8 @@ class Interpolation implements Node {
   final List<Node> children;
 
   @override
-  accept(Visitor visitor) {
-    return visitor.visitInterpolation(this);
+  void accept(Visitor visitor) {
+    visitor.visitInterpolation(this);
   }
 
   @override

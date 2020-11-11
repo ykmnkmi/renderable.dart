@@ -28,7 +28,7 @@ abstract class Token {
     TokenType.semicolon: ';',
     TokenType.sub: '-',
     TokenType.tilde: '~',
-    TokenType.whitespace: ' ',
+    TokenType.whiteSpace: ' ',
   };
 
   const factory Token(int start, TokenType type, String lexeme) = LexemeToken;
@@ -105,7 +105,7 @@ enum TokenType {
   sub,
   text,
   tilde,
-  whitespace,
+  whiteSpace,
 }
 
 @immutable

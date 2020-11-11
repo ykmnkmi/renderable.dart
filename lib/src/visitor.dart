@@ -11,15 +11,21 @@ abstract class Visitor {
 
   void visitAll(Iterable<Node> nodes);
 
-  void visitComment(Comment comment);
+  void visitDictLiteral(DictLiteral node);
 
   void visitIf(IfStatement node);
 
   void visitInterpolation(Interpolation node);
 
+  void visitListLiteral(ListLiteral node);
+
   void visitLiteral(Literal node);
+
+  void visitName(Name node);
+
+  void visitPair(Pair node);
 
   void visitText(Text node);
 
-  void visitVariable(Variable node);
+  void visitTupleLiteral(TupleLiteral node);
 }
