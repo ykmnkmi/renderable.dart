@@ -2,7 +2,9 @@ import 'tokenizer.dart';
 import 'utils.dart';
 
 class TokenReader {
-  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator;
+  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator {
+    _iterator.moveNext();
+  }
 
   final Iterator<Token> _iterator;
 
@@ -10,11 +12,6 @@ class TokenReader {
 
   Token get current {
     return _iterator.current;
-  }
-
-  bool isNext(String type) {
-    _peek = next();
-    return _peek == null ? false : _peek.type == type;
   }
 
   bool moveNext() {

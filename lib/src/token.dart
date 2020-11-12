@@ -10,6 +10,7 @@ abstract class TokenType {
   static const String commentBegin = 'commentbegin';
   static const String div = 'div';
   static const String dot = 'dot';
+  static const String eof = 'eof';
   static const String eq = 'eq';
   static const String error = 'error';
   static const String variableEnd = 'variableend';
@@ -53,6 +54,7 @@ abstract class Token {
     TokenType.div: '/',
     TokenType.dot: '.',
     TokenType.eq: '==',
+    TokenType.eof: '',
     TokenType.floorDiv: '//',
     TokenType.gt: '>',
     TokenType.gteq: '>=',
@@ -136,7 +138,7 @@ abstract class BaseToken implements Token {
 
   @override
   String toString() {
-    return '#$type:$start:$length $value';
+    return 'Token#$type:$start:$length $value';
   }
 }
 

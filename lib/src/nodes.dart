@@ -1,5 +1,6 @@
 library ast;
 
+import 'exceptions.dart';
 import 'visitor.dart';
 
 abstract class Node {
@@ -178,6 +179,42 @@ class Attribute extends Expression {
   @override
   String toString() {
     return 'Attribute($attribute, $expression)';
+  }
+}
+
+class Slice extends Expression {
+  factory Slice.fromList(List<Expression> expressions) {
+    assert(expressions.isNotEmpty);
+    assert(expressions.length <= 3);
+
+    switch (expressions.length) {
+      case 1:
+        return Slice(expressions[0]);
+      case 2:
+        return Slice(expressions[0], expressions[1]);
+      case 3:
+        return Slice(expressions[0], expressions[1], expressions[2]);
+      default:
+        throw TemplateRuntimeError();
+    }
+  }
+
+  const Slice(this.start, [this.stop, this.step]);
+
+  final Expression start;
+
+  final Expression stop;
+
+  final Expression step;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitSlice(this);
+  }
+
+  @override
+  String toString() {
+    return 'Slice($start, $stop, $step)';
   }
 }
 

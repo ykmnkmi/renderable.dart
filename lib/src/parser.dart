@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 
 import 'nodes.dart';
 import 'environment.dart';
+import 'exceptions.dart';
 import 'reader.dart';
 import 'tokenizer.dart';
 import 'utils.dart';
@@ -47,7 +48,7 @@ class ExpressionParser {
   }
 
   Expression parseRoot(TokenReader reader, {bool withCondExpr = true}) {
-    return parsePrimary(reader);
+    return parseUnary(reader);
   }
 
   Expression parseUnary(TokenReader reader, {bool withFilter = true}) {
@@ -55,10 +56,12 @@ class ExpressionParser {
 
     switch (reader.current.type) {
       case TokenType.sub:
+        reader.moveNext();
         expression = parseUnary(reader, withFilter: false);
         expression = Negative(expression);
         break;
       case TokenType.add:
+        reader.moveNext();
         expression = parseUnary(reader, withFilter: false);
         expression = Positive(expression);
         break;
@@ -255,6 +258,7 @@ class ExpressionParser {
 
   Expression parseSubscript(TokenReader reader, Expression expression) {
     final token = reader.current;
+    print('parseSubscript: $token');
 
     if (token.type == TokenType.dot) {
       final attributeToken = reader.next();
@@ -266,7 +270,7 @@ class ExpressionParser {
       }
 
       return Item(Constant<int>(int.parse(attributeToken.value)), expression);
-    } else if (token.type == TokenType.dot) {
+    } else if (token.type == TokenType.lBracket) {
       final arguments = <Expression>[];
 
       while (reader.current.type != TokenType.rBracket) {
@@ -287,6 +291,48 @@ class ExpressionParser {
     }
 
     fail('expected subscript expression');
+  }
+
+  Expression parseSubscribed(TokenReader reader) {
+    reader.moveNext();
+
+    final arguments = <Expression>[];
+
+    if (reader.current.type == TokenType.colon) {
+      reader.moveNext();
+      arguments.add(null);
+    } else {
+      final expression = parseRoot(reader);
+
+      if (reader.current.type != TokenType.colon) {
+        return expression;
+      }
+
+      reader.moveNext();
+      arguments.add(expression);
+    }
+
+    if (reader.current.type == TokenType.colon) {
+      arguments.add(null);
+    } else if (reader.current.type != TokenType.rBracket || reader.current.type != TokenType.colon) {
+      arguments.add(parseRoot(reader));
+    } else {
+      arguments.add(null);
+    }
+
+    if (reader.current.type == TokenType.colon) {
+      reader.moveNext();
+
+      if (reader.current.type != TokenType.rBracket || reader.current.type != TokenType.colon) {
+        arguments.add(parseRoot(reader));
+      } else {
+        arguments.add(null);
+      }
+    } else {
+      arguments.add(null);
+    }
+
+    return Slice.fromList(arguments);
   }
 
   @override
@@ -434,7 +480,7 @@ class Parser {
     Node orElse;
 
     while (true) {
-      if (reader.isNext(TokenType.blockEnd)) {
+      if (reader.peek().test(TokenType.blockEnd)) {
         error('expect if statement body');
       }
 

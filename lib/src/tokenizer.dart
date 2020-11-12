@@ -94,6 +94,8 @@ class ExpressionTokenizer {
         error('unexpected char');
       }
     }
+
+    yield Token.simple(scanner.position, TokenType.eof);
   }
 
   @override
@@ -225,6 +227,8 @@ class Tokenizer {
         yield Token(start, TokenType.text, text);
       }
     }
+
+    yield Token.simple(scanner.position, TokenType.eof);
   }
 
   @override

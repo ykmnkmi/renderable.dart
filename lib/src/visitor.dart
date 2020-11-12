@@ -5,9 +5,7 @@ import 'nodes.dart';
 abstract class Visitor {
   const Visitor();
 
-  void visit(Node node) {
-    node.accept(this);
-  }
+  void visit(Node node);
 
   void visitAll(Iterable<Node> nodes);
 
@@ -28,6 +26,8 @@ abstract class Visitor {
   void visitOutput(Output node);
 
   void visitPair(Pair node);
+
+  void visitSlice(Slice node);
 
   void visitTest(Test node);
 
