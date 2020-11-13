@@ -22,9 +22,21 @@ abstract class Expression extends Node {
 }
 
 class Name implements Expression {
-  const Name(this.name);
+  const Name(this.name, [this.type = 'dynamic']);
 
   final String name;
+
+  final String type;
+
+  @override
+  int get hashCode {
+    return 'Name'.hashCode ^ name.hashCode ^ type.hashCode;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) || other is Name && name == other.name && type == other.type;
+  }
 
   @override
   void accept(Visitor visitor) {
@@ -33,7 +45,7 @@ class Name implements Expression {
 
   @override
   String toString() {
-    return 'Name($name)';
+    return 'Name($name, $type)';
   }
 }
 
@@ -183,23 +195,25 @@ class Attribute extends Expression {
 }
 
 class Slice extends Expression {
-  factory Slice.fromList(List<Expression> expressions) {
+  factory Slice.fromList(Expression expression, List<Expression> expressions) {
     assert(expressions.isNotEmpty);
     assert(expressions.length <= 3);
 
     switch (expressions.length) {
       case 1:
-        return Slice(expressions[0]);
+        return Slice(expression, expressions[0]);
       case 2:
-        return Slice(expressions[0], expressions[1]);
+        return Slice(expression, expressions[0], expressions[1]);
       case 3:
-        return Slice(expressions[0], expressions[1], expressions[2]);
+        return Slice(expression, expressions[0], expressions[1], expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
   }
 
-  const Slice(this.start, [this.stop, this.step]);
+  const Slice(this.expression, this.start, [this.stop, this.step]);
+
+  final Expression expression;
 
   final Expression start;
 
@@ -214,7 +228,7 @@ class Slice extends Expression {
 
   @override
   String toString() {
-    return 'Slice($start, $stop, $step)';
+    return 'Slice($expression, $start, $stop, $step)';
   }
 }
 

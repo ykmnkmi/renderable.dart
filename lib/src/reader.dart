@@ -1,10 +1,7 @@
 import 'tokenizer.dart';
-import 'utils.dart';
 
 class TokenReader {
-  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator {
-    _iterator.moveNext();
-  }
+  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator;
 
   final Iterator<Token> _iterator;
 
@@ -33,16 +30,25 @@ class TokenReader {
     return _iterator.moveNext() ? _iterator.current : null;
   }
 
+  bool nextIf(String expression) {
+    if (current.test(expression)) {
+      next();
+      return true;
+    }
+
+    return false;
+  }
+
   Token peek() {
     return _peek = next();
   }
 
-  bool skip(String type, [bool all = false]) {
-    if (peek()?.type == type) {
+  bool skipIf(String expression, [bool all = false]) {
+    if (peek().test(expression)) {
       next();
 
       if (all) {
-        skip(type, all);
+        skipIf(expression, all);
       }
 
       return true;
@@ -51,9 +57,9 @@ class TokenReader {
     return false;
   }
 
-  Token expect(String type) {
-    if (this.current == null || this.current.type != type) {
-      error('expected token $type, got ${this.current}');
+  Token expect(String expression) {
+    if (this.current == null || !this.current.test(expression)) {
+      throw 'expected token $expression, got ${this.current}';
     }
 
     final current = this.current;
@@ -65,7 +71,7 @@ class TokenReader {
     final token = next();
 
     if (token == null || token.type != type) {
-      error('expected token $type, got $token');
+      throw 'expected token $type, got $token';
     }
 
     return token;

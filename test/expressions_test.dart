@@ -3,11 +3,11 @@ import 'package:renderable/renderable.dart';
 const environment = Environment();
 
 void main() {
-  final tokens = ExpressionTokenizer(environment).tokenize('[1, 2].1').toList();
+  final tokens = Tokenizer(environment).tokenize('{# asd #}{{ [] }}').toList();
   tokens.forEach(print);
   print('');
 
   final reader = TokenReader(tokens);
-  final expression = ExpressionParser(environment).scan(reader);
+  final expression = Parser(environment).scan(reader);
   print(expression);
 }

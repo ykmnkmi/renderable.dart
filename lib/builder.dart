@@ -60,11 +60,11 @@ class HtmlTemplateBuilder extends Builder {
     }
 
     environment = Environment(
-        commentStart: commentStart,
+        commentBegin: commentStart,
         commentEnd: commentEnd,
-        variableStart: expressionStart,
+        variableBegin: expressionStart,
         variableEnd: expressionEnd,
-        blockStart: statementStart,
+        blockBegin: statementStart,
         blockEnd: statementEnd);
   }
 
@@ -99,7 +99,7 @@ class TemplateBuilder extends Visitor {
   TemplateBuilder(this.name, this.buffer)
       : body = StringBuffer(),
         texts = <String>[],
-        names = <String>{},
+        names = <Name>{},
         accepted = false;
 
   final String name;
@@ -110,101 +110,23 @@ class TemplateBuilder extends Visitor {
 
   final List<String> texts;
 
-  final Set<String> names;
+  final Set<Name> names;
 
   bool accepted;
 
-  @override
-  void visit(Node node) {
-    if (accepted) {
-      throw 'why!';
+  void _writeIf(Test check, Node node, [bool isElif = false]) {
+    if (isElif) {
+      body.write('else ');
     }
 
-    accepted = true;
+    body.write('if (');
+    check.accept(this);
+    body.writeln(') {');
     node.accept(this);
-
-    buffer.writeln('import \'package:renderable/renderable.dart\';');
-    buffer.writeln();
-
-    buffer.writeln('class $name implements Template {');
-    buffer.writeln('const $name();');
-    buffer.writeln();
-
-    buffer.write('String render(');
-
-    if (names.isNotEmpty) {
-      buffer.write('{');
-      buffer.writeAll(names.map<String>((name) => 'Object $name'), ', ');
-      buffer.write('}');
-    }
-
-    buffer.write(') {');
-    buffer.writeln('final buffer = StringBuffer();');
-    buffer.write(body);
-    buffer.writeln('return buffer.toString();');
-    buffer.writeln('}');
-
-    for (var i = 0; i < texts.length; i++) {
-      buffer.writeln('static const String _t$i = ${wrapString(texts[i])};');
-      buffer.writeln();
-    }
-
-    buffer.writeln('}');
+    body.writeln('}');
   }
 
-  @override
-  void visitAll(Iterable<Node> nodes) {
-    for (final node in nodes) {
-      node.accept(this);
-    }
-  }
-
-  @override
-  void visitOutput(Output node) {
-    visitAll(node.items);
-  }
-
-  @override
-  void visitIf(If node) {
-    body.writeln();
-
-    final entries = node.pairs.entries.toList();
-    final first = entries.removeAt(0);
-
-    writeIf(first.key, first.value);
-
-    for (final entry in entries) {
-      writeIf(entry.key, entry.value);
-    }
-
-    if (node.orElse != null) {
-      body.writeln('else {');
-      node.orElse.accept(this);
-      body.writeln('}');
-    }
-
-    body.writeln();
-  }
-
-  @override
-  void visitText(Text node) {
-    var id = texts.indexOf(node.text);
-
-    if (id == -1) {
-      id = texts.length;
-      texts.add(node.text);
-    }
-
-    body.writeln('buffer.write(_t$id);');
-  }
-
-  @override
-  void visitName(Name node) {
-    names.add(node.name);
-    body.writeln('buffer.write(${node.name});');
-  }
-
-  String wrapString(String value) {
+  String _wrapString(String value) {
     final multiline = value.contains(r'\n') || value.contains(r'\r\n');
     final hasSingleQuote = value.contains(r"'");
     final hasDoubleQuote = value.contains(r'"');
@@ -221,22 +143,185 @@ class TemplateBuilder extends Visitor {
     return wrapper + value + wrapper;
   }
 
-  void writeIf(Test check, Node node, [bool isElif = false]) {
-    if (isElif) {
-      body.write('else ');
+  @override
+  void visit(Node node) {
+    if (accepted) {
+      throw StateError('why!');
     }
 
-    body.write('if (');
-
-    // TODO: replace with test
-    if (check is Name) {
-      body.write(check.name + ' != null');
-    } else {
-      body.write(false);
-    }
-
-    body.writeln(') {');
+    accepted = true;
     node.accept(this);
-    body.writeln('}');
+
+    buffer.writeln('import \'package:renderable/renderable.dart\';');
+    buffer.writeln();
+
+    buffer.writeln('class $name implements Template {');
+    buffer.writeln('const $name();');
+    buffer.writeln();
+
+    buffer.write('String render(');
+
+    if (names.isNotEmpty) {
+      buffer.write('{');
+      buffer.writeAll(names.map<String>((name) => '${name.type} ${name.name}'), ', ');
+      buffer.write('}');
+    }
+
+    buffer.write(') {');
+    buffer.writeln('final buffer = StringBuffer();');
+    buffer.write(body);
+    buffer.writeln('return buffer.toString();');
+    buffer.writeln('}');
+
+    for (var i = 0; i < texts.length; i++) {
+      buffer.writeln('static const String _t$i = ${_wrapString(texts[i])};');
+      buffer.writeln();
+    }
+
+    buffer.writeln('}');
+  }
+
+  @override
+  void visitAll(Iterable<Node> nodes) {
+    for (final node in nodes) {
+      node.accept(this);
+    }
+  }
+
+  @override
+  void visitAttribute(Attribute node) {
+    node.expression.accept(this);
+    body.write('.');
+    body.write(node.attribute);
+  }
+
+  @override
+  void visitDictLiteral(DictLiteral node) {
+    body.write('{');
+
+    for (final item in node.items) {
+      item.accept(this);
+
+      if (item != node.items.last) {
+        body.write(', ');
+      }
+    }
+
+    body.write('}');
+  }
+
+  @override
+  void visitIf(If node) {
+    body.writeln();
+
+    final entries = node.pairs.entries.toList();
+    final first = entries.removeAt(0);
+
+    _writeIf(first.key, first.value);
+
+    for (final entry in entries) {
+      _writeIf(entry.key, entry.value);
+    }
+
+    if (node.orElse != null) {
+      body.writeln('else {');
+      node.orElse.accept(this);
+      body.writeln('}');
+    }
+
+    body.writeln();
+  }
+
+  @override
+  void visitItem(Item node) {
+    node.expression.accept(this);
+    body.write('[');
+    node.key.accept(this);
+    body.write('[');
+  }
+
+  @override
+  void visitListLiteral(ListLiteral node) {
+    body.write('[');
+
+    for (final item in node.items) {
+      item.accept(this);
+
+      if (item != node.items.last) {
+        body.write(', ');
+      }
+    }
+
+    body.write(']');
+  }
+
+  @override
+  void visitLiteral(Literal node) {
+    throw UnimplementedError();
+  }
+
+  @override
+  void visitName(Name node) {
+    names.add(node);
+    body.write(node.name);
+  }
+
+  @override
+  void visitOutput(Output node) {
+    visitAll(node.items);
+  }
+
+  @override
+  void visitPair(Pair node) {
+    node.key.accept(this);
+    body.write(': ');
+    node.value.accept(this);
+  }
+
+  @override
+  void visitSlice(Slice node) {
+    body.write('slice(');
+    node.expression.accept(this);
+    body.write(', ');
+    node.start.accept(this);
+
+    if (node.stop != null) {
+      body.write(', ');
+      node.stop.accept(this);
+    }
+
+    if (node.step != null) {
+      body.write(', ');
+      node.step.accept(this);
+    }
+
+    body.write(')');
+  }
+
+  @override
+  void visitText(Text node) {
+    var id = texts.indexOf(node.text);
+
+    if (id == -1) {
+      id = texts.length;
+      texts.add(node.text);
+    }
+
+    body.write('_t$id');
+  }
+
+  @override
+  void visitTest(Test node) {
+    throw Exception();
+  }
+
+  @override
+  void visitTupleLiteral(TupleLiteral node) {
+    throw Exception();
+  }
+
+  @override
+  void visitUnary(Unary node) {
+    throw Exception();
   }
 }

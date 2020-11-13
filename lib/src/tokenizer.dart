@@ -73,6 +73,8 @@ class ExpressionTokenizer {
     while (!scanner.isDone) {
       if (scanner.scan(whiteSpaceRe)) {
         // yield Token.simple(scanner.lastMatch.start, TokenType.whiteSpace);
+      } else if (scanner.matches(end)) {
+        return;
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch.start, TokenType.name, scanner.lastMatch[0]);
       } else if (scanner.scan(stringRe)) {
@@ -88,10 +90,8 @@ class ExpressionTokenizer {
         }
       } else if (scanner.scan(operatorsRe)) {
         yield Token.simple(scanner.lastMatch.start, operators[scanner.lastMatch[0]]);
-      } else if (scanner.matches(end)) {
-        return;
       } else {
-        error('unexpected char');
+        throw 'unexpected char: ${scanner.rest[0]}';
       }
     }
 
@@ -116,7 +116,7 @@ class Tokenizer {
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
-    final rules = <String>[environment.commentStart, environment.variableStart, environment.blockStart];
+    final rules = <String>[environment.commentBegin, environment.variableBegin, environment.blockBegin];
     final reversed = rules.toList(growable: false);
     reversed.sort((a, b) => b.compareTo(a));
 
@@ -144,7 +144,7 @@ class Tokenizer {
               yield Token(start, TokenType.text, text);
             }
 
-            yield Token.simple(scanner.lastMatch.start, TokenType.commentBegin);
+            yield Token(scanner.lastMatch.start, TokenType.commentBegin, environment.commentBegin);
 
             start = scanner.lastMatch.end;
             end = start;
@@ -157,15 +157,15 @@ class Tokenizer {
             text = scanner.substring(start, end).trim();
 
             if (text.isEmpty) {
-              error('expected comment body.');
+              throw 'expected comment body.';
             }
 
             if (!scanner.scan(environment.commentEnd)) {
-              error('expected comment end.');
+              throw 'expected comment end.';
             }
 
             yield Token(start, TokenType.comment, text);
-            yield Token.simple(scanner.lastMatch.start, TokenType.commentEnd);
+            yield Token(scanner.lastMatch.start, TokenType.commentEnd, environment.commentEnd);
 
             start = scanner.lastMatch.end;
             end = start;
@@ -179,20 +179,17 @@ class Tokenizer {
               yield Token(start, TokenType.text, text);
             }
 
-            yield Token.simple(end, TokenType.variableBegin);
+            yield Token(end, TokenType.variableBegin, environment.variableBegin);
             yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.variableEnd)) {
-              error('expected expression end');
+              throw 'expected expression end';
             }
 
             end = scanner.lastMatch.start;
             start = end;
-
-            yield Token.simple(end, TokenType.variableEnd);
-
+            yield Token(end, TokenType.variableEnd, environment.variableEnd);
             break inner;
-
           case 2: // statement
             text = scanner.substring(start, end);
 
@@ -200,18 +197,18 @@ class Tokenizer {
               yield Token(start, TokenType.text, text);
             }
 
-            yield Token.simple(end, TokenType.blockBegin);
+            yield Token(end, TokenType.blockBegin, environment.blockBegin);
 
             yield* ExpressionTokenizer(environment).scan(scanner);
 
             if (!scanner.scan(environment.blockEnd)) {
-              error('expected statement end');
+              throw 'expected statement end';
             }
 
             start = scanner.lastMatch.end;
             end = start;
 
-            yield Token.simple(scanner.lastMatch.start, TokenType.blockEnd);
+            yield Token(scanner.lastMatch.start, TokenType.blockEnd, environment.blockEnd);
 
             break inner;
 

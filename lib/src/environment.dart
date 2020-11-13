@@ -3,11 +3,11 @@ import 'package:meta/meta.dart';
 @immutable
 class Environment {
   const Environment({
-    this.commentStart = '{#',
+    this.commentBegin = '{#',
     this.commentEnd = '#}',
-    this.variableStart = '{{',
+    this.variableBegin = '{{',
     this.variableEnd = '}}',
-    this.blockStart = '{%',
+    this.blockBegin = '{%',
     this.blockEnd = '%}',
     this.lineCommentPrefix = '##',
     this.lineStatementPrefix = '#',
@@ -15,19 +15,19 @@ class Environment {
     this.trimBlocks = false,
     this.newlineSequence = const <String>['\r\n', '\r', '\n'],
     this.keepTrailingNewline = false,
-  })  : assert(commentStart != commentEnd),
-        assert(variableStart != variableEnd),
-        assert(blockStart != variableEnd);
+  })  : assert(commentBegin != commentEnd),
+        assert(variableBegin != variableEnd),
+        assert(blockBegin != variableEnd);
 
-  final String commentStart;
+  final String commentBegin;
 
   final String commentEnd;
 
-  final String variableStart;
+  final String variableBegin;
 
   final String variableEnd;
 
-  final String blockStart;
+  final String blockBegin;
 
   final String blockEnd;
 
@@ -44,11 +44,11 @@ class Environment {
   final bool keepTrailingNewline;
 
   Environment change({
-    String commentStart,
+    String commentBegin,
     String commentEnd,
-    String variableStart,
+    String variableBegin,
     String variableEnd,
-    String blockStart,
+    String blockBegin,
     String blockEnd,
     String lineCommentPrefix,
     String lineStatementPrefix,
@@ -58,11 +58,11 @@ class Environment {
     bool keepTrailingNewline,
   }) {
     return Environment(
-      commentStart: commentStart ?? this.commentStart,
+      commentBegin: commentBegin ?? this.commentBegin,
       commentEnd: commentEnd ?? this.commentEnd,
-      variableStart: variableStart ?? this.variableStart,
+      variableBegin: variableBegin ?? this.variableBegin,
       variableEnd: variableEnd ?? this.variableEnd,
-      blockStart: blockStart ?? this.blockStart,
+      blockBegin: blockBegin ?? this.blockBegin,
       blockEnd: blockEnd ?? this.blockEnd,
       lineCommentPrefix: lineCommentPrefix ?? this.lineCommentPrefix,
       lineStatementPrefix: lineStatementPrefix ?? this.lineStatementPrefix,
