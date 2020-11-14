@@ -11,10 +11,10 @@ class Environment {
     this.blockEnd = '%}',
     this.lineCommentPrefix = '##',
     this.lineStatementPrefix = '#',
-    this.lstripBlocks = false,
+    this.lStripBlocks = false,
     this.trimBlocks = false,
-    this.newlineSequence = const <String>['\r\n', '\r', '\n'],
-    this.keepTrailingNewline = false,
+    this.newLine = '\n',
+    this.keepTrailingNewLine = false,
   })  : assert(commentBegin != commentEnd),
         assert(variableBegin != variableEnd),
         assert(blockBegin != variableEnd);
@@ -35,13 +35,13 @@ class Environment {
 
   final String lineStatementPrefix;
 
-  final bool lstripBlocks;
+  final bool lStripBlocks;
 
   final bool trimBlocks;
 
-  final List<String> newlineSequence;
+  final String newLine;
 
-  final bool keepTrailingNewline;
+  final bool keepTrailingNewLine;
 
   Environment change({
     String commentBegin,
@@ -52,10 +52,10 @@ class Environment {
     String blockEnd,
     String lineCommentPrefix,
     String lineStatementPrefix,
-    bool lstripBlocks,
+    bool lStripBlocks,
     bool trimBlocks,
-    List<String> newlineSequence,
-    bool keepTrailingNewline,
+    String newLine,
+    bool keepTrailingNewLine,
   }) {
     return Environment(
       commentBegin: commentBegin ?? this.commentBegin,
@@ -66,10 +66,10 @@ class Environment {
       blockEnd: blockEnd ?? this.blockEnd,
       lineCommentPrefix: lineCommentPrefix ?? this.lineCommentPrefix,
       lineStatementPrefix: lineStatementPrefix ?? this.lineStatementPrefix,
-      lstripBlocks: lstripBlocks ?? this.lstripBlocks,
+      lStripBlocks: lStripBlocks ?? this.lStripBlocks,
       trimBlocks: trimBlocks ?? this.trimBlocks,
-      newlineSequence: newlineSequence ?? this.newlineSequence,
-      keepTrailingNewline: keepTrailingNewline ?? this.keepTrailingNewline,
+      newLine: newLine ?? this.newLine,
+      keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
     );
   }
 }

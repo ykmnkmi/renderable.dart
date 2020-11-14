@@ -196,6 +196,18 @@ class TemplateBuilder extends Visitor {
   }
 
   @override
+  void visitData(Data node) {
+    var id = texts.indexOf(node.data);
+
+    if (id == -1) {
+      id = texts.length;
+      texts.add(node.data);
+    }
+
+    body.write('_t$id');
+  }
+
+  @override
   void visitDictLiteral(DictLiteral node) {
     body.write('{');
 
@@ -296,18 +308,6 @@ class TemplateBuilder extends Visitor {
     }
 
     body.write(')');
-  }
-
-  @override
-  void visitText(Text node) {
-    var id = texts.indexOf(node.text);
-
-    if (id == -1) {
-      id = texts.length;
-      texts.add(node.text);
-    }
-
-    body.write('_t$id');
   }
 
   @override

@@ -4,14 +4,6 @@ import 'exceptions.dart';
 import 'visitor.dart';
 
 abstract class Node {
-  static Node orList(List<Node> nodes) {
-    if (nodes.length == 1) {
-      return nodes[0];
-    }
-
-    return Output(nodes);
-  }
-
   const Node();
 
   void accept(Visitor visitor);
@@ -58,19 +50,19 @@ abstract class Literal implements Expression {
   }
 }
 
-class Text implements Literal {
-  const Text(this.text);
+class Data implements Literal {
+  const Data(this.data);
 
-  final String text;
+  final String data;
 
   @override
   void accept(Visitor visitor) {
-    return visitor.visitText(this);
+    return visitor.visitData(this);
   }
 
   @override
   String toString() {
-    return 'Text("${text.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
+    return 'Data("${data.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
   }
 }
 
@@ -293,7 +285,7 @@ class Output extends Statement {
 
   @override
   String toString() {
-    return 'Interpolation($items)';
+    return 'Output($items)';
   }
 }
 

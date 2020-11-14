@@ -3,7 +3,7 @@ import 'package:renderable/renderable.dart';
 const environment = Environment();
 
 void main() {
-  final tokens = Tokenizer(environment).tokenize('{# asd #}{{ [] }}').toList();
+  final tokens = Tokenizer(environment).tokenize('hello {{name }}!').toList();
   tokens.forEach(print);
   print('');
 

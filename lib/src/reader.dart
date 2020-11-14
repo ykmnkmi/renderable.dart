@@ -1,7 +1,9 @@
 import 'tokenizer.dart';
 
 class TokenReader {
-  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator;
+  TokenReader(Iterable<Token> tokens) : _iterator = tokens.iterator {
+    _iterator.moveNext();
+  }
 
   final Iterator<Token> _iterator;
 
@@ -28,15 +30,6 @@ class TokenReader {
     }
 
     return _iterator.moveNext() ? _iterator.current : null;
-  }
-
-  bool nextIf(String expression) {
-    if (current.test(expression)) {
-      next();
-      return true;
-    }
-
-    return false;
   }
 
   Token peek() {

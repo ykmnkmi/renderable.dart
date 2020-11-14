@@ -11,6 +11,8 @@ abstract class Visitor {
 
   void visitAttribute(Attribute node);
 
+  void visitData(Data node);
+
   void visitDictLiteral(DictLiteral node);
 
   void visitIf(If node);
@@ -30,8 +32,6 @@ abstract class Visitor {
   void visitSlice(Slice node);
 
   void visitTest(Test node);
-
-  void visitText(Text node);
 
   void visitTupleLiteral(TupleLiteral node);
 

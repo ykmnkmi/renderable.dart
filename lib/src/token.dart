@@ -3,18 +3,19 @@ part of 'tokenizer.dart';
 abstract class TokenType {
   static const String add = 'add';
   static const String assign = 'assign';
+  static const String blockBegin = 'blockbegin';
+  static const String blockEnd = 'blockend';
   static const String colon = 'colon';
   static const String comma = 'comma';
   static const String comment = 'comment';
-  static const String commentEnd = 'commentend';
   static const String commentBegin = 'commentbegin';
+  static const String commentEnd = 'commentend';
+  static const String data = 'data';
   static const String div = 'div';
   static const String dot = 'dot';
   static const String eof = 'eof';
   static const String eq = 'eq';
   static const String error = 'error';
-  static const String variableEnd = 'variableend';
-  static const String variableBegin = 'variablebegin';
   static const String float = 'float';
   static const String floorDiv = 'floordiv';
   static const String gt = 'gt';
@@ -22,6 +23,11 @@ abstract class TokenType {
   static const String integer = 'integer';
   static const String lBrace = 'lbrace';
   static const String lBracket = 'lbracket';
+  static const String lineComment = 'linecomment';
+  static const String lineCommentBegin = 'linecommentbegin';
+  static const String lineCommentEnd = 'linecommentend';
+  static const String lineStatementBegin = 'linestatementbegin';
+  static const String lineStatementEnd = 'linestatementend';
   static const String lParen = 'lparen';
   static const String lt = 'lt';
   static const String lteq = 'lteq';
@@ -32,21 +38,22 @@ abstract class TokenType {
   static const String operator = 'operator';
   static const String pipe = 'pipe';
   static const String pow = 'pow';
+  static const String rawBegin = 'rawbegin';
+  static const String rawEnd = 'rawend';
   static const String rBrace = 'rbrace';
   static const String rBracket = 'rbracket';
   static const String rParen = 'rparen';
   static const String semicolon = 'semicolon';
-  static const String blockEnd = 'blockend';
-  static const String blockBegin = 'blockbegin';
   static const String string = 'string';
   static const String sub = 'sub';
-  static const String text = 'text';
   static const String tilde = 'tilde';
-  static const String whiteSpace = 'whitespace';
+  static const String variableBegin = 'variablebegin';
+  static const String variableEnd = 'variableend';
+  static const String whitespace = 'whitespace';
 }
 
 abstract class Token {
-  static final Map<String, String> lexemes = <String, String>{
+  static final Map<String, String> common = <String, String>{
     TokenType.add: '+',
     TokenType.assign: '=',
     TokenType.colon: ':',
@@ -74,10 +81,10 @@ abstract class Token {
     TokenType.semicolon: ';',
     TokenType.sub: '-',
     TokenType.tilde: '~',
-    TokenType.whiteSpace: ' ',
+    TokenType.whitespace: ' ',
   };
 
-  const factory Token(int start, String type, String lexeme) = LexemeToken;
+  const factory Token(int start, String type, String value) = ValueToken;
 
   const factory Token.simple(int start, String type) = SimpleToken;
 
@@ -98,9 +105,14 @@ abstract class Token {
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true;
+    if (identical(this, other)) {
+      return true;
+    }
+
     return other is Token && type == other.type && start == other.start && value == other.value;
   }
+
+  Token change({int start, String type, String value});
 
   bool test(String expression);
 
@@ -124,6 +136,23 @@ abstract class BaseToken implements Token {
     return value.length;
   }
 
+  Token change({int start, String type, String value}) {
+    start ??= this.start;
+    value ??= this.value;
+
+    if (type != null && Token.common.containsKey(type)) {
+      if (value != null && Token.common[type] != value) {
+        throw this;
+      }
+
+      value = null;
+    } else {
+      type = this.type;
+    }
+
+    return value == null ? Token.simple(start, type) : Token(start, type, value);
+  }
+
   @override
   bool test(String expression) {
     if (type == expression) {
@@ -142,19 +171,6 @@ abstract class BaseToken implements Token {
   }
 }
 
-class LexemeToken extends BaseToken {
-  const LexemeToken(this.start, this.type, this.value);
-
-  @override
-  final int start;
-
-  @override
-  final String type;
-
-  @override
-  final String value;
-}
-
 class SimpleToken extends BaseToken {
   const SimpleToken(this.start, this.type);
 
@@ -166,6 +182,19 @@ class SimpleToken extends BaseToken {
 
   @override
   String get value {
-    return Token.lexemes[type];
+    return Token.common[type];
   }
+}
+
+class ValueToken extends BaseToken {
+  const ValueToken(this.start, this.type, this.value);
+
+  @override
+  final int start;
+
+  @override
+  final String type;
+
+  @override
+  final String value;
 }
