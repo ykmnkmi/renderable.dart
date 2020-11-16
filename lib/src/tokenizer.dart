@@ -48,7 +48,6 @@ const List<String> defaultIgnoredTokens = <String>[
   TokenType.lineComment,
 ];
 
-@immutable
 class Tokenizer {
   Tokenizer(this.environment, {this.ignoredTokens = defaultIgnoredTokens})
       : newLineRe = RegExp(r'(\r\n|\r|\n)'),

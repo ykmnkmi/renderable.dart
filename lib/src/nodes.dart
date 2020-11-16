@@ -4,31 +4,17 @@ import 'exceptions.dart';
 import 'visitor.dart';
 
 abstract class Node {
-  const Node();
-
   void accept(Visitor visitor);
 }
 
-abstract class Expression extends Node {
-  const Expression();
-}
+abstract class Expression extends Node {}
 
-class Name implements Expression {
-  const Name(this.name, [this.type = 'dynamic']);
+class Name extends Expression {
+  Name({this.name, this.type = 'dynamic'});
 
-  final String name;
+  String name;
 
-  final String type;
-
-  @override
-  int get hashCode {
-    return 'Name'.hashCode ^ name.hashCode ^ type.hashCode;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) || other is Name && name == other.name && type == other.type;
-  }
+  String type;
 
   @override
   void accept(Visitor visitor) {
@@ -41,19 +27,17 @@ class Name implements Expression {
   }
 }
 
-abstract class Literal implements Expression {
-  const Literal();
-
+abstract class Literal extends Expression {
   @override
   String toString() {
     return 'Literal()';
   }
 }
 
-class Data implements Literal {
-  const Data(this.data);
+class Data extends Literal {
+  Data({this.data});
 
-  final String data;
+  String data;
 
   @override
   void accept(Visitor visitor) {
@@ -67,9 +51,9 @@ class Data implements Literal {
 }
 
 class Constant<T> extends Literal {
-  const Constant(this.value);
+  Constant({this.value});
 
-  final T value;
+  T value;
 
   @override
   void accept(Visitor visitor) {
@@ -83,11 +67,11 @@ class Constant<T> extends Literal {
 }
 
 class TupleLiteral extends Literal {
-  const TupleLiteral(this.items, {this.save = false});
+  TupleLiteral({this.items, this.save = false});
 
-  final List<Expression> items;
+  List<Expression> items;
 
-  final bool save;
+  bool save;
 
   @override
   void accept(Visitor visitor) {
@@ -101,9 +85,9 @@ class TupleLiteral extends Literal {
 }
 
 class ListLiteral extends Literal {
-  const ListLiteral(this.items);
+  ListLiteral({this.items});
 
-  final List<Expression> items;
+  List<Expression> items;
 
   @override
   void accept(Visitor visitor) {
@@ -117,9 +101,9 @@ class ListLiteral extends Literal {
 }
 
 class DictLiteral extends Literal {
-  const DictLiteral(this.items);
+  DictLiteral({this.items});
 
-  final List<Pair> items;
+  List<Pair> items;
 
   @override
   void accept(Visitor visitor) {
@@ -133,11 +117,11 @@ class DictLiteral extends Literal {
 }
 
 class Test extends Expression {
-  const Test(this.name, this.expression);
+  Test({this.name, this.expression});
 
-  final String name;
+  String name;
 
-  final Expression expression;
+  Expression expression;
 
   @override
   void accept(Visitor visitor) {
@@ -150,12 +134,32 @@ class Test extends Expression {
   }
 }
 
+class Call extends Expression {
+  Call({this.expression, this.arguments, this.keywordArguments});
+
+  Expression expression;
+
+  List<Expression> arguments;
+
+  List<Keyword> keywordArguments;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitCall(this);
+  }
+
+  @override
+  String toString() {
+    return 'Call($expression, $arguments, $keywordArguments)';
+  }
+}
+
 class Item extends Expression {
-  const Item(this.key, this.expression);
+  Item({this.key, this.expression});
 
-  final Expression key;
+  Expression key;
 
-  final Expression expression;
+  Expression expression;
 
   @override
   void accept(Visitor visitor) {
@@ -169,11 +173,11 @@ class Item extends Expression {
 }
 
 class Attribute extends Expression {
-  const Attribute(this.attribute, this.expression);
+  Attribute({this.attribute, this.expression});
 
-  final String attribute;
+  String attribute;
 
-  final Expression expression;
+  Expression expression;
 
   @override
   void accept(Visitor visitor) {
@@ -187,31 +191,31 @@ class Attribute extends Expression {
 }
 
 class Slice extends Expression {
-  factory Slice.fromList(Expression expression, List<Expression> expressions) {
+  factory Slice.fromList(List<Expression> expressions, {Expression expression}) {
     assert(expressions.isNotEmpty);
     assert(expressions.length <= 3);
 
     switch (expressions.length) {
       case 1:
-        return Slice(expression, expressions[0]);
+        return Slice(expression: expression, start: expressions[0]);
       case 2:
-        return Slice(expression, expressions[0], expressions[1]);
+        return Slice(expression: expression, start: expressions[0], stop: expressions[1]);
       case 3:
-        return Slice(expression, expressions[0], expressions[1], expressions[2]);
+        return Slice(expression: expression, start: expressions[0], stop: expressions[1], step: expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
   }
 
-  const Slice(this.expression, this.start, [this.stop, this.step]);
+  Slice({this.expression, this.start, this.stop, this.step});
 
-  final Expression expression;
+  Expression expression;
 
-  final Expression start;
+  Expression start;
 
-  final Expression stop;
+  Expression stop;
 
-  final Expression step;
+  Expression step;
 
   @override
   void accept(Visitor visitor) {
@@ -225,11 +229,11 @@ class Slice extends Expression {
 }
 
 abstract class Unary extends Expression {
-  const Unary(this.operator, this.expression);
+  Unary({this.operator, this.expression});
 
-  final String operator;
+  String operator;
 
-  final Expression expression;
+  Expression expression;
 
   @override
   void accept(Visitor visitor) {
@@ -243,7 +247,7 @@ abstract class Unary extends Expression {
 }
 
 class Not extends Unary {
-  const Not(Expression item) : super('not', item);
+  Not({Expression expression}) : super(operator: 'not', expression: expression);
 
   @override
   String toString() {
@@ -252,7 +256,7 @@ class Not extends Unary {
 }
 
 class Negative extends Unary {
-  const Negative(Expression item) : super('-', item);
+  Negative({Expression expression}) : super(operator: '-', expression: expression);
 
   @override
   String toString() {
@@ -261,7 +265,7 @@ class Negative extends Unary {
 }
 
 class Positive extends Unary {
-  const Positive(Expression item) : super('+', item);
+  Positive({Expression expression}) : super(operator: '+', expression: expression);
 
   @override
   String toString() {
@@ -269,14 +273,12 @@ class Positive extends Unary {
   }
 }
 
-abstract class Statement extends Node {
-  const Statement();
-}
+abstract class Statement extends Node {}
 
 class Output extends Statement {
-  const Output(this.items);
+  Output({this.items});
 
-  final List<Node> items;
+  List<Node> items;
 
   @override
   void accept(Visitor visitor) {
@@ -290,11 +292,15 @@ class Output extends Statement {
 }
 
 class If extends Statement {
-  const If(this.pairs, [this.orElse]);
+  If({this.test, this.body, this.elseIf, this.$else});
 
-  final Map<Test, Node> pairs;
+  Expression test;
 
-  final Node orElse;
+  List<Node> body;
+
+  List<Node> elseIf;
+
+  List<Node> $else;
 
   @override
   void accept(Visitor visitor) {
@@ -303,20 +309,18 @@ class If extends Statement {
 
   @override
   String toString() {
-    return 'If($pairs, $orElse)';
+    return 'If($test, $body, $elseIf, ${$else})';
   }
 }
 
-abstract class Helper extends Node {
-  const Helper();
-}
+abstract class Helper extends Node {}
 
 class Pair extends Helper {
-  const Pair(this.key, this.value);
+  Pair({this.key, this.value});
 
-  final Expression key;
+  Expression key;
 
-  final Expression value;
+  Expression value;
 
   @override
   void accept(Visitor visitor) {
@@ -326,5 +330,23 @@ class Pair extends Helper {
   @override
   String toString() {
     return 'Pair($key, $value)';
+  }
+}
+
+class Keyword extends Helper {
+  Keyword({this.key, this.value});
+
+  String key;
+
+  Expression value;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitKeyword(this);
+  }
+
+  @override
+  String toString() {
+    return 'Keyword($key, $value)';
   }
 }

@@ -11,6 +11,8 @@ abstract class Visitor {
 
   void visitAttribute(Attribute node);
 
+  void visitCall(Call node);
+
   void visitData(Data node);
 
   void visitDictLiteral(DictLiteral node);
@@ -18,6 +20,8 @@ abstract class Visitor {
   void visitIf(If node);
 
   void visitItem(Item node);
+
+  void visitKeyword(Keyword node);
 
   void visitListLiteral(ListLiteral node);
 

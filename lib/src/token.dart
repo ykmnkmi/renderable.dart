@@ -20,6 +20,7 @@ abstract class TokenType {
   static const String floorDiv = 'floordiv';
   static const String gt = 'gt';
   static const String gteq = 'gteq';
+  static const String initial = 'initial';
   static const String integer = 'integer';
   static const String lBrace = 'lbrace';
   static const String lBracket = 'lbracket';
@@ -65,6 +66,7 @@ abstract class Token {
     TokenType.floorDiv: '//',
     TokenType.gt: '>',
     TokenType.gteq: '>=',
+    TokenType.initial: '',
     TokenType.lBrace: '{',
     TokenType.lBracket: '[',
     TokenType.lParen: '(',
@@ -114,7 +116,9 @@ abstract class Token {
 
   Token change({int start, String type, String value});
 
-  bool test(String expression);
+  bool test(String type, [String value]);
+
+  bool testAny(Iterable<String> expressions);
 
   @override
   String toString() {
@@ -136,6 +140,7 @@ abstract class BaseToken implements Token {
     return value.length;
   }
 
+  @override
   Token change({int start, String type, String value}) {
     start ??= this.start;
     value ??= this.value;
@@ -154,12 +159,29 @@ abstract class BaseToken implements Token {
   }
 
   @override
-  bool test(String expression) {
-    if (type == expression) {
-      return true;
-    } else if (expression.contains(':')) {
-      final parts = expression.split(':').take(2);
-      return type == parts.first && value == parts.last;
+  bool test(String type, [String value]) {
+    if (value == null) {
+      if (type == this.type) {
+        return true;
+      }
+
+      if (type.contains(':')) {
+        var parts = type.split(':');
+        return this.type == parts.first && this.value == parts.last;
+      }
+
+      return false;
+    }
+
+    return type == this.type && value == this.value;
+  }
+
+  @override
+  bool testAny(Iterable<String> expressions) {
+    for (var expression in expressions) {
+      if (test(expression)) {
+        return true;
+      }
     }
 
     return false;

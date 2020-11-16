@@ -226,21 +226,6 @@ class TemplateBuilder extends Visitor {
   void visitIf(If node) {
     body.writeln();
 
-    final entries = node.pairs.entries.toList();
-    final first = entries.removeAt(0);
-
-    _writeIf(first.key, first.value);
-
-    for (final entry in entries) {
-      _writeIf(entry.key, entry.value);
-    }
-
-    if (node.orElse != null) {
-      body.writeln('else {');
-      node.orElse.accept(this);
-      body.writeln('}');
-    }
-
     body.writeln();
   }
 
