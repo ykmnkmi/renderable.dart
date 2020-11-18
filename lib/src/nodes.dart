@@ -10,7 +10,7 @@ abstract class Node {
 abstract class Expression extends Node {}
 
 class Name extends Expression {
-  Name({this.name, this.type = 'dynamic'});
+  Name(this.name, {this.type = 'dynamic'});
 
   String name;
 
@@ -35,7 +35,7 @@ abstract class Literal extends Expression {
 }
 
 class Data extends Literal {
-  Data({this.data});
+  Data(this.data);
 
   String data;
 
@@ -51,7 +51,7 @@ class Data extends Literal {
 }
 
 class Constant<T> extends Literal {
-  Constant({this.value});
+  Constant(this.value);
 
   T value;
 
@@ -67,9 +67,9 @@ class Constant<T> extends Literal {
 }
 
 class TupleLiteral extends Literal {
-  TupleLiteral({this.items, this.save = false});
+  TupleLiteral(this.values, {this.save = false});
 
-  List<Expression> items;
+  List<Expression> values;
 
   bool save;
 
@@ -80,14 +80,14 @@ class TupleLiteral extends Literal {
 
   @override
   String toString() {
-    return 'TupleLiteral($items)';
+    return 'TupleLiteral($values)';
   }
 }
 
 class ListLiteral extends Literal {
-  ListLiteral({this.items});
+  ListLiteral(this.values);
 
-  List<Expression> items;
+  List<Expression> values;
 
   @override
   void accept(Visitor visitor) {
@@ -96,14 +96,14 @@ class ListLiteral extends Literal {
 
   @override
   String toString() {
-    return 'ListLiteral($items)';
+    return 'ListLiteral($values)';
   }
 }
 
 class DictLiteral extends Literal {
-  DictLiteral({this.items});
+  DictLiteral(this.pairs);
 
-  List<Pair> items;
+  List<Pair> pairs;
 
   @override
   void accept(Visitor visitor) {
@@ -112,16 +112,63 @@ class DictLiteral extends Literal {
 
   @override
   String toString() {
-    return 'DictLiteral($items)';
+    return 'DictLiteral($pairs)';
   }
 }
 
-class Test extends Expression {
-  Test({this.name, this.expression});
+class Filter extends Expression {
+  Filter(this.name, this.expression,
+      {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
+
+  Filter.fromCall(this.name, this.expression, Call call)
+      : arguments = call.arguments,
+        keywordArguments = call.keywordArguments,
+        dArguments = call.dArguments,
+        dKeywordArguments = call.dKeywordArguments;
 
   String name;
 
   Expression expression;
+
+  List<Expression> arguments;
+
+  List<Keyword> keywordArguments;
+
+  Expression dArguments;
+
+  Expression dKeywordArguments;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitFilter(this);
+  }
+
+  @override
+  String toString() {
+    return 'Filter($name, $expression, $arguments, $keywordArguments, $dArguments, $dKeywordArguments)';
+  }
+}
+
+class Test extends Expression {
+  Test(this.name, this.expression, {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
+
+  Test.fromCall(this.name, this.expression, Call call)
+      : arguments = call.arguments,
+        keywordArguments = call.keywordArguments,
+        dArguments = call.dArguments,
+        dKeywordArguments = call.dKeywordArguments;
+
+  String name;
+
+  Expression expression;
+
+  List<Expression> arguments;
+
+  List<Keyword> keywordArguments;
+
+  Expression dArguments;
+
+  Expression dKeywordArguments;
 
   @override
   void accept(Visitor visitor) {
@@ -130,18 +177,22 @@ class Test extends Expression {
 
   @override
   String toString() {
-    return 'Test($name, $expression)';
+    return 'Test($name, $expression, $arguments, $keywordArguments, $dArguments, $dKeywordArguments)';
   }
 }
 
 class Call extends Expression {
-  Call({this.expression, this.arguments, this.keywordArguments});
+  Call(this.expression, {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
 
   Expression expression;
 
   List<Expression> arguments;
 
   List<Keyword> keywordArguments;
+
+  Expression dArguments;
+
+  Expression dKeywordArguments;
 
   @override
   void accept(Visitor visitor) {
@@ -155,7 +206,7 @@ class Call extends Expression {
 }
 
 class Item extends Expression {
-  Item({this.key, this.expression});
+  Item(this.key, this.expression);
 
   Expression key;
 
@@ -173,7 +224,7 @@ class Item extends Expression {
 }
 
 class Attribute extends Expression {
-  Attribute({this.attribute, this.expression});
+  Attribute(this.attribute, this.expression);
 
   String attribute;
 
@@ -191,23 +242,23 @@ class Attribute extends Expression {
 }
 
 class Slice extends Expression {
-  factory Slice.fromList(List<Expression> expressions, {Expression expression}) {
+  factory Slice.fromList(List<Expression> expressions, [Expression expression]) {
     assert(expressions.isNotEmpty);
     assert(expressions.length <= 3);
 
     switch (expressions.length) {
       case 1:
-        return Slice(expression: expression, start: expressions[0]);
+        return Slice(expression, expressions[0]);
       case 2:
-        return Slice(expression: expression, start: expressions[0], stop: expressions[1]);
+        return Slice(expression, expressions[0], stop: expressions[1]);
       case 3:
-        return Slice(expression: expression, start: expressions[0], stop: expressions[1], step: expressions[2]);
+        return Slice(expression, expressions[0], stop: expressions[1], step: expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
   }
 
-  Slice({this.expression, this.start, this.stop, this.step});
+  Slice(this.expression, this.start, {this.stop, this.step});
 
   Expression expression;
 
@@ -229,7 +280,7 @@ class Slice extends Expression {
 }
 
 abstract class Unary extends Expression {
-  Unary({this.operator, this.expression});
+  Unary(this.operator, this.expression);
 
   String operator;
 
@@ -247,7 +298,7 @@ abstract class Unary extends Expression {
 }
 
 class Not extends Unary {
-  Not({Expression expression}) : super(operator: 'not', expression: expression);
+  Not(Expression expression) : super('not', expression);
 
   @override
   String toString() {
@@ -256,7 +307,7 @@ class Not extends Unary {
 }
 
 class Negative extends Unary {
-  Negative({Expression expression}) : super(operator: '-', expression: expression);
+  Negative(Expression expression) : super('-', expression);
 
   @override
   String toString() {
@@ -265,7 +316,7 @@ class Negative extends Unary {
 }
 
 class Positive extends Unary {
-  Positive({Expression expression}) : super(operator: '+', expression: expression);
+  Positive({Expression expression}) : super('+', expression);
 
   @override
   String toString() {
@@ -276,9 +327,9 @@ class Positive extends Unary {
 abstract class Statement extends Node {}
 
 class Output extends Statement {
-  Output({this.items});
+  Output(this.values);
 
-  List<Node> items;
+  List<Node> values;
 
   @override
   void accept(Visitor visitor) {
@@ -287,12 +338,12 @@ class Output extends Statement {
 
   @override
   String toString() {
-    return 'Output($items)';
+    return 'Output($values)';
   }
 }
 
 class If extends Statement {
-  If({this.test, this.body, this.elseIf, this.$else});
+  If(this.test, this.body, {this.elseIf, this.$else});
 
   Expression test;
 
@@ -316,7 +367,7 @@ class If extends Statement {
 abstract class Helper extends Node {}
 
 class Pair extends Helper {
-  Pair({this.key, this.value});
+  Pair(this.key, this.value);
 
   Expression key;
 
@@ -334,7 +385,7 @@ class Pair extends Helper {
 }
 
 class Keyword extends Helper {
-  Keyword({this.key, this.value});
+  Keyword(this.key, this.value);
 
   String key;
 

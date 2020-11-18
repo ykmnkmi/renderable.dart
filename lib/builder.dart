@@ -211,10 +211,10 @@ class TemplateBuilder extends Visitor {
   void visitDictLiteral(DictLiteral node) {
     body.write('{');
 
-    for (final item in node.items) {
+    for (final item in node.pairs) {
       item.accept(this);
 
-      if (item != node.items.last) {
+      if (item != node.pairs.last) {
         body.write(', ');
       }
     }
@@ -241,10 +241,10 @@ class TemplateBuilder extends Visitor {
   void visitListLiteral(ListLiteral node) {
     body.write('[');
 
-    for (final item in node.items) {
+    for (final item in node.values) {
       item.accept(this);
 
-      if (item != node.items.last) {
+      if (item != node.values.last) {
         body.write(', ');
       }
     }
@@ -265,7 +265,7 @@ class TemplateBuilder extends Visitor {
 
   @override
   void visitOutput(Output node) {
-    visitAll(node.items);
+    visitAll(node.values);
   }
 
   @override

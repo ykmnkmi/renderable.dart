@@ -6,6 +6,7 @@ class TokenReader {
         _pushed = <Token>[] {
     _current = Token.simple(0, TokenType.initial);
     _isClosed = false;
+    next();
   }
 
   Iterator<Token> _iterator;

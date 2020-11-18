@@ -17,6 +17,8 @@ abstract class Visitor {
 
   void visitDictLiteral(DictLiteral node);
 
+  void visitFilter(Filter node);
+  
   void visitIf(If node);
 
   void visitItem(Item node);
