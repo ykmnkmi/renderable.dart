@@ -8,44 +8,44 @@ import 'environment.dart';
 part 'token.dart';
 
 const Map<String, String> operators = <String, String>{
-  '-': TokenType.sub,
-  ',': TokenType.comma,
-  ';': TokenType.semicolon,
-  ':': TokenType.colon,
-  '!=': TokenType.ne,
-  '.': TokenType.dot,
-  '(': TokenType.lParen,
-  ')': TokenType.rParen,
-  '[': TokenType.lBracket,
-  ']': TokenType.rBracket,
-  '{': TokenType.lBrace,
-  '}': TokenType.rBrace,
-  '*': TokenType.mul,
-  '**': TokenType.pow,
-  '/': TokenType.div,
-  '//': TokenType.floorDiv,
-  '%': TokenType.mod,
-  '+': TokenType.add,
-  '<': TokenType.lt,
-  '<=': TokenType.lteq,
-  '=': TokenType.assign,
-  '==': TokenType.eq,
-  '>': TokenType.gt,
-  '>=': TokenType.gteq,
-  '|': TokenType.pipe,
-  '~': TokenType.tilde,
+  '-': 'sub',
+  ',': 'comma',
+  ';': 'semicolon',
+  ':': 'colon',
+  '!=': 'ne',
+  '.': 'dot',
+  '(': 'lparen',
+  ')': 'rparen',
+  '[': 'lbracket',
+  ']': 'rbracket',
+  '{': 'lbrace',
+  '}': 'rbrace',
+  '*': 'mul',
+  '**': 'pow',
+  '/': 'div',
+  '//': 'floordiv',
+  '%': 'mod',
+  '+': 'add',
+  '<': 'lt',
+  '<=': 'lteq',
+  '=': 'assign',
+  '==': 'eq',
+  '>': 'gt',
+  '>=': 'gteq',
+  '|': 'pipe',
+  '~': 'tilde',
 };
 
 const List<String> defaultIgnoredTokens = <String>[
-  TokenType.whitespace,
-  TokenType.commentBegin,
-  TokenType.comment,
-  TokenType.commentEnd,
-  TokenType.rawBegin,
-  TokenType.rawEnd,
-  TokenType.lineCommentBegin,
-  TokenType.lineCommentEnd,
-  TokenType.lineComment,
+  'whitespace',
+  'comment_begin',
+  'comment',
+  'comment_end',
+  'raw_begin',
+  'raw_end',
+  'linecomment_begin',
+  'linecomment_end',
+  'linecomment',
 ];
 
 class Tokenizer {
@@ -84,13 +84,13 @@ class Tokenizer {
     for (final token in scan(StringScanner(template, sourceUrl: path))) {
       if (ignoredTokens.any(token.test)) {
         continue;
-      } else if (token.test(TokenType.lineStatementBegin)) {
-        yield token.change(type: TokenType.lineStatementBegin);
-      } else if (token.test(TokenType.lineStatementEnd)) {
-        yield token.change(type: TokenType.lineStatementEnd);
-      } else if (token.test(TokenType.data) || token.test(TokenType.string)) {
+      } else if (token.test('lineStatement_begin')) {
+        yield token.change(type: 'lineStatement_begin');
+      } else if (token.test('lineStatement_end')) {
+        yield token.change(type: 'lineStatement_end');
+      } else if (token.test('data') || token.test('string')) {
         yield token.change(value: normalizeNewLines(token.value));
-      } else if (token.test(TokenType.integer) || token.test(TokenType.float)) {
+      } else if (token.test('integer') || token.test('float')) {
         yield token.change(value: token.value.replaceAll('_', ''));
       } else {
         yield token;
@@ -124,10 +124,10 @@ class Tokenizer {
           case 0: // comment
             if (start < end) {
               text = scanner.substring(start, end);
-              yield Token(start, TokenType.data, text);
+              yield Token(start, 'data', text);
             }
 
-            yield Token(scanner.lastMatch.start, TokenType.commentBegin, environment.commentBegin);
+            yield Token(scanner.lastMatch.start, 'comment_begin', environment.commentBegin);
             start = scanner.lastMatch.end;
             end = start;
 
@@ -146,8 +146,8 @@ class Tokenizer {
               throw 'expected comment end';
             }
 
-            yield Token(start, TokenType.comment, text);
-            yield Token(scanner.lastMatch.start, TokenType.commentEnd, environment.commentEnd);
+            yield Token(start, 'comment', text);
+            yield Token(scanner.lastMatch.start, 'comment_end', environment.commentEnd);
             start = scanner.lastMatch.end;
             end = start;
             break inner;
@@ -155,10 +155,10 @@ class Tokenizer {
             text = scanner.substring(start, end);
 
             if (text.isNotEmpty) {
-              yield Token(start, TokenType.data, text);
+              yield Token(start, 'data', text);
             }
 
-            yield Token(end, TokenType.variableBegin, environment.variableBegin);
+            yield Token(end, 'variable_begin', environment.variableBegin);
             yield* expression(scanner);
 
             if (!scanner.scan(environment.variableEnd)) {
@@ -167,16 +167,16 @@ class Tokenizer {
 
             end = scanner.lastMatch.start;
             start = end;
-            yield Token(end, TokenType.variableEnd, environment.variableEnd);
+            yield Token(end, 'variable_end', environment.variableEnd);
             break inner;
           case 2: // statement
             text = scanner.substring(start, end);
 
             if (text.isNotEmpty) {
-              yield Token(start, TokenType.data, text);
+              yield Token(start, 'data', text);
             }
 
-            yield Token(end, TokenType.blockBegin, environment.blockBegin);
+            yield Token(end, 'block_begin', environment.blockBegin);
             yield* expression(scanner);
 
             if (!scanner.scan(environment.blockEnd)) {
@@ -185,7 +185,7 @@ class Tokenizer {
 
             start = scanner.lastMatch.end;
             end = start;
-            yield Token(scanner.lastMatch.start, TokenType.blockEnd, environment.blockEnd);
+            yield Token(scanner.lastMatch.start, 'block_end', environment.blockEnd);
             break inner;
           default:
             scanner.position += 1;
@@ -196,31 +196,31 @@ class Tokenizer {
       text = scanner.substring(start, end);
 
       if (text.isNotEmpty) {
-        yield Token(start, TokenType.data, text);
+        yield Token(start, 'data', text);
       }
     }
 
-    yield Token.simple(scanner.position, TokenType.eof);
+    yield Token.simple(scanner.position, 'eof');
   }
 
   Iterable<Token> expression(StringScanner scanner) sync* {
     while (!scanner.isDone) {
       if (scanner.scan(whiteSpaceRe)) {
-        yield Token(scanner.lastMatch.start, TokenType.whitespace, scanner.lastMatch[0]);
+        yield Token(scanner.lastMatch.start, 'whitespace', scanner.lastMatch[0]);
       } else if (scanner.matches(environment.variableEnd)) {
         return;
       } else if (scanner.scan(nameRe)) {
-        yield Token(scanner.lastMatch.start, TokenType.name, scanner.lastMatch[0]);
+        yield Token(scanner.lastMatch.start, 'name', scanner.lastMatch[0]);
       } else if (scanner.scan(stringRe)) {
-        yield Token(scanner.lastMatch.start, TokenType.string, scanner.lastMatch[2] ?? scanner.lastMatch[3]);
+        yield Token(scanner.lastMatch.start, 'string', scanner.lastMatch[2] ?? scanner.lastMatch[3]);
       } else if (scanner.scan(integerRe)) {
         final start = scanner.lastMatch.start;
         final integer = scanner.lastMatch[0];
 
         if (scanner.scan(floatRe)) {
-          yield Token(start, TokenType.float, integer + scanner.lastMatch[0]);
+          yield Token(start, 'float', integer + scanner.lastMatch[0]);
         } else {
-          yield Token(start, TokenType.integer, integer);
+          yield Token(start, 'integer', integer);
         }
       } else if (scanner.scan(operatorsRe)) {
         yield Token.simple(scanner.lastMatch.start, operators[scanner.lastMatch[0]]);
@@ -229,7 +229,7 @@ class Tokenizer {
       }
     }
 
-    yield Token.simple(scanner.position, TokenType.eof);
+    yield Token.simple(scanner.position, 'eof');
   }
 
   @override

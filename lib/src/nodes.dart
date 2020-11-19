@@ -1,5 +1,6 @@
 library ast;
 
+import 'tokenizer.dart' show TokenType;
 import 'exceptions.dart';
 import 'visitor.dart';
 
@@ -27,92 +28,117 @@ class Name extends Expression {
   }
 }
 
-abstract class Literal extends Expression {
-  @override
-  String toString() {
-    return 'Literal()';
-  }
-}
+class Concat extends Expression {
+  Concat(this.expressions);
 
-class Data extends Literal {
-  Data(this.data);
-
-  String data;
+  List<Expression> expressions;
 
   @override
   void accept(Visitor visitor) {
-    return visitor.visitData(this);
+    visitor.visitConcat(this);
   }
 
   @override
   String toString() {
-    return 'Data("${data.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
+    return 'Concat($expressions)';
   }
 }
 
-class Constant<T> extends Literal {
-  Constant(this.value);
+class Attribute extends Expression {
+  Attribute(this.attribute, this.expression);
 
-  T value;
+  String attribute;
+
+  Expression expression;
 
   @override
   void accept(Visitor visitor) {
-    return visitor.visitLiteral(this);
+    visitor.visitAttribute(this);
   }
 
   @override
   String toString() {
-    return 'Constant<$T>($value)';
+    return 'Attribute($attribute, $expression)';
   }
 }
 
-class TupleLiteral extends Literal {
-  TupleLiteral(this.values, {this.save = false});
+class Item extends Expression {
+  Item(this.key, this.expression);
 
-  List<Expression> values;
+  Expression key;
 
-  bool save;
+  Expression expression;
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitTupleLiteral(this);
+    visitor.visitItem(this);
   }
 
   @override
   String toString() {
-    return 'TupleLiteral($values)';
+    return 'Item($key, $expression)';
   }
 }
 
-class ListLiteral extends Literal {
-  ListLiteral(this.values);
+class Slice extends Expression {
+  factory Slice.fromList(List<Expression> expressions, [Expression expression]) {
+    assert(expressions.isNotEmpty);
+    assert(expressions.length <= 3);
 
-  List<Expression> values;
+    switch (expressions.length) {
+      case 1:
+        return Slice(expression, expressions[0]);
+      case 2:
+        return Slice(expression, expressions[0], stop: expressions[1]);
+      case 3:
+        return Slice(expression, expressions[0], stop: expressions[1], step: expressions[2]);
+      default:
+        throw TemplateRuntimeError();
+    }
+  }
+
+  Slice(this.expression, this.start, {this.stop, this.step});
+
+  Expression expression;
+
+  Expression start;
+
+  Expression stop;
+
+  Expression step;
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitListLiteral(this);
+    visitor.visitSlice(this);
   }
 
   @override
   String toString() {
-    return 'ListLiteral($values)';
+    return 'Slice($expression, $start, $stop, $step)';
   }
 }
 
-class DictLiteral extends Literal {
-  DictLiteral(this.pairs);
+class Call extends Expression {
+  Call(this.expression, {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
 
-  List<Pair> pairs;
+  Expression expression;
+
+  List<Expression> arguments;
+
+  List<Keyword> keywordArguments;
+
+  Expression dArguments;
+
+  Expression dKeywordArguments;
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitDictLiteral(this);
+    visitor.visitCall(this);
   }
 
   @override
   String toString() {
-    return 'DictLiteral($pairs)';
+    return 'Call($expression, $arguments, $keywordArguments)';
   }
 }
 
@@ -181,101 +207,125 @@ class Test extends Expression {
   }
 }
 
-class Call extends Expression {
-  Call(this.expression, {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
+class Compare extends Expression {
+  Compare(this.expression, this.operands);
 
   Expression expression;
 
-  List<Expression> arguments;
-
-  List<Keyword> keywordArguments;
-
-  Expression dArguments;
-
-  Expression dKeywordArguments;
+  List<Operand> operands;
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitCall(this);
+    visitor.visitCompare(this);
   }
 
   @override
   String toString() {
-    return 'Call($expression, $arguments, $keywordArguments)';
+    return 'Compare($operands)';
   }
 }
 
-class Item extends Expression {
-  Item(this.key, this.expression);
+class CondExpr extends Expression {
+  CondExpr(this.test, this.expression1, [this.expression2]);
 
-  Expression key;
+  Expression test;
 
-  Expression expression;
+  Expression expression1;
+
+  Expression expression2;
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitItem(this);
-  }
-
-  @override
-  String toString() {
-    return 'Item($key, $expression)';
+    visitor.visitCondExpr(this);
   }
 }
 
-class Attribute extends Expression {
-  Attribute(this.attribute, this.expression);
-
-  String attribute;
-
-  Expression expression;
-
-  @override
-  void accept(Visitor visitor) {
-    visitor.visitAttribute(this);
-  }
-
+abstract class Literal extends Expression {
   @override
   String toString() {
-    return 'Attribute($attribute, $expression)';
+    return 'Literal()';
   }
 }
 
-class Slice extends Expression {
-  factory Slice.fromList(List<Expression> expressions, [Expression expression]) {
-    assert(expressions.isNotEmpty);
-    assert(expressions.length <= 3);
+class Data extends Literal {
+  Data(this.data);
 
-    switch (expressions.length) {
-      case 1:
-        return Slice(expression, expressions[0]);
-      case 2:
-        return Slice(expression, expressions[0], stop: expressions[1]);
-      case 3:
-        return Slice(expression, expressions[0], stop: expressions[1], step: expressions[2]);
-      default:
-        throw TemplateRuntimeError();
-    }
-  }
-
-  Slice(this.expression, this.start, {this.stop, this.step});
-
-  Expression expression;
-
-  Expression start;
-
-  Expression stop;
-
-  Expression step;
+  String data;
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitSlice(this);
+    return visitor.visitData(this);
   }
 
   @override
   String toString() {
-    return 'Slice($expression, $start, $stop, $step)';
+    return 'Data("${data.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
+  }
+}
+
+class Constant<T> extends Literal {
+  Constant(this.value);
+
+  T value;
+
+  @override
+  void accept(Visitor visitor) {
+    return visitor.visitConstant(this);
+  }
+
+  @override
+  String toString() {
+    return 'Constant<$T>($value)';
+  }
+}
+
+class TupleLiteral extends Literal {
+  TupleLiteral(this.values, {this.save = false});
+
+  List<Expression> values;
+
+  bool save;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitTupleLiteral(this);
+  }
+
+  @override
+  String toString() {
+    return 'TupleLiteral($values)';
+  }
+}
+
+class ListLiteral extends Literal {
+  ListLiteral(this.values);
+
+  List<Expression> values;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitListLiteral(this);
+  }
+
+  @override
+  String toString() {
+    return 'ListLiteral($values)';
+  }
+}
+
+class DictLiteral extends Literal {
+  DictLiteral(this.pairs);
+
+  List<Pair> pairs;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitDictLiteral(this);
+  }
+
+  @override
+  String toString() {
+    return 'DictLiteral($pairs)';
   }
 }
 
@@ -293,43 +343,100 @@ abstract class Unary extends Expression {
 
   @override
   String toString() {
-    return 'Unary(\'$operator\', $expression)';
-  }
-}
-
-class Not extends Unary {
-  Not(Expression expression) : super('not', expression);
-
-  @override
-  String toString() {
-    return 'Not($expression)';
-  }
-}
-
-class Negative extends Unary {
-  Negative(Expression expression) : super('-', expression);
-
-  @override
-  String toString() {
-    return 'Negative($expression)';
+    return '$runtimeType(\'$operator\', $expression)';
   }
 }
 
 class Positive extends Unary {
   Positive({Expression expression}) : super('+', expression);
+}
+
+class Negative extends Unary {
+  Negative(Expression expression) : super('-', expression);
+}
+
+class Not extends Unary {
+  Not(Expression expression) : super('not', expression);
+}
+
+abstract class Binary extends Expression {
+  Binary(this.operator, this.left, this.right);
+
+  String operator;
+
+  Expression left;
+
+  Expression right;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitBinary(this);
+  }
 
   @override
   String toString() {
-    return 'Positive($expression)';
+    return '$runtimeType(\'$operator\', $left, $right)';
   }
+}
+
+class Pow extends Binary {
+  Pow(Expression left, Expression right) : super('**', left, right);
+}
+
+class Mul extends Binary {
+  Mul(Expression left, Expression right) : super('*', left, right);
+}
+
+class Div extends Binary {
+  Div(Expression left, Expression right) : super('/', left, right);
+}
+
+class FloorDiv extends Binary {
+  FloorDiv(Expression left, Expression right) : super('//', left, right);
+}
+
+class Mod extends Binary {
+  Mod(Expression left, Expression right) : super('%', left, right);
+}
+
+class Add extends Binary {
+  Add(Expression left, Expression right) : super('+', left, right);
+}
+
+class Sub extends Binary {
+  Sub(Expression left, Expression right) : super('-', left, right);
+}
+
+class And extends Binary {
+  And(Expression left, Expression right) : super('and', left, right);
+}
+
+class Or extends Binary {
+  Or(Expression left, Expression right) : super('or', left, right);
 }
 
 abstract class Statement extends Node {}
 
 class Output extends Statement {
-  Output(this.values);
+  static Node orNode(List<Node> nodes) {
+    if (nodes.isEmpty) {
+      return Data('');
+    }
 
-  List<Node> values;
+    if (nodes.length == 1) {
+      return nodes[0];
+    }
+
+    if (nodes.every((node) => node is Expression)) {
+      return Concat(nodes.cast<Expression>().toList());
+    }
+
+    return Output(nodes);
+  }
+
+  Output(this.nodes);
+
+  List<Node> nodes;
 
   @override
   void accept(Visitor visitor) {
@@ -338,7 +445,7 @@ class Output extends Statement {
 
   @override
   String toString() {
-    return 'Output($values)';
+    return 'Output($nodes)';
   }
 }
 
@@ -399,5 +506,18 @@ class Keyword extends Helper {
   @override
   String toString() {
     return 'Keyword($key, $value)';
+  }
+}
+
+class Operand extends Helper {
+  Operand(this.operator, this.expression);
+
+  String operator;
+
+  Expression expression;
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitOperand(this);
   }
 }

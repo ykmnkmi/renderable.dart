@@ -5,20 +5,28 @@ import 'nodes.dart';
 abstract class Visitor {
   const Visitor();
 
-  void visit(Node node);
-
   void visitAll(Iterable<Node> nodes);
 
   void visitAttribute(Attribute node);
 
+  void visitBinary(Binary node);
+
   void visitCall(Call node);
+
+  void visitCompare(Compare node);
+
+  void visitConcat(Concat node);
+
+  void visitCondExpr(CondExpr node);
+
+  void visitConstant(Constant<Object> node);
 
   void visitData(Data node);
 
   void visitDictLiteral(DictLiteral node);
 
   void visitFilter(Filter node);
-  
+
   void visitIf(If node);
 
   void visitItem(Item node);
@@ -27,9 +35,9 @@ abstract class Visitor {
 
   void visitListLiteral(ListLiteral node);
 
-  void visitLiteral(Literal node);
-
   void visitName(Name node);
+
+  void visitOperand(Operand node);
 
   void visitOutput(Output node);
 
