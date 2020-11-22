@@ -1,8 +1,8 @@
 import 'package:meta/meta.dart';
 
 @immutable
-class Environment {
-  const Environment({
+class Configuration {
+  const Configuration({
     this.commentBegin = '{#',
     this.commentEnd = '#}',
     this.variableBegin = '{{',
@@ -43,7 +43,7 @@ class Environment {
 
   final bool keepTrailingNewLine;
 
-  Environment change({
+  Configuration change({
     String commentBegin,
     String commentEnd,
     String variableBegin,
@@ -57,7 +57,7 @@ class Environment {
     String newLine,
     bool keepTrailingNewLine,
   }) {
-    return Environment(
+    return Configuration(
       commentBegin: commentBegin ?? this.commentBegin,
       commentEnd: commentEnd ?? this.commentEnd,
       variableBegin: variableBegin ?? this.variableBegin,

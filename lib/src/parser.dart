@@ -2,17 +2,17 @@ library parser;
 
 import 'package:meta/meta.dart';
 
+import 'lexer.dart';
 import 'nodes.dart';
-import 'environment.dart';
+import 'configuration.dart';
 import 'reader.dart';
-import 'tokenizer.dart';
 
 class Parser {
-  Parser(this.environment)
+  Parser(this.configuration)
       : endRulesStack = <List<String>>[],
         tagStack = <String>[];
 
-  final Environment environment;
+  final Configuration configuration;
 
   final List<List<String>> endRulesStack;
 
@@ -26,7 +26,7 @@ class Parser {
         return true;
       default:
         if (extraEndRules != null && extraEndRules.isNotEmpty) {
-          return extraEndRules.any(reader.current.test);
+          return reader.current.testAny(extraEndRules);
         }
 
         return false;
@@ -34,7 +34,7 @@ class Parser {
   }
 
   Node parse(String template, {String path}) {
-    final tokens = Tokenizer(environment).tokenize(template, path: path);
+    final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     return scan(reader);
   }
@@ -42,7 +42,20 @@ class Parser {
   @protected
   Node scan(TokenReader reader) {
     final nodes = subParse(reader);
-    return Output.orNode(nodes);
+
+    if (nodes.isEmpty) {
+      return Data('');
+    }
+
+    if (nodes.length == 1) {
+      return nodes[0];
+    }
+
+    if (nodes.every((node) => node is Expression)) {
+      return Concat(nodes.cast<Expression>().toList());
+    }
+
+    return Output(nodes);
   }
 
   List<Node> subParse(TokenReader reader, {List<String> endRules = const <String>[]}) {
@@ -170,19 +183,19 @@ class Parser {
   }
 
   Expression parseExpression(TokenReader reader, [bool withCondExpr = true]) {
-    return withCondExpr ? parseCondExpr(reader) : parseOr(reader);
+    return withCondExpr ? parseCondition(reader) : parseOr(reader);
   }
 
-  Expression parseCondExpr(TokenReader reader, [bool withCondExpr = true]) {
+  Expression parseCondition(TokenReader reader, [bool withCondExpr = true]) {
     var expression1 = parseOr(reader);
 
     while (reader.skipIf('name', 'if')) {
       var expression2 = parseOr(reader);
 
       if (reader.skipIf('name', 'else')) {
-        expression1 = CondExpr(expression2, expression1, parseCondExpr(reader));
+        expression1 = Condition(expression2, expression1, parseCondition(reader));
       } else {
-        expression1 = CondExpr(expression2, expression1);
+        expression1 = Condition(expression2, expression1);
       }
     }
 

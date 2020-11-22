@@ -5,7 +5,7 @@ import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/nodes.dart';
-import 'src/environment.dart';
+import 'src/configuration.dart';
 import 'src/parser.dart';
 import 'src/utils.dart';
 import 'src/visitor.dart';
@@ -60,7 +60,7 @@ class HtmlTemplateBuilder extends Builder {
       statementEnd = '%}';
     }
 
-    environment = Environment(
+    environment = Configuration(
         commentBegin: commentStart,
         commentEnd: commentEnd,
         variableBegin: expressionStart,
@@ -71,7 +71,7 @@ class HtmlTemplateBuilder extends Builder {
 
   final DartFormatter formatter;
 
-  Environment environment;
+  Configuration environment;
 
   @override
   Map<String, List<String>> get buildExtensions {
@@ -362,8 +362,8 @@ class TemplateBuilder extends Visitor {
   }
 
   @override
-  void visitCondExpr(CondExpr node) {
-    throw 'implement visitCondExpr';
+  void visitCondition(Condition node) {
+    throw 'implement visitCondition';
   }
 
   @override

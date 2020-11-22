@@ -17,7 +17,7 @@ abstract class Visitor {
 
   void visitConcat(Concat node);
 
-  void visitCondExpr(CondExpr node);
+  void visitCondition(Condition node);
 
   void visitConstant(Constant<Object> node);
 

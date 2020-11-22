@@ -1,6 +1,5 @@
 library ast;
 
-import 'tokenizer.dart' show TokenType;
 import 'exceptions.dart';
 import 'visitor.dart';
 
@@ -116,6 +115,36 @@ class Slice extends Expression {
   String toString() {
     return 'Slice($expression, $start, $stop, $step)';
   }
+
+  static List<Object> slice(List<Object> list, int start, [int end, int step]) {
+    final result = <Object>[];
+    final length = list.length;
+
+    end ??= length;
+    step ??= 1;
+
+    if (start < 0) {
+      start = length + start;
+    }
+
+    if (end < 0) {
+      end = length + end;
+    }
+
+    if (step > 0) {
+      for (var i = start; i < end; i += step) {
+        result.add(list[i]);
+      }
+    } else {
+      step = -step;
+
+      for (var i = end - 1; i >= start; i -= step) {
+        result.add(list[i]);
+      }
+    }
+
+    return list;
+  }
 }
 
 class Call extends Expression {
@@ -225,8 +254,8 @@ class Compare extends Expression {
   }
 }
 
-class CondExpr extends Expression {
-  CondExpr(this.test, this.expression1, [this.expression2]);
+class Condition extends Expression {
+  Condition(this.test, this.expression1, [this.expression2]);
 
   Expression test;
 
@@ -236,7 +265,12 @@ class CondExpr extends Expression {
 
   @override
   void accept(Visitor visitor) {
-    visitor.visitCondExpr(this);
+    visitor.visitCondition(this);
+  }
+
+  @override
+  String toString() {
+    return 'Condition($test, $expression1, $expression2)';
   }
 }
 
@@ -418,22 +452,6 @@ class Or extends Binary {
 abstract class Statement extends Node {}
 
 class Output extends Statement {
-  static Node orNode(List<Node> nodes) {
-    if (nodes.isEmpty) {
-      return Data('');
-    }
-
-    if (nodes.length == 1) {
-      return nodes[0];
-    }
-
-    if (nodes.every((node) => node is Expression)) {
-      return Concat(nodes.cast<Expression>().toList());
-    }
-
-    return Output(nodes);
-  }
-
   Output(this.nodes);
 
   List<Node> nodes;
@@ -519,5 +537,10 @@ class Operand extends Helper {
   @override
   void accept(Visitor visitor) {
     visitor.visitOperand(this);
+  }
+
+  @override
+  String toString() {
+    return 'Operand(\'$operator\', $expression)';
   }
 }

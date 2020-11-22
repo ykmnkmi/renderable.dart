@@ -1,4 +1,4 @@
-import 'package:renderable/anotations.dart';
+import 'anotations.dart';
 
 @Test()
 bool defined(Object value) {

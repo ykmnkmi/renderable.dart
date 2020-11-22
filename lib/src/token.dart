@@ -1,4 +1,4 @@
-part of 'tokenizer.dart';
+part of 'lexer.dart';
 
 abstract class Token {
   static final Map<String, String> common = <String, String>{
@@ -33,9 +33,9 @@ abstract class Token {
     'whitespace': ' ',
   };
 
-  const factory Token(int start, String type, String value) = ValueToken;
+  const factory Token(int start, String type, String value) = _ValueToken;
 
-  const factory Token.simple(int start, String type) = SimpleToken;
+  const factory Token.simple(int start, String type) = _SimpleToken;
 
   @override
   int get hashCode {
@@ -74,8 +74,8 @@ abstract class Token {
 }
 
 @immutable
-abstract class BaseToken implements Token {
-  const BaseToken();
+abstract class _BaseToken implements Token {
+  const _BaseToken();
 
   @override
   int get end {
@@ -140,8 +140,8 @@ abstract class BaseToken implements Token {
   }
 }
 
-class SimpleToken extends BaseToken {
-  const SimpleToken(this.start, this.type);
+class _SimpleToken extends _BaseToken {
+  const _SimpleToken(this.start, this.type);
 
   @override
   final int start;
@@ -155,8 +155,8 @@ class SimpleToken extends BaseToken {
   }
 }
 
-class ValueToken extends BaseToken {
-  const ValueToken(this.start, this.type, this.value);
+class _ValueToken extends _BaseToken {
+  const _ValueToken(this.start, this.type, this.value);
 
   @override
   final int start;

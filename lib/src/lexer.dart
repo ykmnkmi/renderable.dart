@@ -3,7 +3,7 @@ library tokenizer;
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
-import 'environment.dart';
+import 'configuration.dart';
 
 part 'token.dart';
 
@@ -48,8 +48,8 @@ const List<String> defaultIgnoredTokens = <String>[
   'linecomment',
 ];
 
-class Tokenizer {
-  Tokenizer(this.environment, {this.ignoredTokens = defaultIgnoredTokens})
+class Lexer {
+  Lexer(this.configuration, {this.ignoredTokens = defaultIgnoredTokens})
       : newLineRe = RegExp(r'(\r\n|\r|\n)'),
         whiteSpaceRe = RegExp(r'\s+'),
         nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
@@ -58,7 +58,7 @@ class Tokenizer {
         floatRe = RegExp(r'\.(\d+_)*\d+[eE][+\-]?(\d+_)*\d+|\.(\d+_)*\d+'),
         operatorsRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;');
 
-  final Environment environment;
+  final Configuration configuration;
 
   final List<String> ignoredTokens;
 
@@ -77,7 +77,7 @@ class Tokenizer {
   final Pattern operatorsRe;
 
   String normalizeNewLines(String value) {
-    return value.replaceAll(newLineRe, environment.newLine);
+    return value.replaceAll(newLineRe, configuration.newLine);
   }
 
   Iterable<Token> tokenize(String template, {String path}) sync* {
@@ -100,7 +100,7 @@ class Tokenizer {
 
   @protected
   Iterable<Token> scan(StringScanner scanner) sync* {
-    final rules = <String>[environment.commentBegin, environment.variableBegin, environment.blockBegin];
+    final rules = <String>[configuration.commentBegin, configuration.variableBegin, configuration.blockBegin];
     final reversed = rules.toList(growable: false);
     reversed.sort((a, b) => b.compareTo(a));
 
@@ -127,11 +127,11 @@ class Tokenizer {
               yield Token(start, 'data', text);
             }
 
-            yield Token(scanner.lastMatch.start, 'comment_begin', environment.commentBegin);
+            yield Token(scanner.lastMatch.start, 'comment_begin', configuration.commentBegin);
             start = scanner.lastMatch.end;
             end = start;
 
-            while (!(scanner.isDone || scanner.matches(environment.commentEnd))) {
+            while (!(scanner.isDone || scanner.matches(configuration.commentEnd))) {
               scanner.position++;
             }
 
@@ -142,12 +142,12 @@ class Tokenizer {
               throw 'expected comment body';
             }
 
-            if (!scanner.scan(environment.commentEnd)) {
+            if (!scanner.scan(configuration.commentEnd)) {
               throw 'expected comment end';
             }
 
             yield Token(start, 'comment', text);
-            yield Token(scanner.lastMatch.start, 'comment_end', environment.commentEnd);
+            yield Token(scanner.lastMatch.start, 'comment_end', configuration.commentEnd);
             start = scanner.lastMatch.end;
             end = start;
             break inner;
@@ -158,16 +158,16 @@ class Tokenizer {
               yield Token(start, 'data', text);
             }
 
-            yield Token(end, 'variable_begin', environment.variableBegin);
+            yield Token(end, 'variable_begin', configuration.variableBegin);
             yield* expression(scanner);
 
-            if (!scanner.scan(environment.variableEnd)) {
+            if (!scanner.scan(configuration.variableEnd)) {
               throw 'expected expression end';
             }
 
             end = scanner.lastMatch.start;
             start = end;
-            yield Token(end, 'variable_end', environment.variableEnd);
+            yield Token(end, 'variable_end', configuration.variableEnd);
             break inner;
           case 2: // statement
             text = scanner.substring(start, end);
@@ -176,16 +176,16 @@ class Tokenizer {
               yield Token(start, 'data', text);
             }
 
-            yield Token(end, 'block_begin', environment.blockBegin);
+            yield Token(end, 'block_begin', configuration.blockBegin);
             yield* expression(scanner);
 
-            if (!scanner.scan(environment.blockEnd)) {
+            if (!scanner.scan(configuration.blockEnd)) {
               throw 'expected statement end';
             }
 
             start = scanner.lastMatch.end;
             end = start;
-            yield Token(scanner.lastMatch.start, 'block_end', environment.blockEnd);
+            yield Token(scanner.lastMatch.start, 'block_end', configuration.blockEnd);
             break inner;
           default:
             scanner.position += 1;
@@ -207,7 +207,7 @@ class Tokenizer {
     while (!scanner.isDone) {
       if (scanner.scan(whiteSpaceRe)) {
         yield Token(scanner.lastMatch.start, 'whitespace', scanner.lastMatch[0]);
-      } else if (scanner.matches(environment.variableEnd)) {
+      } else if (scanner.matches(configuration.variableEnd)) {
         return;
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch.start, 'name', scanner.lastMatch[0]);

@@ -1,4 +1,4 @@
-import 'tokenizer.dart';
+import 'lexer.dart';
 
 class TokenReader {
   TokenReader(Iterable<Token> tokens)
@@ -23,6 +23,10 @@ class TokenReader {
 
   bool get isClosed {
     return _isClosed;
+  }
+
+  Iterable<Token> get values {
+    return _TokenIterable(this);
   }
 
   void push(Token token) {
@@ -94,5 +98,37 @@ class TokenReader {
     }
 
     return next();
+  }
+}
+
+class _TokenIterable extends Iterable<Token> {
+  _TokenIterable(this.reader);
+
+  final TokenReader reader;
+
+  @override
+  Iterator<Token> get iterator {
+    return _TokenIterator(reader);
+  }
+}
+
+class _TokenIterator extends Iterator<Token> {
+  _TokenIterator(this.reader);
+
+  final TokenReader reader;
+
+  @override
+  Token get current {
+    return reader.next();
+  }
+
+  @override
+  bool moveNext() {
+    if (reader.current.test('eof')) {
+      reader.close();
+      return false;
+    }
+
+    return true;
   }
 }
