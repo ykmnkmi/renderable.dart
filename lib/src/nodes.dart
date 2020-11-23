@@ -1,5 +1,3 @@
-library ast;
-
 import 'exceptions.dart';
 import 'visitor.dart';
 

@@ -1,5 +1,3 @@
-library parser;
-
 import 'package:meta/meta.dart';
 
 import 'lexer.dart';

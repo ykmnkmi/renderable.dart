@@ -1,11 +1,7 @@
-library visitor;
-
 import 'nodes.dart';
 
 abstract class Visitor {
   const Visitor();
-
-  void visitAll(Iterable<Node> nodes);
 
   void visitAttribute(Attribute node);
 

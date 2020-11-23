@@ -219,7 +219,7 @@ class TemplateBuilder extends Visitor {
 
   @override
   void visitConstant(Constant<Object> node) {
-    bodyBuffer.write(repr(node.value));
+    bodyBuffer.write(represent(node.value));
   }
 
   @override

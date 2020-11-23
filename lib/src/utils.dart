@@ -1,7 +1,7 @@
-String repr(Object object) {
+String represent(Object object) {
   if (object is Iterable<Object>) {
     final buffer = StringBuffer('[')
-      ..writeAll(object.map<String>(repr), ', ')
+      ..writeAll(object.map<String>(represent), ', ')
       ..write(']');
     return buffer.toString();
   } else if (object is Map<Object, Object>) {
@@ -9,7 +9,7 @@ String repr(Object object) {
     final pairs = <Object>[];
 
     object.forEach((key, value) {
-      pairs.add('${repr(key)}: ${repr(value)}');
+      pairs.add('${represent(key)}: ${represent(value)}');
     });
 
     buffer

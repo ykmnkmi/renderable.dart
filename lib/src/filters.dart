@@ -1,7 +1,7 @@
-import 'anotations.dart';
+import 'package:renderable/anotations.dart';
 
-@Test()
-bool defined(Object value) {
+@Filter()
+bool boolean(Object value) {
   if (value == null) {
     return false;
   }
@@ -27,4 +27,17 @@ bool defined(Object value) {
   }
 
   return true;
+}
+
+@Filter()
+String string(Object value) {
+  if (value == null) {
+    return null;
+  }
+
+  if (value is String) {
+    return value;
+  }
+
+  return value.toString();
 }
