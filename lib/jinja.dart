@@ -68,9 +68,10 @@ class Environment extends Configuration {
 }
 
 class Template extends Renderable {
-  Template({
-    String name,
-    Environment environment,
+  factory Template(
+    String source, {
+    String path,
+    Environment parent,
     String commentBegin = '{#',
     String commentEnd = '#}',
     String variableBegin = '{{',
@@ -83,45 +84,74 @@ class Template extends Renderable {
     bool trimBlocks = false,
     String newLine = '\n',
     bool keepTrailingNewLine = false,
-  })  : environment = environment == null
-            ? Environment(
-                commentBegin: commentBegin,
-                commentEnd: commentEnd,
-                variableBegin: variableBegin,
-                variableEnd: variableEnd,
-                blockBegin: blockBegin,
-                blockEnd: blockEnd,
-                lineCommentPrefix: lineCommentPrefix,
-                lineStatementPrefix: lineStatementPrefix,
-                lStripBlocks: lStripBlocks,
-                trimBlocks: trimBlocks,
-                newLine: newLine,
-                keepTrailingNewLine: keepTrailingNewLine,
-              )
-            : environment.change(
-                commentBegin: commentBegin,
-                commentEnd: commentEnd,
-                variableBegin: variableBegin,
-                variableEnd: variableEnd,
-                blockBegin: blockBegin,
-                blockEnd: blockEnd,
-                lineCommentPrefix: lineCommentPrefix,
-                lineStatementPrefix: lineStatementPrefix,
-                lStripBlocks: lStripBlocks,
-                trimBlocks: trimBlocks,
-                newLine: newLine,
-                keepTrailingNewLine: keepTrailingNewLine,
-              ),
-        super(name: name);
+  }) {
+    Environment environment;
+
+    if (parent != null) {
+      environment = parent.change(
+        commentBegin: commentBegin,
+        commentEnd: commentEnd,
+        variableBegin: variableBegin,
+        variableEnd: variableEnd,
+        blockBegin: blockBegin,
+        blockEnd: blockEnd,
+        lineCommentPrefix: lineCommentPrefix,
+        lineStatementPrefix: lineStatementPrefix,
+        lStripBlocks: lStripBlocks,
+        trimBlocks: trimBlocks,
+        newLine: newLine,
+        keepTrailingNewLine: keepTrailingNewLine,
+      );
+    } else {
+      environment = Environment(
+        commentBegin: commentBegin,
+        commentEnd: commentEnd,
+        variableBegin: variableBegin,
+        variableEnd: variableEnd,
+        blockBegin: blockBegin,
+        blockEnd: blockEnd,
+        lineCommentPrefix: lineCommentPrefix,
+        lineStatementPrefix: lineStatementPrefix,
+        lStripBlocks: lStripBlocks,
+        trimBlocks: trimBlocks,
+        newLine: newLine,
+        keepTrailingNewLine: keepTrailingNewLine,
+      );
+    }
+
+    final body = Parser(environment).parse(source, path: path);
+    return Template.parsed(environment, body, path);
+  }
+
+  Template.parsed(this.environment, this.body, [this.path]);
 
   final Environment environment;
 
+  final Node body;
+
+  final String path;
+
   @override
-  String render([Map<String, Object> context]) {}
+  String render([Map<String, Object> context]) {
+    return Renderer(body, context).toString();
+  }
 }
 
 class Renderer implements Visitor {
-  Renderer([Map<String, Object> context]);
+  Renderer(Node node, [Map<String, Object> context])
+      : buffer = StringBuffer(),
+        contexts = <Map<String, Object>>[context ?? <String, Object>{}] {
+    node.accept(this);
+  }
+
+  final StringBuffer buffer;
+
+  final List<Map<String, Object>> contexts;
+
+  @override
+  String toString() {
+    return buffer.toString();
+  }
 
   @override
   void visitAttribute(Attribute node) {
