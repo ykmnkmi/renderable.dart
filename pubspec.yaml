@@ -1,6 +1,6 @@
 name: renderable
-description: An simple template language for Dart like Jinja or Stencil.
-version: 1.0.0-dev+23
+description: Testing features for Jinja.dart.
+version: 1.0.0-dev+24
 
 environment:
   sdk: '>=2.10.4 <3.0.0'

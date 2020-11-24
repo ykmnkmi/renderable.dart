@@ -4,10 +4,10 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
-import 'src/nodes.dart';
 import 'src/configuration.dart';
+import 'src/filters.dart';
+import 'src/nodes.dart';
 import 'src/parser.dart';
-import 'src/utils.dart';
 import 'src/visitor.dart';
 
 Builder htmlTemplateBuilder(BuilderOptions options) {
