@@ -5,11 +5,16 @@ import 'nodes.dart';
 import 'visitor.dart';
 
 class Renderer implements Context, Visitor {
-  Renderer(this.environment, Node node, [Map<String, Object> context])
+  Renderer(this.environment, List<Node> nodes, [Map<String, Object> context])
       : buffer = StringBuffer(),
-        contexts = <Map<String, Object>>[environment.globals, context ?? <String, Object>{}] {
-    writeAsLiteral = false;
-    node.accept(this);
+        contexts = <Map<String, Object>>[environment.globals] {
+    if (context != null) {
+      contexts.add(context);
+    }
+
+    for (final node in nodes) {
+      node.accept(this);
+    }
   }
 
   @override
@@ -18,8 +23,6 @@ class Renderer implements Context, Visitor {
   final StringBuffer buffer;
 
   final List<Map<String, Object>> contexts;
-
-  bool writeAsLiteral;
 
   @override
   Object operator [](String key) {
@@ -122,11 +125,7 @@ class Renderer implements Context, Visitor {
 
   @override
   void visitConstant(Constant<Object> node) {
-    if (writeAsLiteral) {
-      buffer.write(represent(node.value));
-    } else {
-      buffer.write(node.value);
-    }
+    buffer.write(represent(node.value));
   }
 
   @override
@@ -163,7 +162,6 @@ class Renderer implements Context, Visitor {
   void visitListLiteral(ListLiteral node) {
     var notFirst = false;
     buffer.write('[');
-    writeAsLiteral = true;
 
     for (final value in node.values) {
       if (notFirst) {
@@ -175,7 +173,6 @@ class Renderer implements Context, Visitor {
       value.accept(this);
     }
 
-    writeAsLiteral = false;
     buffer.write(']');
   }
 

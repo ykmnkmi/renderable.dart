@@ -97,20 +97,20 @@ class HtmlTemplateBuilder extends Builder {
 }
 
 class TemplateBuilder extends Visitor {
-  TemplateBuilder(this.name, this.templateBuffer, Node body)
+  TemplateBuilder(this.name, this.templateBuffer, List<Node> nodes)
       : bodyBuffers = <StringBuffer>[],
         names = <Name>{} {
     var isExpression = false;
     pushBodyBuffer();
 
-    if (body is Expression) {
+    if (nodes.length == 1) {
       isExpression = true;
-      body.accept(this);
-    } else if (body is Output) {
-      for (final child in body.nodes) {
-        if (child is Expression) {
+      nodes.first.accept(this);
+    } else {
+      for (final node in nodes) {
+        if (node is Expression) {
           bodyBuffer.write('buffer.write(');
-          child.accept(this);
+          node.accept(this);
           bodyBuffer.writeln(');');
         } else {
           throw 'implment statements';
@@ -214,7 +214,7 @@ class TemplateBuilder extends Visitor {
       quote *= 3;
     }
 
-    bodyBuffer.write(quote + template + quote);
+    bodyBuffer.write('$quote$template$quote');
   }
 
   @override

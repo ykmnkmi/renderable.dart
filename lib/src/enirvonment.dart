@@ -161,20 +161,20 @@ class Template extends Renderable {
       );
     }
 
-    final body = Parser(environment).parse(source, path: path);
-    return Template.parsed(environment, body, path);
+    final nodes = Parser(environment).parse(source, path: path);
+    return Template.parsed(environment, nodes, path);
   }
 
-  Template.parsed(this.environment, this.body, [this.path]);
+  Template.parsed(this.environment, this.nodes, [this.path]);
 
   final Environment environment;
 
-  final Node body;
+  final List<Node> nodes;
 
   final String path;
 
   @override
   String render([Map<String, Object> context]) {
-    return Renderer(environment, body, context).toString();
+    return Renderer(environment, nodes, context).toString();
   }
 }

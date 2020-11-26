@@ -31,29 +31,15 @@ class Parser {
     }
   }
 
-  Node parse(String template, {String path}) {
+  List<Node> parse(String template, {String path}) {
     final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     return scan(reader);
   }
 
   @protected
-  Node scan(TokenReader reader) {
-    final nodes = subParse(reader);
-
-    if (nodes.isEmpty) {
-      return Data('');
-    }
-
-    if (nodes.length == 1) {
-      return nodes[0];
-    }
-
-    if (nodes.every((node) => node is Expression)) {
-      return Concat(nodes.cast<Expression>().toList());
-    }
-
-    return Output(nodes);
+  List<Node> scan(TokenReader reader) {
+    return subParse(reader);
   }
 
   List<Node> subParse(TokenReader reader, {List<String> endRules = const <String>[]}) {
