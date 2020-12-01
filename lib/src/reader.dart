@@ -5,24 +5,17 @@ class TokenReader {
       : _iterator = tokens.iterator,
         _pushed = <Token>[] {
     _current = Token.simple(0, 'initial');
-    _isClosed = false;
     next();
   }
 
-  Iterator<Token> _iterator;
+  final Iterator<Token> _iterator;
 
-  List<Token> _pushed;
+  final List<Token> _pushed;
 
-  Token _current;
+  late Token _current;
 
   Token get current {
     return _current;
-  }
-
-  bool _isClosed;
-
-  bool get isClosed {
-    return _isClosed;
   }
 
   Iterable<Token> get values {
@@ -50,13 +43,13 @@ class TokenReader {
       if (_iterator.moveNext()) {
         _current = _iterator.current;
       } else {
-        close();
+        eof();
         break;
       }
     }
   }
 
-  Token nextIf(String type, [String value]) {
+  Token? nextIf(String type, [String? value]) {
     if (_current.test(type, value)) {
       return next();
     }
@@ -64,7 +57,7 @@ class TokenReader {
     return null;
   }
 
-  bool skipIf(String type, [String value]) {
+  bool skipIf(String type, [String? value]) {
     return nextIf(type, value) != null;
   }
 
@@ -75,16 +68,14 @@ class TokenReader {
       if (_iterator.moveNext()) {
         _current = _iterator.current;
       } else {
-        close();
+        eof();
       }
     }
 
     return result;
   }
 
-  void close() {
-    _iterator = null;
-    _isClosed = true;
+  void eof() {
     _current = Token.simple(current.start + current.length, 'eof');
   }
 
@@ -125,7 +116,7 @@ class _TokenIterator extends Iterator<Token> {
   @override
   bool moveNext() {
     if (reader.current.test('eof')) {
-      reader.close();
+      reader.eof();
       return false;
     }
 

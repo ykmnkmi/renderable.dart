@@ -1,7 +1,5 @@
 abstract class Renderable {
-  const Renderable({this.name});
-
-  final String name;
+  const Renderable();
 
   String render();
 }

@@ -8,7 +8,7 @@ abstract class Node {
 abstract class Expression extends Node {}
 
 class Name extends Expression {
-  Name(this.name, {this.type = 'dynamic'});
+  Name(this.name, [this.type = 'dynamic']);
 
   String name;
 
@@ -78,17 +78,17 @@ class Item extends Expression {
 }
 
 class Slice extends Expression {
-  factory Slice.fromList(List<Expression> expressions, [Expression expression]) {
+  factory Slice.fromList(Expression expression, List<Expression?> expressions) {
     assert(expressions.isNotEmpty);
     assert(expressions.length <= 3);
 
     switch (expressions.length) {
       case 1:
-        return Slice(expression, expressions[0]);
+        return Slice(expression, expressions[0]!);
       case 2:
-        return Slice(expression, expressions[0], stop: expressions[1]);
+        return Slice(expression, expressions[0]!, stop: expressions[1]);
       case 3:
-        return Slice(expression, expressions[0], stop: expressions[1], step: expressions[2]);
+        return Slice(expression, expressions[0]!, stop: expressions[1], step: expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
@@ -100,9 +100,9 @@ class Slice extends Expression {
 
   Expression start;
 
-  Expression stop;
+  Expression? stop;
 
-  Expression step;
+  Expression? step;
 
   @override
   void accept(Visitor visitor) {
@@ -114,7 +114,7 @@ class Slice extends Expression {
     return 'Slice($expression, $start, $stop, $step)';
   }
 
-  static List<Object> slice(List<Object> list, int start, [int end, int step]) {
+  static List<Object> slice(List<Object> list, int start, [int? end, int? step]) {
     final result = <Object>[];
     final length = list.length;
 
@@ -154,9 +154,9 @@ class Call extends Expression {
 
   List<Keyword> keywordArguments;
 
-  Expression dArguments;
+  Expression? dArguments;
 
-  Expression dKeywordArguments;
+  Expression? dKeywordArguments;
 
   @override
   void accept(Visitor visitor) {
@@ -187,9 +187,9 @@ class Filter extends Expression {
 
   List<Keyword> keywordArguments;
 
-  Expression dArguments;
+  Expression? dArguments;
 
-  Expression dKeywordArguments;
+  Expression? dKeywordArguments;
 
   @override
   void accept(Visitor visitor) {
@@ -219,9 +219,9 @@ class Test extends Expression {
 
   List<Keyword> keywordArguments;
 
-  Expression dArguments;
+  Expression? dArguments;
 
-  Expression dKeywordArguments;
+  Expression? dKeywordArguments;
 
   @override
   void accept(Visitor visitor) {
@@ -259,7 +259,7 @@ class Condition extends Expression {
 
   Expression expression1;
 
-  Expression expression2;
+  Expression? expression2;
 
   @override
   void accept(Visitor visitor) {
@@ -280,7 +280,7 @@ abstract class Literal extends Expression {
 }
 
 class Data extends Literal {
-  Data(this.data);
+  Data([this.data = '']);
 
   String data;
 
@@ -380,7 +380,7 @@ abstract class Unary extends Expression {
 }
 
 class Positive extends Unary {
-  Positive({Expression expression}) : super('+', expression);
+  Positive(Expression expression) : super('+', expression);
 }
 
 class Negative extends Unary {
@@ -466,7 +466,7 @@ class Output extends Statement {
 }
 
 class If extends Statement {
-  If(this.test, this.body, {this.elseIf, this.$else});
+  If(this.test, this.body, this.elseIf, this.$else);
 
   Expression test;
 

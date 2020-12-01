@@ -80,7 +80,7 @@ class Lexer {
     return value.replaceAll(newLineRe, configuration.newLine);
   }
 
-  Iterable<Token> tokenize(String template, {String path}) sync* {
+  Iterable<Token> tokenize(String template, {String? path}) sync* {
     for (final token in scan(StringScanner(template, sourceUrl: path))) {
       if (ignoredTokens.any(token.test)) {
         continue;
@@ -111,7 +111,7 @@ class Lexer {
 
       inner:
       while (!scanner.isDone) {
-        int state;
+        int? state;
 
         for (final rule in reversed) {
           if (scanner.scan(rule)) {
@@ -127,8 +127,8 @@ class Lexer {
               yield Token(start, 'data', text);
             }
 
-            yield Token(scanner.lastMatch.start, 'comment_begin', configuration.commentBegin);
-            start = scanner.lastMatch.end;
+            yield Token(scanner.lastMatch!.start, 'comment_begin', configuration.commentBegin);
+            start = scanner.lastMatch!.end;
             end = start;
 
             while (!(scanner.isDone || scanner.matches(configuration.commentEnd))) {
@@ -147,8 +147,8 @@ class Lexer {
             }
 
             yield Token(start, 'comment', text);
-            yield Token(scanner.lastMatch.start, 'comment_end', configuration.commentEnd);
-            start = scanner.lastMatch.end;
+            yield Token(scanner.lastMatch!.start, 'comment_end', configuration.commentEnd);
+            start = scanner.lastMatch!.end;
             end = start;
             break inner;
           case 1: // expression
@@ -165,7 +165,7 @@ class Lexer {
               throw 'expected expression end';
             }
 
-            end = scanner.lastMatch.start;
+            end = scanner.lastMatch!.start;
             start = end;
             yield Token(end, 'variable_end', configuration.variableEnd);
             break inner;
@@ -183,9 +183,9 @@ class Lexer {
               throw 'expected statement end';
             }
 
-            start = scanner.lastMatch.end;
+            start = scanner.lastMatch!.end;
             end = start;
-            yield Token(scanner.lastMatch.start, 'block_end', configuration.blockEnd);
+            yield Token(scanner.lastMatch!.start, 'block_end', configuration.blockEnd);
             break inner;
           default:
             scanner.position += 1;
@@ -206,24 +206,24 @@ class Lexer {
   Iterable<Token> expression(StringScanner scanner) sync* {
     while (!scanner.isDone) {
       if (scanner.scan(whiteSpaceRe)) {
-        yield Token(scanner.lastMatch.start, 'whitespace', scanner.lastMatch[0]);
+        yield Token(scanner.lastMatch!.start, 'whitespace', scanner.lastMatch![0]!);
       } else if (scanner.matches(configuration.variableEnd)) {
         return;
       } else if (scanner.scan(nameRe)) {
-        yield Token(scanner.lastMatch.start, 'name', scanner.lastMatch[0]);
+        yield Token(scanner.lastMatch!.start, 'name', scanner.lastMatch![0]!);
       } else if (scanner.scan(stringRe)) {
-        yield Token(scanner.lastMatch.start, 'string', scanner.lastMatch[2] ?? scanner.lastMatch[3]);
+        yield Token(scanner.lastMatch!.start, 'string', scanner.lastMatch![2] ?? scanner.lastMatch![3] ?? '');
       } else if (scanner.scan(integerRe)) {
-        final start = scanner.lastMatch.start;
-        final integer = scanner.lastMatch[0];
+        final start = scanner.lastMatch!.start;
+        final integer = scanner.lastMatch![0]!;
 
         if (scanner.scan(floatRe)) {
-          yield Token(start, 'float', integer + scanner.lastMatch[0]);
+          yield Token(start, 'float', integer + scanner.lastMatch![0]!);
         } else {
           yield Token(start, 'integer', integer);
         }
       } else if (scanner.scan(operatorsRe)) {
-        yield Token.simple(scanner.lastMatch.start, operators[scanner.lastMatch[0]]);
+        yield Token.simple(scanner.lastMatch!.start, operators[scanner.lastMatch![0]]!);
       } else {
         throw 'unexpected char: ${scanner.rest[0]}';
       }

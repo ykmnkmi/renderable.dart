@@ -5,7 +5,7 @@ import 'nodes.dart';
 import 'visitor.dart';
 
 class Renderer implements Context, Visitor {
-  Renderer(this.environment, List<Node> nodes, [Map<String, Object> context])
+  Renderer(this.environment, List<Node> nodes, [Map<String, Object>? context])
       : buffer = StringBuffer(),
         contexts = <Map<String, Object>>[environment.globals] {
     if (context != null) {
@@ -124,7 +124,7 @@ class Renderer implements Context, Visitor {
   }
 
   @override
-  void visitConstant(Constant<Object> node) {
+  void visitConstant(Constant<Object?> node) {
     buffer.write(represent(node.value));
   }
 

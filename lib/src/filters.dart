@@ -26,7 +26,7 @@ bool boolean(Object value) {
   return true;
 }
 
-String represent(Object object) {
+String represent(Object? object) {
   if (object is Iterable<Object>) {
     final buffer = StringBuffer('[')
       ..writeAll(object.map<String>(represent), ', ')

@@ -44,18 +44,18 @@ class Configuration {
   final bool keepTrailingNewLine;
 
   Configuration change({
-    String commentBegin,
-    String commentEnd,
-    String variableBegin,
-    String variableEnd,
-    String blockBegin,
-    String blockEnd,
-    String lineCommentPrefix,
-    String lineStatementPrefix,
-    bool lStripBlocks,
-    bool trimBlocks,
-    String newLine,
-    bool keepTrailingNewLine,
+    String? commentBegin,
+    String? commentEnd,
+    String? variableBegin,
+    String? variableEnd,
+    String? blockBegin,
+    String? blockEnd,
+    String? lineCommentPrefix,
+    String? lineStatementPrefix,
+    bool? lStripBlocks,
+    bool? trimBlocks,
+    String? newLine,
+    bool? keepTrailingNewLine,
   }) {
     return Configuration(
       commentBegin: commentBegin ?? this.commentBegin,

@@ -15,7 +15,7 @@ Builder htmlTemplateBuilder(BuilderOptions options) {
 }
 
 class HtmlTemplateBuilder extends Builder {
-  HtmlTemplateBuilder([Map<String, Object> config]) : formatter = DartFormatter() {
+  HtmlTemplateBuilder(Map<String, Object?> config) : formatter = DartFormatter() {
     String commentStart;
     String commentEnd;
 
@@ -61,17 +61,18 @@ class HtmlTemplateBuilder extends Builder {
     }
 
     environment = Configuration(
-        commentBegin: commentStart,
-        commentEnd: commentEnd,
-        variableBegin: expressionStart,
-        variableEnd: expressionEnd,
-        blockBegin: statementStart,
-        blockEnd: statementEnd);
+      commentBegin: commentStart,
+      commentEnd: commentEnd,
+      variableBegin: expressionStart,
+      variableEnd: expressionEnd,
+      blockBegin: statementStart,
+      blockEnd: statementEnd,
+    );
   }
 
   final DartFormatter formatter;
 
-  Configuration environment;
+  late Configuration environment;
 
   @override
   Map<String, List<String>> get buildExtensions {
@@ -218,7 +219,7 @@ class TemplateBuilder extends Visitor {
   }
 
   @override
-  void visitConstant(Constant<Object> node) {
+  void visitConstant(Constant<Object?> node) {
     bodyBuffer.write(represent(node.value));
   }
 
@@ -316,14 +317,18 @@ class TemplateBuilder extends Visitor {
     bodyBuffer.write(', ');
     node.start.accept(this);
 
-    if (node.stop != null) {
+    var stop = node.stop;
+
+    if (stop != null) {
       bodyBuffer.write(', ');
-      node.stop.accept(this);
+      stop.accept(this);
     }
 
-    if (node.step != null) {
+    var step = node.step;
+
+    if (step != null) {
       bodyBuffer.write(', ');
-      node.step.accept(this);
+      step.accept(this);
     }
 
     bodyBuffer.write(')');

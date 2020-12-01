@@ -5,9 +5,9 @@ import 'parser.dart';
 import 'renderable.dart';
 import 'renderer.dart';
 
-typedef Finalizer = Object Function([Object value]);
+typedef Finalizer = Object Function([Object? value]);
 
-Object defaultFinalizer([Object value]) {
+Object defaultFinalizer([Object? value]) {
   if (value == null) {
     return '';
   }
@@ -34,9 +34,9 @@ class Environment extends Configuration {
     String newLine = '\n',
     bool keepTrailingNewLine = false,
     this.finalize = defaultFinalizer,
-    Map<String, Object> globals,
-    Map<String, Function> filters,
-    Map<String, Function> tests,
+    Map<String, Object>? globals,
+    Map<String, Function>? filters,
+    Map<String, Function>? tests,
   })  : globals = <String, Object>{},
         filters = <String, Function>{},
         tests = <String, Function>{},
@@ -77,34 +77,34 @@ class Environment extends Configuration {
 
   @override
   Environment change({
-    String commentBegin,
-    String commentEnd,
-    String variableBegin,
-    String variableEnd,
-    String blockBegin,
-    String blockEnd,
-    String lineCommentPrefix,
-    String lineStatementPrefix,
-    bool lStripBlocks,
-    bool trimBlocks,
-    String newLine,
-    bool keepTrailingNewLine,
-    Finalizer finalize,
+    String? commentBegin,
+    String? commentEnd,
+    String? variableBegin,
+    String? variableEnd,
+    String? blockBegin,
+    String? blockEnd,
+    String? lineCommentPrefix,
+    String? lineStatementPrefix,
+    bool? lStripBlocks,
+    bool? trimBlocks,
+    String? newLine,
+    bool? keepTrailingNewLine,
+    Finalizer? finalize,
   }) {
     return Environment(
-      commentBegin: commentBegin,
-      commentEnd: commentEnd,
-      variableBegin: variableBegin,
-      variableEnd: variableEnd,
-      blockBegin: blockBegin,
-      blockEnd: blockEnd,
-      lineCommentPrefix: lineCommentPrefix,
-      lineStatementPrefix: lineStatementPrefix,
-      lStripBlocks: lStripBlocks,
-      trimBlocks: trimBlocks,
-      newLine: newLine,
-      keepTrailingNewLine: keepTrailingNewLine,
-      finalize: finalize,
+      commentBegin: commentBegin ?? this.commentBegin,
+      commentEnd: commentEnd ?? this.commentEnd,
+      variableBegin: variableBegin ?? this.variableBegin,
+      variableEnd: variableEnd ?? this.variableEnd,
+      blockBegin: blockBegin ?? this.blockBegin,
+      blockEnd: blockEnd ?? this.blockEnd,
+      lineCommentPrefix: lineCommentPrefix ?? this.lineCommentPrefix,
+      lineStatementPrefix: lineStatementPrefix ?? this.lineStatementPrefix,
+      lStripBlocks: lStripBlocks ?? this.lStripBlocks,
+      trimBlocks: trimBlocks ?? this.trimBlocks,
+      newLine: newLine ?? this.newLine,
+      keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
+      finalize: finalize ?? this.finalize,
     );
   }
 }
@@ -112,8 +112,8 @@ class Environment extends Configuration {
 class Template extends Renderable {
   factory Template(
     String source, {
-    String path,
-    Environment parent,
+    String? path,
+    Environment? parent,
     String commentBegin = '{#',
     String commentEnd = '#}',
     String variableBegin = '{{',
@@ -171,10 +171,10 @@ class Template extends Renderable {
 
   final List<Node> nodes;
 
-  final String path;
+  final String? path;
 
   @override
-  String render([Map<String, Object> context]) {
+  String render([Map<String, Object>? context]) {
     return Renderer(environment, nodes, context).toString();
   }
 }

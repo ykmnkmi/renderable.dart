@@ -16,14 +16,14 @@ class Parser {
 
   final List<String> tagStack;
 
-  bool isTupleEnd(TokenReader reader, [List<String> extraEndRules]) {
+  bool isTupleEnd(TokenReader reader, [List<String> extraEndRules = const <String>[]]) {
     switch (reader.current.type) {
       case 'variable_end':
       case 'block_end':
       case 'rparen':
         return true;
       default:
-        if (extraEndRules != null && extraEndRules.isNotEmpty) {
+        if (extraEndRules.isNotEmpty) {
           return reader.current.testAny(extraEndRules);
         }
 
@@ -31,7 +31,7 @@ class Parser {
     }
   }
 
-  List<Node> parse(String template, {String path}) {
+  List<Node> parse(String template, {String? path}) {
     final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     return scan(reader);
@@ -142,7 +142,7 @@ class Parser {
 
   Node parseIf(TokenReader reader) {
     If result, node;
-    result = node = If(null, null);
+    result = node = If(Constant<bool>(true), <Node>[Data()], <Node>[], <Node>[]);
 
     while (true) {
       node.test = parseTuple(reader, withCondExpr: false);
@@ -153,7 +153,7 @@ class Parser {
       final token = reader.next();
 
       if (token.test('name', 'elif')) {
-        node = If(null, null);
+        node = If(Constant<bool>(true), <Node>[Data()], <Node>[], <Node>[]);
         result.elseIf.add(node);
         continue;
       } else if (token.test('name', 'else')) {
@@ -318,7 +318,7 @@ class Parser {
       case 'add':
         reader.next();
         expression = parseUnary(reader, withFilter: false);
-        expression = Positive(expression: expression);
+        expression = Positive(expression);
         break;
       case 'sub':
         reader.next();
@@ -396,7 +396,8 @@ class Parser {
     return expression;
   }
 
-  Expression parseTuple(TokenReader reader, {bool simplified = false, bool withCondExpr = true, List<String> extraEndRules, bool explicitParentheses = false}) {
+  Expression parseTuple(TokenReader reader,
+      {bool simplified = false, bool withCondExpr = true, List<String> extraEndRules = const <String>[], bool explicitParentheses = false}) {
     Expression Function(TokenReader) parse;
 
     if (simplified) {
@@ -558,7 +559,7 @@ class Parser {
   }
 
   Expression parseSubscribed(TokenReader reader) {
-    var arguments = <Expression>[];
+    var arguments = <Expression?>[];
 
     if (reader.current.test('colon')) {
       reader.next();
@@ -594,14 +595,14 @@ class Parser {
       arguments.add(null);
     }
 
-    return Slice.fromList(arguments);
+    return Slice.fromList(Data(), arguments);
   }
 
   Call parseCall(TokenReader reader, Expression expression) {
     reader.expect('lparen');
     var arguments = <Expression>[];
     var keywordArguments = <Keyword>[];
-    Expression dArguments, dKeywordArguments;
+    Expression? dArguments, dKeywordArguments;
 
     void ensure(bool ensure) {
       if (!ensure) {
@@ -661,9 +662,9 @@ class Parser {
       Call call;
 
       if (reader.current.test('lparen')) {
-        call = parseCall(reader, null);
+        call = parseCall(reader, Data());
       } else {
-        call = Call(null);
+        call = Call(Data());
       }
 
       expression = Filter.fromCall(name, expression, call);
@@ -694,7 +695,7 @@ class Parser {
     Call call;
 
     if (reader.current.test('lparen')) {
-      call = parseCall(reader, null);
+      call = parseCall(reader, Data());
     } else if (reader.current.testAny(['name', 'string', 'integer', 'float', 'lparen', 'lbracket', 'lbrace']) &&
         !reader.current.testAny(['name:else', 'name:or', 'name:and'])) {
       if (reader.current.test('name', 'is')) {
@@ -705,9 +706,9 @@ class Parser {
       var argument = parsePrimary(reader);
       argument = parsePostfix(reader, argument);
       // print('current: ${reader.current}');
-      call = Call(null, arguments: <Expression>[argument]);
+      call = Call(Data(), arguments: <Expression>[argument]);
     } else {
-      call = Call(null);
+      call = Call(Data());
     }
 
     expression = Test.fromCall(name, expression, call);

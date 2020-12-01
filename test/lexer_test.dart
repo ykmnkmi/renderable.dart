@@ -9,12 +9,9 @@ void main() {
     test('simple', () {
       var reader = TokenReader(testTokens);
       expect(reader.current.test('block_begin'), isTrue);
-      expect(reader.isClosed, isFalse);
       reader.next();
       expect(reader.current.test('block_end'), isTrue);
-      expect(reader.isClosed, isFalse);
       reader.next();
-      expect(reader.isClosed, isTrue);
     });
 
     test('simple', () {

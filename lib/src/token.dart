@@ -63,7 +63,7 @@ abstract class Token {
 
   Token change({int start, String type, String value});
 
-  bool test(String type, [String value]);
+  bool test(String type, [String? value]);
 
   bool testAny(Iterable<String> expressions);
 
@@ -88,12 +88,12 @@ abstract class _BaseToken implements Token {
   }
 
   @override
-  Token change({int start, String type, String value}) {
+  Token change({int? start, String? type, String? value}) {
     start ??= this.start;
     value ??= this.value;
 
     if (type != null && Token.common.containsKey(type)) {
-      if (value != null && Token.common[type] != value) {
+      if (Token.common[type] != value) {
         throw this;
       }
 
@@ -106,7 +106,7 @@ abstract class _BaseToken implements Token {
   }
 
   @override
-  bool test(String type, [String value]) {
+  bool test(String type, [String? value]) {
     if (value == null) {
       if (type == this.type) {
         return true;
@@ -151,7 +151,7 @@ class _SimpleToken extends _BaseToken {
 
   @override
   String get value {
-    return Token.common[type];
+    return Token.common[type]!;
   }
 }
 

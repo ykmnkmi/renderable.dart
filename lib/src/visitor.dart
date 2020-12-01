@@ -15,7 +15,7 @@ abstract class Visitor {
 
   void visitCondition(Condition node);
 
-  void visitConstant(Constant<Object> node);
+  void visitConstant(Constant<Object?> node);
 
   void visitData(Data node);
 

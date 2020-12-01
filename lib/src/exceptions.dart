@@ -1,7 +1,7 @@
 abstract class TemplateError implements Exception {
   TemplateError([this.message]);
 
-  final String message;
+  final String? message;
 
   @override
   String toString() {
@@ -16,11 +16,11 @@ abstract class TemplateError implements Exception {
 class TemplateSyntaxError extends TemplateError {
   TemplateSyntaxError(String message, {this.offset, this.name, this.fileName}) : super(message);
 
-  final int offset;
+  final int? offset;
 
-  final String name;
+  final String? name;
 
-  final String fileName;
+  final String? fileName;
 
   @override
   String toString() {
@@ -40,5 +40,5 @@ class TemplateSyntaxError extends TemplateError {
 }
 
 class TemplateRuntimeError extends TemplateError {
-  TemplateRuntimeError([String message]) : super(message);
+  TemplateRuntimeError([String? message]) : super(message);
 }
