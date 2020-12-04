@@ -5,13 +5,13 @@ typedef ContextCallback = void Function(Context context);
 abstract class Context {
   Environment get environment;
 
-  Object operator [](String key);
+  Object? operator [](String key);
 
   void operator []=(String key, Object value);
 
   void apply(Map<String, Object> data, ContextCallback closure);
 
-  Object get(String key);
+  Object? get(String key);
 
   bool has(String name);
 

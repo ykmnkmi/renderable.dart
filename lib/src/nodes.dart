@@ -379,16 +379,31 @@ abstract class Unary extends Expression {
   }
 }
 
-class Positive extends Unary {
-  Positive(Expression expression) : super('+', expression);
+class Pos extends Unary {
+  Pos(Expression expression) : super('+', expression);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitPos(this);
+  }
 }
 
-class Negative extends Unary {
-  Negative(Expression expression) : super('-', expression);
+class Neg extends Unary {
+  Neg(Expression expression) : super('-', expression);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitNeg(this);
+  }
 }
 
 class Not extends Unary {
   Not(Expression expression) : super('not', expression);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitNot(this);
+  }
 }
 
 abstract class Binary extends Expression {
@@ -413,38 +428,83 @@ abstract class Binary extends Expression {
 
 class Pow extends Binary {
   Pow(Expression left, Expression right) : super('**', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitPow(this);
+  }
 }
 
 class Mul extends Binary {
   Mul(Expression left, Expression right) : super('*', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitMul(this);
+  }
 }
 
 class Div extends Binary {
   Div(Expression left, Expression right) : super('/', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitDiv(this);
+  }
 }
 
 class FloorDiv extends Binary {
   FloorDiv(Expression left, Expression right) : super('//', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitFloorDiv(this);
+  }
 }
 
 class Mod extends Binary {
   Mod(Expression left, Expression right) : super('%', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitMod(this);
+  }
 }
 
 class Add extends Binary {
   Add(Expression left, Expression right) : super('+', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitAdd(this);
+  }
 }
 
 class Sub extends Binary {
   Sub(Expression left, Expression right) : super('-', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitSub(this);
+  }
 }
 
 class And extends Binary {
   And(Expression left, Expression right) : super('and', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitAnd(this);
+  }
 }
 
 class Or extends Binary {
   Or(Expression left, Expression right) : super('or', left, right);
+
+  @override
+  void accept(Visitor visitor) {
+    visitor.visitOr(this);
+  }
 }
 
 abstract class Statement extends Node {}

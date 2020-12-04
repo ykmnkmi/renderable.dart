@@ -318,12 +318,12 @@ class Parser {
       case 'add':
         reader.next();
         expression = parseUnary(reader, withFilter: false);
-        expression = Positive(expression);
+        expression = Pos(expression);
         break;
       case 'sub':
         reader.next();
         expression = parseUnary(reader, withFilter: false);
-        expression = Negative(expression);
+        expression = Neg(expression);
         break;
       default:
         expression = parsePrimary(reader);

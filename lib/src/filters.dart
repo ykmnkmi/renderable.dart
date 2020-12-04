@@ -1,4 +1,4 @@
-bool boolean(Object value) {
+bool boolean(Object? value) {
   if (value == null) {
     return false;
   }

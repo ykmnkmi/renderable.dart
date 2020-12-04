@@ -175,6 +175,9 @@ class Template extends Renderable {
 
   @override
   String render([Map<String, Object>? context]) {
-    return Renderer(environment, nodes, context).toString();
+    final buffer = StringBuffer();
+    // TODO: improve
+    Renderer(environment, buffer, nodes, context);
+    return buffer.toString();
   }
 }

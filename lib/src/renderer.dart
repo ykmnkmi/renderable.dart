@@ -4,25 +4,32 @@ import 'filters.dart';
 import 'nodes.dart';
 import 'visitor.dart';
 
-class Renderer implements Context, Visitor {
-  Renderer(this.environment, List<Node> nodes, [Map<String, Object>? context])
-      : buffer = StringBuffer(),
-        contexts = <Map<String, Object>>[environment.globals] {
+class Renderer extends Visitor implements Context {
+  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, Object>? context])
+      : contexts = <Map<String, Object>>[environment.globals],
+        stack = [] {
     if (context != null) {
       contexts.add(context);
     }
 
     for (final node in nodes) {
       node.accept(this);
+
+      if (stack.isNotEmpty) {
+        sink.writeAll(stack.map<Object>((value) => environment.finalize(value)));
+        stack.clear();
+      }
     }
   }
 
   @override
   final Environment environment;
 
-  final StringBuffer buffer;
+  final StringSink sink;
 
   final List<Map<String, Object>> contexts;
+
+  final List<Object?> stack;
 
   @override
   Object operator [](String key) {
@@ -43,13 +50,16 @@ class Renderer implements Context, Visitor {
 
   @override
   Object get(String key) {
+    Object? value;
+
     for (final context in contexts.reversed) {
       if (context.containsKey(key)) {
-        return environment.finalize(context[key]);
+        value = context[key];
+        break;
       }
     }
 
-    return environment.finalize(null);
+    return environment.finalize(value);
   }
 
   @override
@@ -88,7 +98,7 @@ class Renderer implements Context, Visitor {
 
   @override
   String toString() {
-    return buffer.toString();
+    return sink.toString();
   }
 
   @override
@@ -125,12 +135,12 @@ class Renderer implements Context, Visitor {
 
   @override
   void visitConstant(Constant<Object?> node) {
-    buffer.write(represent(node.value));
+    stack.add(node.value);
   }
 
   @override
   void visitData(Data node) {
-    buffer.write(node.data);
+    sink.write(node.data);
   }
 
   @override
@@ -160,25 +170,18 @@ class Renderer implements Context, Visitor {
 
   @override
   void visitListLiteral(ListLiteral node) {
-    var notFirst = false;
-    buffer.write('[');
+    stack.add(<Object?>[]);
 
     for (final value in node.values) {
-      if (notFirst) {
-        buffer.write(', ');
-      } else {
-        notFirst = true;
-      }
-
       value.accept(this);
+      var last = stack.removeLast();
+      (stack.last as List).add(last);
     }
-
-    buffer.write(']');
   }
 
   @override
   void visitName(Name node) {
-    buffer.write(environment.finalize(get(node.name)));
+    stack.add(get(node.name));
   }
 
   @override
@@ -213,6 +216,29 @@ class Renderer implements Context, Visitor {
 
   @override
   void visitUnary(Unary node) {
-    throw 'implement visitUnary';
+    node.expression.accept(this);
+
+    var value = stack.removeLast();
+
+    switch (node.operator) {
+      case '+':
+        if (value is! num) {
+          throw TypeError();
+        }
+
+        break;
+      case '-':
+        if (value is! num) {
+          throw TypeError();
+        }
+
+        value = -value;
+        break;
+      case 'not':
+        value = !boolean(value);
+        break;
+    }
+
+    stack.add(value);
   }
 }
