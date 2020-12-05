@@ -15,11 +15,11 @@ bool boolean(Object? value) {
     return value.isNotEmpty;
   }
 
-  if (value is Iterable<Object>) {
+  if (value is Iterable) {
     return value.isNotEmpty;
   }
 
-  if (value is Map<Object, Object>) {
+  if (value is Map) {
     return value.isNotEmpty;
   }
 
@@ -27,12 +27,12 @@ bool boolean(Object? value) {
 }
 
 String represent(Object? object) {
-  if (object is Iterable<Object>) {
+  if (object is Iterable<Object?>) {
     final buffer = StringBuffer('[')
       ..writeAll(object.map<String>(represent), ', ')
       ..write(']');
     return buffer.toString();
-  } else if (object is Map<Object, Object>) {
+  } else if (object is Map<Object?, Object?>) {
     final buffer = StringBuffer('{');
     final pairs = <Object>[];
 
@@ -52,7 +52,7 @@ String represent(Object? object) {
   }
 }
 
-String string(Object value) {
+String string(Object? value) {
   if (value == null) {
     return '';
   }

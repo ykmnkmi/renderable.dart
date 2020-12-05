@@ -145,7 +145,16 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitDictLiteral(DictLiteral node) {
-    throw 'implement visitDictLiteral';
+    final dict = <Object?, Object?>{};
+    stack.add(dict);
+
+    MapEntry<Object?, Object?> entry;
+
+    for (final pair in node.pairs) {
+      pair.accept(this);
+      entry = stack.removeLast() as MapEntry<Object?, Object?>;
+      dict[entry.key] = entry.value;
+    }
   }
 
   @override
@@ -160,7 +169,10 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitItem(Item node) {
-    throw 'implement visitItem';
+    node.key.accept(this);
+    node.expression.accept(this);
+
+    stack.add(environment.getItem(stack.removeLast(), stack.removeLast()));
   }
 
   @override
@@ -170,12 +182,12 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitListLiteral(ListLiteral node) {
-    stack.add(<Object?>[]);
+    final list = <Object?>[];
+    stack.add(list);
 
     for (final value in node.values) {
       value.accept(this);
-      var last = stack.removeLast();
-      (stack.last as List).add(last);
+      list.add(stack.removeLast());
     }
   }
 
@@ -196,7 +208,10 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitPair(Pair node) {
-    throw 'implement visitPair';
+    node.key.accept(this);
+    final key = stack.removeLast();
+    node.value.accept(this);
+    stack.add(MapEntry<Object?, Object?>(key, stack.removeLast()));
   }
 
   @override
@@ -211,7 +226,13 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitTupleLiteral(TupleLiteral node) {
-    throw 'implement visitTupleLiteral';
+    final tuple = <Object?>[];
+    stack.add(tuple);
+
+    for (final value in node.values) {
+      value.accept(this);
+      tuple.add(stack.removeLast());
+    }
   }
 
   @override

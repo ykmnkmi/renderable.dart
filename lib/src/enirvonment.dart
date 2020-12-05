@@ -7,6 +7,26 @@ import 'renderer.dart';
 
 typedef Finalizer = Object Function([Object? value]);
 
+typedef ItemGetter = Object? Function(Object? object, Object? key);
+
+Object? defaultItemGetter(Object? object, Object? key) {
+  return (object as dynamic)[key];
+
+  // if (object is Map<Object?, Object?>) {
+  //   return object[key];
+  // }
+
+  // if (object is List<Object?>) {
+  //   if (key is int) {
+  //     return object[key];
+  //   }
+
+  //   throw TypeError();
+  // }
+
+  // return null;
+}
+
 Object defaultFinalizer([Object? value]) {
   if (value == null) {
     return '';
@@ -34,6 +54,7 @@ class Environment extends Configuration {
     String newLine = '\n',
     bool keepTrailingNewLine = false,
     this.finalize = defaultFinalizer,
+    this.getItem = defaultItemGetter,
     Map<String, Object>? globals,
     Map<String, Function>? filters,
     Map<String, Function>? tests,
@@ -74,6 +95,8 @@ class Environment extends Configuration {
   final Map<String, Function> tests;
 
   final Finalizer finalize;
+
+  final ItemGetter getItem;
 
   @override
   Environment change({
@@ -175,8 +198,8 @@ class Template extends Renderable {
 
   @override
   String render([Map<String, Object>? context]) {
+    // TODO: update
     final buffer = StringBuffer();
-    // TODO: improve
     Renderer(environment, buffer, nodes, context);
     return buffer.toString();
   }

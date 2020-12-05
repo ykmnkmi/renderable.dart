@@ -208,6 +208,7 @@ class Parser {
 
   Expression parseNot(TokenReader reader) {
     if (reader.current.test('name', 'not')) {
+      reader.next();
       return Not(parseNot(reader));
     }
 
