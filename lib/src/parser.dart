@@ -32,7 +32,8 @@ class Parser {
   }
 
   List<Node> parse(String template, {String? path}) {
-    final tokens = Lexer(configuration).tokenize(template, path: path);
+    final tokens = Lexer(configuration).tokenize(template, path: path).toList();
+    tokens.forEach(print);
     final reader = TokenReader(tokens);
     return scan(reader);
   }
@@ -142,7 +143,7 @@ class Parser {
 
   Node parseIf(TokenReader reader) {
     If result, node;
-    result = node = If(Constant<bool>(true), <Node>[Data()], <Node>[], <Node>[]);
+    result = node = If(Constant<bool>(true), <Node>[Constant<String>('')], <Node>[], <Node>[]);
 
     while (true) {
       node.test = parseTuple(reader, withCondExpr: false);
@@ -153,7 +154,7 @@ class Parser {
       final token = reader.next();
 
       if (token.test('name', 'elif')) {
-        node = If(Constant<bool>(true), <Node>[Data()], <Node>[], <Node>[]);
+        node = If(Constant<bool>(true), <Node>[Constant<String>('')], <Node>[], <Node>[]);
         result.elseIf.add(node);
         continue;
       } else if (token.test('name', 'else')) {
@@ -345,13 +346,16 @@ class Parser {
     switch (reader.current.type) {
       case 'name':
         switch (reader.current.value) {
+          case 'False':
           case 'false':
             expression = Constant<bool>(false);
             break;
+          case 'True':
           case 'true':
             expression = Constant<bool>(true);
             break;
-          case 'null':
+          case 'None':
+          case 'none':
             expression = Constant<Null>(null);
             break;
           default:
@@ -400,7 +404,6 @@ class Parser {
   Expression parseTuple(TokenReader reader,
       {bool simplified = false, bool withCondExpr = true, List<String> extraEndRules = const <String>[], bool explicitParentheses = false}) {
     Expression Function(TokenReader) parse;
-
     if (simplified) {
       parse = parsePrimary;
     } else if (withCondExpr) {
@@ -423,7 +426,7 @@ class Parser {
 
       values.add(parse(reader));
 
-      if (!isTuple && reader.current.test('comma')) {
+      if (reader.current.test('comma')) {
         isTuple = true;
       } else {
         break;
@@ -596,7 +599,7 @@ class Parser {
       arguments.add(null);
     }
 
-    return Slice.fromList(Data(), arguments);
+    return Slice.fromList(Constant<String>(''), arguments);
   }
 
   Call parseCall(TokenReader reader, Expression expression) {
@@ -663,9 +666,9 @@ class Parser {
       Call call;
 
       if (reader.current.test('lparen')) {
-        call = parseCall(reader, Data());
+        call = parseCall(reader, Constant<String>(''));
       } else {
-        call = Call(Data());
+        call = Call(Constant<String>(''));
       }
 
       expression = Filter.fromCall(name, expression, call);
@@ -696,7 +699,7 @@ class Parser {
     Call call;
 
     if (reader.current.test('lparen')) {
-      call = parseCall(reader, Data());
+      call = parseCall(reader, Constant<String>(''));
     } else if (reader.current.testAny(['name', 'string', 'integer', 'float', 'lparen', 'lbracket', 'lbrace']) &&
         !reader.current.testAny(['name:else', 'name:or', 'name:and'])) {
       if (reader.current.test('name', 'is')) {
@@ -707,9 +710,9 @@ class Parser {
       var argument = parsePrimary(reader);
       argument = parsePostfix(reader, argument);
       // print('current: ${reader.current}');
-      call = Call(Data(), arguments: <Expression>[argument]);
+      call = Call(Constant<String>(''), arguments: <Expression>[argument]);
     } else {
-      call = Call(Data());
+      call = Call(Constant<String>(''));
     }
 
     expression = Test.fromCall(name, expression, call);

@@ -1,8 +1,8 @@
 import 'package:renderable/jinja.dart';
 
-const source = 'hello {{ [0][1] }}!';
+const source = '*{{ name }}*';
 
 Future<void> main() async {
   final template = Template(source);
-  print(template.render({'name': 'world'}));
+  print(template.render({'name': 'name'}));
 }

@@ -1,56 +1,14 @@
-bool boolean(Object? value) {
-  if (value == null) {
-    return false;
-  }
-
-  if (value is bool) {
-    return value;
-  }
-
-  if (value is num) {
-    return value != 0.0;
-  }
-
-  if (value is String) {
-    return value.isNotEmpty;
-  }
-
-  if (value is Iterable) {
-    return value.isNotEmpty;
-  }
-
-  if (value is Map) {
-    return value.isNotEmpty;
-  }
-
-  return true;
+class _ContextFilter {
+  const _ContextFilter();
 }
 
-String represent(Object? object) {
-  if (object is Iterable<Object?>) {
-    final buffer = StringBuffer('[')
-      ..writeAll(object.map<String>(represent), ', ')
-      ..write(']');
-    return buffer.toString();
-  } else if (object is Map<Object?, Object?>) {
-    final buffer = StringBuffer('{');
-    final pairs = <Object>[];
-
-    object.forEach((key, value) {
-      pairs.add('${represent(key)}: ${represent(value)}');
-    });
-
-    buffer
-      ..writeAll(pairs, ', ')
-      ..write('}');
-    return buffer.toString();
-  } else if (object is String) {
-    final string = object.replaceAll('\'', '\\\'');
-    return "'$string'";
-  } else {
-    return object.toString();
-  }
+class _EnvironmentFilter {
+  const _EnvironmentFilter();
 }
+
+const contextFilter = _ContextFilter();
+
+const environmentFilter = _EnvironmentFilter();
 
 String string(Object? value) {
   if (value == null) {
@@ -63,3 +21,60 @@ String string(Object? value) {
 
   return value.toString();
 }
+
+const filters = <String, Function>{
+  'string': string,
+  // 'abs': doAbs,
+  // 'attr': doAttr,
+  // 'batch': doBatch,
+  // 'capitalize': doCapitalize,
+  // 'center': doCenter,
+  // 'count': doCount,
+  // 'd': doDefault,
+  // 'default': doDefault,
+  // 'e': doEscape,
+  // 'escape': doEscape,
+  // 'filesizeformat': doFileSizeFormat,
+  // 'first': doFirst,
+  // 'float': doFloat,
+  // 'forceescape': doForceEscape,
+  // 'int': doInt,
+  // 'join': doJoin,
+  // 'last': doLast,
+  // 'length': doCount,
+  // 'list': doList,
+  // 'lower': doLower,
+  // 'random': doRandom,
+  // 'sum': doSum,
+  // 'trim': doTrim,
+  // 'upper': doUpper,
+
+  // 'dictsort': doDictSort,
+  // 'format': doFormat,
+  // 'groupby': doGroupBy,
+  // 'indent': doIndent,
+  // 'map': doMap,
+  // 'max': doMax,
+  // 'min': doMin,
+  // 'pprint': doPPrint,
+  // 'reject': doReject,
+  // 'rejectattr': doRejectAttr,
+  // 'replace': doReplace,
+  // 'reverse': doReverse,
+  // 'round': doRound,
+  // 'safe': doMarkSafe,
+  // 'select': doSelect,
+  // 'selectattr': doSelectAttr,
+  // 'slice': doSlice,
+  // 'sort': doSort,
+  // 'striptags': doStripTags,
+  // 'title': doTitle,
+  // 'tojson': doToJson,
+  // 'truncate': doTruncate,
+  // 'unique': doUnique,
+  // 'urlencode': doURLEncode,
+  // 'urlize': doURLize,
+  // 'wordcount': doWordCount,
+  // 'wordwrap': doWordwrap,
+  // 'xmlattr': doXMLAttr,
+};

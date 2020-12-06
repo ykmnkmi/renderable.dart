@@ -1,3 +1,4 @@
+// ignore_for_file: import_of_legacy_library_into_null_safe
 import 'dart:async';
 
 import 'package:build/build.dart';
@@ -5,9 +6,9 @@ import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/configuration.dart';
-import 'src/filters.dart';
 import 'src/nodes.dart';
 import 'src/parser.dart';
+import 'src/utils.dart';
 import 'src/visitor.dart';
 
 Builder htmlTemplateBuilder(BuilderOptions options) {
@@ -90,7 +91,7 @@ class HtmlTemplateBuilder extends Builder {
     name += 'Template';
 
     return buildStep.readAsString(buildStep.inputId).then<void>((source) {
-      var buffer = StringBuffer();
+      final buffer = StringBuffer();
       TemplateBuilder(name, buffer, Parser(environment).parse(source, path: inputId.path));
       buildStep.writeAsString(buildStep.inputId.changeExtension('.html.dart'), formatter.format(buffer.toString()));
     });
@@ -119,7 +120,7 @@ class TemplateBuilder extends Visitor {
       }
     }
 
-    var template = popBodyBuffer().toString();
+    final template = popBodyBuffer().toString();
 
     templateBuffer.writeln('import \'package:renderable/renderable.dart\';');
     templateBuffer.writeln();
@@ -173,13 +174,6 @@ class TemplateBuilder extends Visitor {
   }
 
   @override
-  void visitAll(Iterable<Node> nodes) {
-    for (final node in nodes) {
-      node.accept(this);
-    }
-  }
-
-  @override
   void visitAttribute(Attribute node) {
     node.expression.accept(this);
     bodyBuffer.write('.');
@@ -199,16 +193,14 @@ class TemplateBuilder extends Visitor {
       if (expression is Name) {
         bodyBuffer.write(r'$');
         expression.accept(this);
-      } else if (expression is! Data) {
+      } else {
         bodyBuffer.write(r'${');
         expression.accept(this);
         bodyBuffer.write('}');
-      } else {
-        bodyBuffer.write((expression as Data).data.replaceAll('\'', '\\\''));
       }
     }
 
-    var template = popBodyBuffer().toString();
+    final template = popBodyBuffer().toString();
     var quote = '\'';
 
     if (template.contains('\n') || template.contains('\r\n')) {
@@ -249,7 +241,7 @@ class TemplateBuilder extends Visitor {
     bodyBuffer.write('(');
     node.expression.accept(this);
 
-    for (var param in node.arguments.cast<Node>().followedBy(node.keywordArguments.cast<Node>())) {
+    for (final param in node.arguments.cast<Node>().followedBy(node.keywordArguments.cast<Node>())) {
       bodyBuffer.write(', ');
       param.accept(this);
     }
@@ -300,7 +292,9 @@ class TemplateBuilder extends Visitor {
 
   @override
   void visitOutput(Output node) {
-    visitAll(node.nodes);
+    for (final child in node.nodes) {
+      child.accept(this);
+    }
   }
 
   @override
@@ -317,14 +311,14 @@ class TemplateBuilder extends Visitor {
     bodyBuffer.write(', ');
     node.start.accept(this);
 
-    var stop = node.stop;
+    final stop = node.stop;
 
     if (stop != null) {
       bodyBuffer.write(', ');
       stop.accept(this);
     }
 
-    var step = node.step;
+    final step = node.step;
 
     if (step != null) {
       bodyBuffer.write(', ');
@@ -351,7 +345,7 @@ class TemplateBuilder extends Visitor {
   }
 
   static String _wrapData(String value) {
-    var quote = value.contains(r'\n') || value.contains(r'\r\n') ? '\'' : "\'\'\'";
+    final quote = value.contains(r'\n') || value.contains(r'\r\n') ? '\'' : "\'\'\'";
     value = value.replaceAll('\'', '\\\'');
     return quote + value + quote;
   }

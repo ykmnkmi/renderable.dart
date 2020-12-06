@@ -1,13 +1,13 @@
 import 'context.dart';
 import 'enirvonment.dart';
-import 'filters.dart';
 import 'nodes.dart';
+import 'utils.dart';
 import 'visitor.dart';
 
 class Renderer extends Visitor implements Context {
-  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, Object>? context])
-      : contexts = <Map<String, Object>>[environment.globals],
-        stack = [] {
+  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, Object?>? context])
+      : contexts = <Map<String, Object?>>[environment.globals],
+        stack = <Object?>[] {
     if (context != null) {
       contexts.add(context);
     }
@@ -16,7 +16,7 @@ class Renderer extends Visitor implements Context {
       node.accept(this);
 
       if (stack.isNotEmpty) {
-        sink.writeAll(stack.map<Object>((value) => environment.finalize(value)));
+        sink.writeAll(stack.map<Object?>((value) => environment.finalize(value)));
         stack.clear();
       }
     }
@@ -27,12 +27,12 @@ class Renderer extends Visitor implements Context {
 
   final StringSink sink;
 
-  final List<Map<String, Object>> contexts;
+  final List<Map<String, Object?>> contexts;
 
   final List<Object?> stack;
 
   @override
-  Object operator [](String key) {
+  Object? operator [](String key) {
     return get(key);
   }
 
@@ -49,17 +49,14 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  Object get(String key) {
-    Object? value;
-
+  Object? get(String key) {
     for (final context in contexts.reversed) {
       if (context.containsKey(key)) {
-        value = context[key];
-        break;
+        return context[key];
       }
     }
 
-    return environment.finalize(value);
+    return null;
   }
 
   @override
@@ -123,14 +120,27 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitConcat(Concat node) {
+    final buffer = StringBuffer();
+
     for (final expression in node.expressions) {
       expression.accept(this);
+      buffer.write(stack.removeLast());
     }
+
+    stack.add(buffer.toString());
   }
 
   @override
   void visitCondition(Condition node) {
-    throw 'implement visitCondition';
+    node.test.accept(this);
+
+    if (boolean(stack.removeLast())) {
+      node.expression1.accept(this);
+    } else if (node.expression2 != null) {
+      node.expression2!.accept(this);
+    } else {
+      stack.add(null);
+    }
   }
 
   @override

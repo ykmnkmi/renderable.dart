@@ -1,66 +1,38 @@
 import 'configuration.dart';
-import 'filters.dart';
+import 'defaults.dart' as defaults;
 import 'nodes.dart';
 import 'parser.dart';
 import 'renderable.dart';
 import 'renderer.dart';
 
-typedef Finalizer = Object Function([Object? value]);
+typedef Finalizer = Object? Function([Object? value]);
 
 typedef ItemGetter = Object? Function(Object? object, Object? key);
 
-Object? defaultItemGetter(Object? object, Object? key) {
-  return (object as dynamic)[key];
-
-  // if (object is Map<Object?, Object?>) {
-  //   return object[key];
-  // }
-
-  // if (object is List<Object?>) {
-  //   if (key is int) {
-  //     return object[key];
-  //   }
-
-  //   throw TypeError();
-  // }
-
-  // return null;
-}
-
-Object defaultFinalizer([Object? value]) {
-  if (value == null) {
-    return '';
-  }
-
-  if (value is String) {
-    return value;
-  }
-
-  return represent(value);
-}
-
 class Environment extends Configuration {
   Environment({
-    String blockBegin = '{%',
-    String blockEnd = '%}',
-    String variableBegin = '{{',
-    String variableEnd = '}}',
-    String commentBegin = '{#',
-    String commentEnd = '#}',
-    String lineCommentPrefix = '##',
-    String lineStatementPrefix = '#',
-    bool trimBlocks = false,
-    bool lStripBlocks = false,
-    String newLine = '\n',
-    bool keepTrailingNewLine = false,
-    this.finalize = defaultFinalizer,
-    this.getItem = defaultItemGetter,
+    String blockBegin = defaults.blockBegin,
+    String blockEnd = defaults.blockEnd,
+    String variableBegin = defaults.variableBegin,
+    String variableEnd = defaults.variableEnd,
+    String commentBegin = defaults.commentBegin,
+    String commentEnd = defaults.commentEnd,
+    String lineCommentPrefix = defaults.lineCommentPrefix,
+    String lineStatementPrefix = defaults.lineStatementPrefix,
+    bool trimBlocks = defaults.trimBlocks,
+    bool lStripBlocks = defaults.lStripBlocks,
+    String newLine = defaults.newLine,
+    bool keepTrailingNewLine = defaults.keepTrailingNewLine,
+    this.finalize = defaults.finalizer,
+    this.getItem = defaults.itemGetter,
     Map<String, Object>? globals,
     Map<String, Function>? filters,
     Map<String, Function>? tests,
-  })  : globals = <String, Object>{},
-        filters = <String, Function>{},
-        tests = <String, Function>{},
+    Map<String, Template>? templates,
+  })  : globals = Map<String, Object>.from(defaults.globals),
+        filters = Map<String, Function>.from(defaults.filters),
+        tests = Map<String, Function>.from(defaults.tests),
+        templates = <String, Template>{},
         super(
           commentBegin: commentBegin,
           commentEnd: commentEnd,
@@ -86,6 +58,10 @@ class Environment extends Configuration {
     if (tests != null) {
       this.tests.addAll(tests);
     }
+
+    if (templates != null) {
+      this.templates.addAll(templates);
+    }
   }
 
   final Map<String, Object> globals;
@@ -97,6 +73,8 @@ class Environment extends Configuration {
   final Finalizer finalize;
 
   final ItemGetter getItem;
+
+  final Map<String, Template> templates;
 
   @override
   Environment change({
@@ -113,6 +91,10 @@ class Environment extends Configuration {
     String? newLine,
     bool? keepTrailingNewLine,
     Finalizer? finalize,
+    ItemGetter? getItem,
+    Map<String, Object>? globals,
+    Map<String, Function>? filters,
+    Map<String, Function>? tests,
   }) {
     return Environment(
       commentBegin: commentBegin ?? this.commentBegin,
@@ -128,7 +110,21 @@ class Environment extends Configuration {
       newLine: newLine ?? this.newLine,
       keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
       finalize: finalize ?? this.finalize,
+      getItem: getItem ?? this.getItem,
+      globals: globals ?? this.globals,
+      filters: filters ?? this.filters,
+      tests: tests ?? this.tests,
     );
+  }
+
+  Template fromString(String source, {String? path}) {
+    final template = Template.parsed(this, Parser(this).parse(source, path: path), path);
+
+    if (path != null) {
+      templates[path] = template;
+    }
+
+    return template;
   }
 }
 
@@ -137,18 +133,23 @@ class Template extends Renderable {
     String source, {
     String? path,
     Environment? parent,
-    String commentBegin = '{#',
-    String commentEnd = '#}',
-    String variableBegin = '{{',
-    String variableEnd = '}}',
-    String blockBegin = '{%',
-    String blockEnd = '%}',
-    String lineCommentPrefix = '##',
-    String lineStatementPrefix = '#',
-    bool lStripBlocks = false,
-    bool trimBlocks = false,
-    String newLine = '\n',
-    bool keepTrailingNewLine = false,
+    String blockBegin = defaults.blockBegin,
+    String blockEnd = defaults.blockEnd,
+    String variableBegin = defaults.variableBegin,
+    String variableEnd = defaults.variableEnd,
+    String commentBegin = defaults.commentBegin,
+    String commentEnd = defaults.commentEnd,
+    String lineCommentPrefix = defaults.lineCommentPrefix,
+    String lineStatementPrefix = defaults.lineStatementPrefix,
+    bool trimBlocks = defaults.trimBlocks,
+    bool lStripBlocks = defaults.lStripBlocks,
+    String newLine = defaults.newLine,
+    bool keepTrailingNewLine = defaults.keepTrailingNewLine,
+    Finalizer finalize = defaults.finalizer,
+    ItemGetter getItem = defaults.itemGetter,
+    Map<String, Object>? globals,
+    Map<String, Function>? filters,
+    Map<String, Function>? tests,
   }) {
     Environment environment;
 
@@ -166,6 +167,11 @@ class Template extends Renderable {
         trimBlocks: trimBlocks,
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
+        finalize: finalize,
+        getItem: getItem,
+        globals: globals,
+        filters: filters,
+        tests: tests,
       );
     } else {
       environment = Environment(
@@ -181,6 +187,11 @@ class Template extends Renderable {
         trimBlocks: trimBlocks,
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
+        finalize: finalize,
+        getItem: getItem,
+        globals: globals,
+        filters: filters,
+        tests: tests,
       );
     }
 
@@ -188,7 +199,11 @@ class Template extends Renderable {
     return Template.parsed(environment, nodes, path);
   }
 
-  Template.parsed(this.environment, this.nodes, [this.path]);
+  Template.parsed(this.environment, this.nodes, [String? path]) : path = path {
+    if (path != null) {
+      environment.templates[path] = this;
+    }
+  }
 
   final Environment environment;
 
@@ -197,7 +212,7 @@ class Template extends Renderable {
   final String? path;
 
   @override
-  String render([Map<String, Object>? context]) {
+  String render([Map<String, Object?>? context]) {
     // TODO: update
     final buffer = StringBuffer();
     Renderer(environment, buffer, nodes, context);

@@ -5,6 +5,22 @@ abstract class Node {
   void accept(Visitor visitor);
 }
 
+class Data extends Node {
+  Data([this.data = '']);
+
+  String data;
+
+  @override
+  void accept(Visitor visitor) {
+    return visitor.visitData(this);
+  }
+
+  @override
+  String toString() {
+    return 'Data("${data.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
+  }
+}
+
 abstract class Expression extends Node {}
 
 class Name extends Expression {
@@ -276,22 +292,6 @@ abstract class Literal extends Expression {
   @override
   String toString() {
     return 'Literal()';
-  }
-}
-
-class Data extends Literal {
-  Data([this.data = '']);
-
-  String data;
-
-  @override
-  void accept(Visitor visitor) {
-    return visitor.visitData(this);
-  }
-
-  @override
-  String toString() {
-    return 'Data("${data.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
   }
 }
 
