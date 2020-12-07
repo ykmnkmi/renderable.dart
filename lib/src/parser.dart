@@ -33,7 +33,6 @@ class Parser {
 
   List<Node> parse(String template, {String? path}) {
     final tokens = Lexer(configuration).tokenize(template, path: path).toList();
-    tokens.forEach(print);
     final reader = TokenReader(tokens);
     return scan(reader);
   }
@@ -217,8 +216,8 @@ class Parser {
   }
 
   Expression parseCompare(TokenReader reader) {
-    var expression = parseMath1(reader);
-    var operands = <Operand>[];
+    final expression = parseMath1(reader);
+    final operands = <Operand>[];
 
     while (true) {
       if (reader.current.testAny(['eq', 'ne', 'lt', 'lteq', 'gt', 'gteq'])) {
@@ -262,7 +261,7 @@ class Parser {
   }
 
   Expression parseConcat(TokenReader reader) {
-    var expressions = <Expression>[parseUnary(reader)];
+    final expressions = <Expression>[parseUnary(reader)];
 
     while (reader.current.test('tilde')) {
       reader.next();
@@ -412,7 +411,7 @@ class Parser {
       parse = (reader) => parseExpression(reader, false);
     }
 
-    var values = <Expression>[];
+    final values = <Expression>[];
     var isTuple = false;
 
     while (true) {
@@ -448,7 +447,7 @@ class Parser {
 
   Expression parseList(TokenReader reader) {
     reader.expect('lbracket');
-    var values = <Expression>[];
+    final values = <Expression>[];
 
     while (!reader.current.test('rbracket')) {
       if (values.isNotEmpty) {
@@ -468,7 +467,7 @@ class Parser {
 
   Expression parseDict(TokenReader reader) {
     reader.expect('lbrace');
-    var pairs = <Pair>[];
+    final pairs = <Pair>[];
 
     while (!reader.current.test('rbrace')) {
       if (pairs.isNotEmpty) {
@@ -479,9 +478,9 @@ class Parser {
         break;
       }
 
-      var key = parseExpression(reader);
+      final key = parseExpression(reader);
       reader.expect('colon');
-      var value = parseExpression(reader);
+      final value = parseExpression(reader);
       pairs.add(Pair(key, value));
     }
 
@@ -520,10 +519,10 @@ class Parser {
   }
 
   Expression parseSubscript(TokenReader reader, Expression expression) {
-    var token = reader.next();
+    final token = reader.next();
 
     if (token.test('dot')) {
-      var attributeToken = reader.next();
+      final attributeToken = reader.next();
 
       if (attributeToken.test('name')) {
         return Attribute(attributeToken.value, expression);
@@ -547,7 +546,7 @@ class Parser {
       arguments = arguments.reversed.toList();
 
       while (arguments.isNotEmpty) {
-        var key = arguments.removeLast();
+        final key = arguments.removeLast();
 
         if (key is Slice) {
           expression = Slice(expression, key.start, stop: key.stop, step: key.step);
@@ -563,13 +562,13 @@ class Parser {
   }
 
   Expression parseSubscribed(TokenReader reader) {
-    var arguments = <Expression?>[];
+    final arguments = <Expression?>[];
 
     if (reader.current.test('colon')) {
       reader.next();
       arguments.add(null);
     } else {
-      var expression = parseExpression(reader);
+      final expression = parseExpression(reader);
 
       if (!reader.current.test('colon')) {
         return expression;
@@ -604,8 +603,8 @@ class Parser {
 
   Call parseCall(TokenReader reader, Expression expression) {
     reader.expect('lparen');
-    var arguments = <Expression>[];
-    var keywordArguments = <Keyword>[];
+    final arguments = <Expression>[];
+    final keywordArguments = <Keyword>[];
     Expression? dArguments, dKeywordArguments;
 
     void ensure(bool ensure) {

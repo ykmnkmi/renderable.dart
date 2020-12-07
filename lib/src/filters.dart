@@ -10,6 +10,10 @@ const contextFilter = _ContextFilter();
 
 const environmentFilter = _EnvironmentFilter();
 
+String lower(String value) {
+  return value.toLowerCase();
+}
+
 String string(Object? value) {
   if (value == null) {
     return '';
@@ -23,6 +27,7 @@ String string(Object? value) {
 }
 
 const filters = <String, Function>{
+  'lower': lower,
   'string': string,
   // 'abs': doAbs,
   // 'attr': doAttr,
@@ -43,7 +48,6 @@ const filters = <String, Function>{
   // 'last': doLast,
   // 'length': doCount,
   // 'list': doList,
-  // 'lower': doLower,
   // 'random': doRandom,
   // 'sum': doSum,
   // 'trim': doTrim,

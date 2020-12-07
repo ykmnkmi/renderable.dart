@@ -42,7 +42,7 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void apply(Map<String, Object> data, ContextCallback closure) {
+  void apply(Map<String, Object?> data, ContextCallback closure) {
     push(data);
     closure(this);
     pop();
@@ -72,7 +72,7 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void push(Map<String, Object> context) {
+  void push(Map<String, Object?> context) {
     contexts.add(context);
   }
 
@@ -94,13 +94,9 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  String toString() {
-    return sink.toString();
-  }
-
-  @override
   void visitAttribute(Attribute node) {
-    throw 'implement visitAttribute';
+    node.expression.accept(this);
+    stack.add(environment.getAttribute(stack.removeLast(), node.attribute));
   }
 
   @override
@@ -110,7 +106,25 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitCall(Call node) {
-    throw 'implement visitCall';
+    node.expression.accept(this);
+    final callable = unsafeCast<Function>(stack.removeLast());
+    final arguments = <Object?>[];
+
+    for (final argument in node.arguments) {
+      argument.accept(this);
+      arguments.add(stack.removeLast());
+    }
+
+    final keywordArguments = <Symbol, Object?>{};
+    MapEntry<Symbol, Object?> entry;
+
+    for (final keywordArgument in node.keywordArguments) {
+      keywordArgument.accept(this);
+      entry = unsafeCast(stack.removeLast());
+      keywordArguments[entry.key] = entry.value;
+    }
+
+    stack.add(Function.apply(callable, arguments, keywordArguments));
   }
 
   @override
@@ -136,10 +150,14 @@ class Renderer extends Visitor implements Context {
 
     if (boolean(stack.removeLast())) {
       node.expression1.accept(this);
-    } else if (node.expression2 != null) {
-      node.expression2!.accept(this);
     } else {
-      stack.add(null);
+      final expression = node.expression2;
+
+      if (expression != null) {
+        expression.accept(this);
+      } else {
+        stack.add(null);
+      }
     }
   }
 
@@ -162,14 +180,31 @@ class Renderer extends Visitor implements Context {
 
     for (final pair in node.pairs) {
       pair.accept(this);
-      entry = stack.removeLast() as MapEntry<Object?, Object?>;
+      entry = unsafeCast(stack.removeLast());
       dict[entry.key] = entry.value;
     }
   }
 
   @override
   void visitFilter(Filter node) {
-    throw 'implement visitFilter';
+    node.expression.accept(this);
+    final arguments = <Object?>[stack.removeLast()];
+
+    for (final argument in node.arguments) {
+      argument.accept(this);
+      arguments.add(stack.removeLast());
+    }
+
+    final keywordArguments = <Symbol, Object?>{};
+    MapEntry<Symbol, Object?> entry;
+
+    for (final keywordArgument in node.keywordArguments) {
+      keywordArgument.accept(this);
+      entry = unsafeCast(stack.removeLast());
+      keywordArguments[entry.key] = entry.value;
+    }
+
+    stack.add(environment.callFilter(node.name, arguments, keywordArguments));
   }
 
   @override
@@ -231,7 +266,24 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitTest(Test node) {
-    throw 'implement visitTest';
+    node.expression.accept(this);
+    final arguments = <Object?>[stack.removeLast()];
+
+    for (final argument in node.arguments) {
+      argument.accept(this);
+      arguments.add(stack.removeLast());
+    }
+
+    final keywordArguments = <Symbol, Object?>{};
+    MapEntry<Symbol, Object?> entry;
+
+    for (final keywordArgument in node.keywordArguments) {
+      keywordArgument.accept(this);
+      entry = unsafeCast(stack.removeLast());
+      keywordArguments[entry.key] = entry.value;
+    }
+
+    stack.add(environment.callTest(node.name, arguments, keywordArguments));
   }
 
   @override

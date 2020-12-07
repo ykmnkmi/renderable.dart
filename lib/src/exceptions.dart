@@ -1,20 +1,22 @@
 abstract class TemplateError implements Exception {
-  TemplateError([this.message]);
+  TemplateError([this.error, this.stack]);
 
-  final String? message;
+  final Object? error;
+
+  final StackTrace? stack;
 
   @override
   String toString() {
-    if (message == null) {
+    if (error == null) {
       return 'TemplateError';
     }
 
-    return 'TemplateError: $message';
+    return 'TemplateError: $error\n$stack';
   }
 }
 
 class TemplateSyntaxError extends TemplateError {
-  TemplateSyntaxError(String message, {this.offset, this.name, this.fileName}) : super(message);
+  TemplateSyntaxError(Object error, {this.offset, this.name, this.fileName}) : super(error, StackTrace.current);
 
   final int? offset;
 
@@ -35,10 +37,10 @@ class TemplateSyntaxError extends TemplateError {
       prefix += ', offset: $offset';
     }
 
-    return '$prefix: $message';
+    return '$prefix: $error\n$stack';
   }
 }
 
 class TemplateRuntimeError extends TemplateError {
-  TemplateRuntimeError([String? message]) : super(message);
+  TemplateRuntimeError([Object? error, StackTrace? stack]) : super(error, stack ?? StackTrace.current);
 }

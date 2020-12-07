@@ -28,6 +28,12 @@ Object? finalizer([Object? value]) {
   return represent(value);
 }
 
+const globals = <String, Object>{};
+
+Object? attributeGetter(Object? object, String field) {
+  return null;
+}
+
 Object? itemGetter(Object? object, Object? key) {
   try {
     return unsafeCast<dynamic>(object)[key];
@@ -35,5 +41,3 @@ Object? itemGetter(Object? object, Object? key) {
     return null;
   }
 }
-
-const globals = <String, Object>{};

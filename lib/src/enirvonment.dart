@@ -1,3 +1,6 @@
+import 'package:renderable/src/exceptions.dart';
+import 'package:renderable/src/utils.dart';
+
 import 'configuration.dart';
 import 'defaults.dart' as defaults;
 import 'nodes.dart';
@@ -6,6 +9,8 @@ import 'renderable.dart';
 import 'renderer.dart';
 
 typedef Finalizer = Object? Function([Object? value]);
+
+typedef AttributeGetter = Object? Function(Object? object, String field);
 
 typedef ItemGetter = Object? Function(Object? object, Object? key);
 
@@ -24,6 +29,7 @@ class Environment extends Configuration {
     String newLine = defaults.newLine,
     bool keepTrailingNewLine = defaults.keepTrailingNewLine,
     this.finalize = defaults.finalizer,
+    this.getAttribute = defaults.attributeGetter,
     this.getItem = defaults.itemGetter,
     Map<String, Object>? globals,
     Map<String, Function>? filters,
@@ -72,6 +78,8 @@ class Environment extends Configuration {
 
   final Finalizer finalize;
 
+  final AttributeGetter getAttribute;
+
   final ItemGetter getItem;
 
   final Map<String, Template> templates;
@@ -91,6 +99,7 @@ class Environment extends Configuration {
     String? newLine,
     bool? keepTrailingNewLine,
     Finalizer? finalize,
+    AttributeGetter? getAttribute,
     ItemGetter? getItem,
     Map<String, Object>? globals,
     Map<String, Function>? filters,
@@ -110,6 +119,7 @@ class Environment extends Configuration {
       newLine: newLine ?? this.newLine,
       keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
       finalize: finalize ?? this.finalize,
+      getAttribute: getAttribute ?? this.getAttribute,
       getItem: getItem ?? this.getItem,
       globals: globals ?? this.globals,
       filters: filters ?? this.filters,
@@ -125,6 +135,22 @@ class Environment extends Configuration {
     }
 
     return template;
+  }
+
+  Object? callFilter(String name, [List<Object?> arguments = const <Object?>[], Map<Symbol, Object?> keywordArguments = const <Symbol, Object?>{}]) {
+    if (filters.containsKey(name) && filters[name] != null) {
+      return unsafeCast(Function.apply(filters[name]!, arguments, keywordArguments));
+    }
+
+    throw TemplateRuntimeError('filter not found: $name');
+  }
+
+  bool callTest(String name, [List<Object?> arguments = const <Object?>[], Map<Symbol, Object?> keywordArguments = const <Symbol, Object?>{}]) {
+    if (tests.containsKey(name) && tests[name] != null) {
+      return unsafeCast(Function.apply(tests[name]!, arguments, keywordArguments));
+    }
+
+    throw TemplateRuntimeError('test not found: $name');
   }
 }
 
@@ -146,6 +172,7 @@ class Template extends Renderable {
     String newLine = defaults.newLine,
     bool keepTrailingNewLine = defaults.keepTrailingNewLine,
     Finalizer finalize = defaults.finalizer,
+    AttributeGetter getAttribute = defaults.attributeGetter,
     ItemGetter getItem = defaults.itemGetter,
     Map<String, Object>? globals,
     Map<String, Function>? filters,
@@ -168,6 +195,7 @@ class Template extends Renderable {
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
         finalize: finalize,
+        getAttribute: getAttribute,
         getItem: getItem,
         globals: globals,
         filters: filters,
@@ -188,6 +216,7 @@ class Template extends Renderable {
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
         finalize: finalize,
+        getAttribute: getAttribute,
         getItem: getItem,
         globals: globals,
         filters: filters,
