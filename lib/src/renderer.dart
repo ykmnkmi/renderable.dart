@@ -1,3 +1,7 @@
+import 'dart:math' as math;
+
+import 'package:renderable/src/exceptions.dart';
+
 import 'context.dart';
 import 'enirvonment.dart';
 import 'nodes.dart';
@@ -101,7 +105,26 @@ class Renderer extends Visitor implements Context {
 
   @override
   void visitBinary(Binary node) {
-    throw 'implement visitBinary';
+    node.left.accept(this);
+    final left = stack.removeLast();
+
+    node.right.accept(this);
+    final right = stack.removeLast();
+
+    Object? result;
+
+    switch (node.operator) {
+      case '**':
+        if (left is num && right is num) {
+          result = math.pow(left, right);
+          break;
+        }
+
+        throw TemplateRuntimeError();
+      default:
+    }
+
+    stack.add(result);
   }
 
   @override

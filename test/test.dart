@@ -1,6 +1,6 @@
 import 'package:renderable/jinja.dart';
 
-const source = '*{{ name("Jhon") is defined }}*';
+const source = '*{{ 2**3 }}*';
 
 Future<void> main() async {
   final template = Template(source);

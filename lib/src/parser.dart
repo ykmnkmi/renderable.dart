@@ -69,7 +69,7 @@ class Parser {
           case 'variable_begin':
             flush();
             reader.next();
-            nodes.add(parseTuple(reader, withCondExpr: true));
+            nodes.add(parseTuple(reader));
             reader.expect('variable_end');
             break;
           case 'block_begin':
@@ -261,11 +261,11 @@ class Parser {
   }
 
   Expression parseConcat(TokenReader reader) {
-    final expressions = <Expression>[parseUnary(reader)];
+    final expressions = <Expression>[parseMath2(reader)];
 
     while (reader.current.test('tilde')) {
       reader.next();
-      expressions.add(parseUnary(reader));
+      expressions.add(parseMath2(reader));
     }
 
     if (expressions.length == 1) {
