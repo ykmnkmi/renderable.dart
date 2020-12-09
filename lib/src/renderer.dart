@@ -8,20 +8,17 @@ import 'nodes.dart';
 import 'utils.dart';
 import 'visitor.dart';
 
-class Renderer extends Visitor implements Context {
-  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, Object?>? context])
-      : contexts = <Map<String, Object?>>[environment.globals],
-        stack = <Object?>[] {
+class Renderer extends Visitor<Object?> implements Context {
+  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, Object?>? context]) : contexts = <Map<String, Object?>>[environment.globals] {
     if (context != null) {
       contexts.add(context);
     }
 
     for (final node in nodes) {
-      node.accept(this);
-
-      if (stack.isNotEmpty) {
-        sink.writeAll(stack.map<Object?>((value) => environment.finalize(value)));
-        stack.clear();
+      if (node is Expression) {
+        sink.write(environment.finalize(node.accept(this)));
+      } else {
+        node.accept(this);
       }
     }
   }
@@ -32,8 +29,6 @@ class Renderer extends Visitor implements Context {
   final StringSink sink;
 
   final List<Map<String, Object?>> contexts;
-
-  final List<Object?> stack;
 
   @override
   Object? operator [](String key) {
@@ -98,56 +93,48 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void visitAttribute(Attribute node) {
-    node.expression.accept(this);
-    stack.add(environment.getAttribute(stack.removeLast(), node.attribute));
+  Object? visitAttribute(Attribute node) {
+    return environment.getAttribute(node.expression.accept(this), node.attribute);
   }
 
   @override
-  void visitBinary(Binary node) {
-    node.left.accept(this);
-    final left = stack.removeLast();
+  num? visitBinary(Binary node) {
+    final left = node.left.accept(this);
+    final right = node.right.accept(this);
 
-    node.right.accept(this);
-    final right = stack.removeLast();
-
-    Object? result;
+    print(node.operator);
 
     switch (node.operator) {
       case '**':
         if (left is num && right is num) {
-          result = math.pow(left, right);
-          break;
+          return math.pow(left, right);
         }
 
         throw TemplateRuntimeError();
       default:
     }
 
-    stack.add(result);
+    return null;
   }
 
   @override
-  void visitCall(Call node) {
-    node.expression.accept(this);
-    final callable = unsafeCast<Function>(stack.removeLast());
+  Object? visitCall(Call node) {
+    final callable = unsafeCast<Function>(node.expression.accept(this));
     final arguments = <Object?>[];
 
     for (final argument in node.arguments) {
-      argument.accept(this);
-      arguments.add(stack.removeLast());
+      arguments.add(argument.accept(this));
     }
 
     final keywordArguments = <Symbol, Object?>{};
     MapEntry<Symbol, Object?> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      keywordArgument.accept(this);
-      entry = unsafeCast(stack.removeLast());
+      entry = unsafeCast<MapEntry<Symbol, Object?>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
     }
 
-    stack.add(Function.apply(callable, arguments, keywordArguments));
+    return Function.apply(callable, arguments, keywordArguments);
   }
 
   @override
@@ -156,37 +143,34 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void visitConcat(Concat node) {
+  String visitConcat(Concat node) {
     final buffer = StringBuffer();
 
     for (final expression in node.expressions) {
-      expression.accept(this);
-      buffer.write(stack.removeLast());
+      buffer.write(expression.accept(this));
     }
 
-    stack.add(buffer.toString());
+    return buffer.toString();
   }
 
   @override
-  void visitCondition(Condition node) {
-    node.test.accept(this);
-
-    if (boolean(stack.removeLast())) {
-      node.expression1.accept(this);
-    } else {
-      final expression = node.expression2;
-
-      if (expression != null) {
-        expression.accept(this);
-      } else {
-        stack.add(null);
-      }
+  Object? visitCondition(Condition node) {
+    if (boolean(node.test.accept(this))) {
+      return node.expression1.accept(this);
     }
+
+    final expression = node.expression2;
+
+    if (expression != null) {
+      return expression.accept(this);
+    }
+
+    return null;
   }
 
   @override
-  void visitConstant(Constant<Object?> node) {
-    stack.add(node.value);
+  Object? visitConstant(Constant<Object?> node) {
+    return node.value;
   }
 
   @override
@@ -197,37 +181,32 @@ class Renderer extends Visitor implements Context {
   @override
   void visitDictLiteral(DictLiteral node) {
     final dict = <Object?, Object?>{};
-    stack.add(dict);
 
     MapEntry<Object?, Object?> entry;
 
     for (final pair in node.pairs) {
-      pair.accept(this);
-      entry = unsafeCast(stack.removeLast());
+      entry = unsafeCast<MapEntry<Object?, Object?>>(pair.accept(this));
       dict[entry.key] = entry.value;
     }
   }
 
   @override
-  void visitFilter(Filter node) {
-    node.expression.accept(this);
-    final arguments = <Object?>[stack.removeLast()];
+  Object? visitFilter(Filter node) {
+    final arguments = <Object?>[node.expression.accept(this)];
 
     for (final argument in node.arguments) {
-      argument.accept(this);
-      arguments.add(stack.removeLast());
+      arguments.add(argument.accept(this));
     }
 
     final keywordArguments = <Symbol, Object?>{};
     MapEntry<Symbol, Object?> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      keywordArgument.accept(this);
-      entry = unsafeCast(stack.removeLast());
+      entry = unsafeCast<MapEntry<Symbol, Object?>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
     }
 
-    stack.add(environment.callFilter(node.name, arguments, keywordArguments));
+    return environment.callFilter(node.name, arguments, keywordArguments);
   }
 
   @override
@@ -236,11 +215,8 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void visitItem(Item node) {
-    node.key.accept(this);
-    node.expression.accept(this);
-
-    stack.add(environment.getItem(stack.removeLast(), stack.removeLast()));
+  Object? visitItem(Item node) {
+    return environment.getItem(node.expression.accept(this), node.key.accept(this));
   }
 
   @override
@@ -249,19 +225,19 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void visitListLiteral(ListLiteral node) {
+  List<Object?> visitListLiteral(ListLiteral node) {
     final list = <Object?>[];
-    stack.add(list);
 
     for (final value in node.values) {
-      value.accept(this);
-      list.add(stack.removeLast());
+      list.add(value.accept(this));
     }
+
+    return list;
   }
 
   @override
-  void visitName(Name node) {
-    stack.add(get(node.name));
+  Object? visitName(Name node) {
+    return get(node.name);
   }
 
   @override
@@ -275,11 +251,8 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void visitPair(Pair node) {
-    node.key.accept(this);
-    final key = stack.removeLast();
-    node.value.accept(this);
-    stack.add(MapEntry<Object?, Object?>(key, stack.removeLast()));
+  MapEntry<Object?, Object?> visitPair(Pair node) {
+    return MapEntry<Object?, Object?>(node.key.accept(this), node.value.accept(this));
   }
 
   @override
@@ -288,43 +261,38 @@ class Renderer extends Visitor implements Context {
   }
 
   @override
-  void visitTest(Test node) {
-    node.expression.accept(this);
-    final arguments = <Object?>[stack.removeLast()];
+  Object? visitTest(Test node) {
+    final arguments = <Object?>[node.expression.accept(this)];
 
     for (final argument in node.arguments) {
-      argument.accept(this);
-      arguments.add(stack.removeLast());
+      arguments.add(argument.accept(this));
     }
 
     final keywordArguments = <Symbol, Object?>{};
     MapEntry<Symbol, Object?> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      keywordArgument.accept(this);
-      entry = unsafeCast(stack.removeLast());
+      entry = unsafeCast<MapEntry<Symbol, Object?>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
     }
 
-    stack.add(environment.callTest(node.name, arguments, keywordArguments));
+    return environment.callTest(node.name, arguments, keywordArguments);
   }
 
   @override
-  void visitTupleLiteral(TupleLiteral node) {
+  List<Object?> visitTupleLiteral(TupleLiteral node) {
     final tuple = <Object?>[];
-    stack.add(tuple);
 
     for (final value in node.values) {
-      value.accept(this);
-      tuple.add(stack.removeLast());
+      tuple.add(value.accept(this));
     }
+
+    return tuple;
   }
 
   @override
-  void visitUnary(Unary node) {
-    node.expression.accept(this);
-
-    var value = stack.removeLast();
+  Object? visitUnary(Unary node) {
+    var value = node.expression.accept(this);
 
     switch (node.operator) {
       case '+':
@@ -345,6 +313,6 @@ class Renderer extends Visitor implements Context {
         break;
     }
 
-    stack.add(value);
+    return value;
   }
 }

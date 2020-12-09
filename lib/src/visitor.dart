@@ -1,97 +1,97 @@
 import 'nodes.dart';
 
-abstract class Visitor {
+abstract class Visitor<R> {
   const Visitor();
 
-  void visitAdd(Add node) {
-    visitBinary(node);
+  R visitAdd(Add node) {
+    return visitBinary(node);
   }
 
-  void visitAnd(And node) {
-    visitBinary(node);
+  R visitAnd(And node) {
+    return visitBinary(node);
   }
 
-  void visitAttribute(Attribute node);
+  R visitAttribute(Attribute node);
 
-  void visitBinary(Binary node);
+  R visitBinary(Binary node);
 
-  void visitCall(Call node);
+  R visitCall(Call node);
 
-  void visitCompare(Compare node);
+  R visitCompare(Compare node);
 
-  void visitConcat(Concat node);
+  R visitConcat(Concat node);
 
-  void visitCondition(Condition node);
+  R visitCondition(Condition node);
 
-  void visitConstant(Constant<Object?> node);
+  R visitConstant(Constant<Object?> node);
 
-  void visitData(Data node);
+  R visitData(Data node);
 
-  void visitDictLiteral(DictLiteral node);
+  R visitDictLiteral(DictLiteral node);
 
-  void visitDiv(Div node) {
-    visitBinary(node);
+  R visitDiv(Div node) {
+    return visitBinary(node);
   }
 
-  void visitFilter(Filter node);
+  R visitFilter(Filter node);
 
-  void visitFloorDiv(FloorDiv node) {
-    visitBinary(node);
+  R visitFloorDiv(FloorDiv node) {
+    return visitBinary(node);
   }
 
-  void visitIf(If node);
+  R visitIf(If node);
 
-  void visitItem(Item node);
+  R visitItem(Item node);
 
-  void visitKeyword(Keyword node);
+  R visitKeyword(Keyword node);
 
-  void visitListLiteral(ListLiteral node);
+  R visitListLiteral(ListLiteral node);
 
-  void visitMod(Mod node) {
-    visitBinary(node);
+  R visitMod(Mod node) {
+    return visitBinary(node);
   }
 
-  void visitMul(Mul node) {
-    visitBinary(node);
+  R visitMul(Mul node) {
+    return visitBinary(node);
   }
 
-  void visitName(Name node);
+  R visitName(Name node);
 
-  void visitNeg(Neg node) {
-    visitUnary(node);
+  R visitNeg(Neg node) {
+    return visitUnary(node);
   }
 
-  void visitNot(Not node) {
-    visitUnary(node);
+  R visitNot(Not node) {
+    return visitUnary(node);
   }
 
-  void visitOperand(Operand node);
+  R visitOperand(Operand node);
 
-  void visitOr(Or node) {
-    visitBinary(node);
+  R visitOr(Or node) {
+    return visitBinary(node);
   }
 
-  void visitOutput(Output node);
+  R visitOutput(Output node);
 
-  void visitPair(Pair node);
+  R visitPair(Pair node);
 
-  void visitPos(Pos node) {
-    visitUnary(node);
+  R visitPos(Pos node) {
+    return visitUnary(node);
   }
 
-  void visitPow(Pow node) {
-    visitBinary(node);
+  R visitPow(Pow node) {
+    return visitBinary(node);
   }
 
-  void visitSlice(Slice node);
+  R visitSlice(Slice node);
 
-  void visitSub(Sub node) {
-    visitBinary(node);
+  R visitSub(Sub node) {
+    return visitBinary(node);
   }
 
-  void visitTest(Test node);
+  R visitTest(Test node);
 
-  void visitTupleLiteral(TupleLiteral node);
+  R visitTupleLiteral(TupleLiteral node);
 
-  void visitUnary(Unary node);
+  R visitUnary(Unary node);
 }

@@ -2,7 +2,7 @@ import 'exceptions.dart';
 import 'visitor.dart';
 
 abstract class Node {
-  void accept(Visitor visitor);
+  R accept<R>(Visitor<R> visitor);
 }
 
 class Data extends Node {
@@ -11,7 +11,7 @@ class Data extends Node {
   String data;
 
   @override
-  void accept(Visitor visitor) {
+  R accept<R>(Visitor<R> visitor) {
     return visitor.visitData(this);
   }
 
@@ -31,7 +31,7 @@ class Name extends Expression {
   String type;
 
   @override
-  void accept(Visitor visitor) {
+  R accept<R>(Visitor<R> visitor) {
     return visitor.visitName(this);
   }
 
@@ -47,8 +47,8 @@ class Concat extends Expression {
   List<Expression> expressions;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitConcat(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitConcat(this);
   }
 
   @override
@@ -65,8 +65,8 @@ class Attribute extends Expression {
   Expression expression;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitAttribute(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitAttribute(this);
   }
 
   @override
@@ -83,8 +83,8 @@ class Item extends Expression {
   Expression expression;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitItem(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitItem(this);
   }
 
   @override
@@ -121,8 +121,8 @@ class Slice extends Expression {
   Expression? step;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitSlice(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitSlice(this);
   }
 
   @override
@@ -175,8 +175,8 @@ class Call extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitCall(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitCall(this);
   }
 
   @override
@@ -208,8 +208,8 @@ class Filter extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitFilter(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitFilter(this);
   }
 
   @override
@@ -240,8 +240,8 @@ class Test extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitTest(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitTest(this);
   }
 
   @override
@@ -258,8 +258,8 @@ class Compare extends Expression {
   List<Operand> operands;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitCompare(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitCompare(this);
   }
 
   @override
@@ -278,8 +278,8 @@ class Condition extends Expression {
   Expression? expression2;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitCondition(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitCondition(this);
   }
 
   @override
@@ -301,7 +301,7 @@ class Constant<T> extends Literal {
   T value;
 
   @override
-  void accept(Visitor visitor) {
+  R accept<R>(Visitor<R> visitor) {
     return visitor.visitConstant(this);
   }
 
@@ -319,8 +319,8 @@ class TupleLiteral extends Literal {
   bool save;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitTupleLiteral(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitTupleLiteral(this);
   }
 
   @override
@@ -335,8 +335,8 @@ class ListLiteral extends Literal {
   List<Expression> values;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitListLiteral(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitListLiteral(this);
   }
 
   @override
@@ -351,8 +351,8 @@ class DictLiteral extends Literal {
   List<Pair> pairs;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitDictLiteral(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitDictLiteral(this);
   }
 
   @override
@@ -369,8 +369,8 @@ abstract class Unary extends Expression {
   Expression expression;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitUnary(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitUnary(this);
   }
 
   @override
@@ -383,8 +383,8 @@ class Pos extends Unary {
   Pos(Expression expression) : super('+', expression);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitPos(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitPos(this);
   }
 }
 
@@ -392,8 +392,8 @@ class Neg extends Unary {
   Neg(Expression expression) : super('-', expression);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitNeg(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitNeg(this);
   }
 }
 
@@ -401,8 +401,8 @@ class Not extends Unary {
   Not(Expression expression) : super('not', expression);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitNot(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitNot(this);
   }
 }
 
@@ -416,8 +416,8 @@ abstract class Binary extends Expression {
   Expression right;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitBinary(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitBinary(this);
   }
 
   @override
@@ -430,8 +430,8 @@ class Pow extends Binary {
   Pow(Expression left, Expression right) : super('**', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitPow(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitPow(this);
   }
 }
 
@@ -439,8 +439,8 @@ class Mul extends Binary {
   Mul(Expression left, Expression right) : super('*', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitMul(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitMul(this);
   }
 }
 
@@ -448,8 +448,8 @@ class Div extends Binary {
   Div(Expression left, Expression right) : super('/', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitDiv(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitDiv(this);
   }
 }
 
@@ -457,8 +457,8 @@ class FloorDiv extends Binary {
   FloorDiv(Expression left, Expression right) : super('//', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitFloorDiv(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitFloorDiv(this);
   }
 }
 
@@ -466,8 +466,8 @@ class Mod extends Binary {
   Mod(Expression left, Expression right) : super('%', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitMod(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitMod(this);
   }
 }
 
@@ -475,8 +475,8 @@ class Add extends Binary {
   Add(Expression left, Expression right) : super('+', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitAdd(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitAdd(this);
   }
 }
 
@@ -484,8 +484,8 @@ class Sub extends Binary {
   Sub(Expression left, Expression right) : super('-', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitSub(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitSub(this);
   }
 }
 
@@ -493,8 +493,8 @@ class And extends Binary {
   And(Expression left, Expression right) : super('and', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitAnd(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitAnd(this);
   }
 }
 
@@ -502,8 +502,8 @@ class Or extends Binary {
   Or(Expression left, Expression right) : super('or', left, right);
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitOr(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitOr(this);
   }
 }
 
@@ -515,8 +515,8 @@ class Output extends Statement {
   List<Node> nodes;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitOutput(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitOutput(this);
   }
 
   @override
@@ -537,7 +537,7 @@ class If extends Statement {
   List<Node> $else;
 
   @override
-  void accept(Visitor visitor) {
+  R accept<R>(Visitor<R> visitor) {
     return visitor.visitIf(this);
   }
 
@@ -557,8 +557,8 @@ class Pair extends Helper {
   Expression value;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitPair(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitPair(this);
   }
 
   @override
@@ -575,8 +575,8 @@ class Keyword extends Helper {
   Expression value;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitKeyword(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitKeyword(this);
   }
 
   @override
@@ -593,8 +593,8 @@ class Operand extends Helper {
   Expression expression;
 
   @override
-  void accept(Visitor visitor) {
-    visitor.visitOperand(this);
+  R accept<R>(Visitor<R> visitor) {
+    return visitor.visitOperand(this);
   }
 
   @override
