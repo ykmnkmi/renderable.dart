@@ -1,8 +1,8 @@
 import 'package:renderable/jinja.dart';
 
-const source = '*{{ name("jhon") }}*';
+const source = '*{{ name is defined }}*';
 
 Future<void> main() async {
   final template = Template(source);
-  print(template.render({'name': (String name) => 'hello $name!'}));
+  print(template.render({'name': null}));
 }

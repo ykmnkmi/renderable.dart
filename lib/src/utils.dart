@@ -1,3 +1,5 @@
+import 'package:meta/dart2js.dart';
+
 bool boolean(Object? value) {
   if (value == null) {
     return false;
@@ -52,6 +54,8 @@ String represent(Object? object) {
   }
 }
 
+@tryInline
+@pragma('vm:prefer-inline')
 T unsafeCast<T>(dynamic object) {
   // ignore: return_of_invalid_type
   return object;

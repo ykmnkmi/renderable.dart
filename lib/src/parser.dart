@@ -247,9 +247,11 @@ class Parser {
     while (true) {
       switch (reader.current.type) {
         case 'add':
+          reader.next();
           expression = Add(expression, parseConcat(reader));
           break;
         case 'sub':
+          reader.next();
           expression = Sub(expression, parseConcat(reader));
           break;
         default:
@@ -282,15 +284,19 @@ class Parser {
     while (true) {
       switch (reader.current.type) {
         case 'mul':
+          reader.next();
           expression = Mul(expression, parsePow(reader));
           break;
         case 'div':
+          reader.next();
           expression = Div(expression, parsePow(reader));
           break;
         case 'floorDiv':
+          reader.next();
           expression = FloorDiv(expression, parsePow(reader));
           break;
         case 'mod':
+          reader.next();
           expression = Mod(expression, parsePow(reader));
           break;
         default:

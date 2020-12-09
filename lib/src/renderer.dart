@@ -98,23 +98,32 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  num? visitBinary(Binary node) {
+  Object? visitBinary(Binary node) {
     final left = node.left.accept(this);
     final right = node.right.accept(this);
 
-    print(node.operator);
-
     switch (node.operator) {
       case '**':
-        if (left is num && right is num) {
-          return math.pow(left, right);
+        return math.pow(unsafeCast<num>(left), unsafeCast<num>(right));
+      case '%':
+        return unsafeCast<num>(left) % unsafeCast<num>(right);
+      case '//':
+        return unsafeCast<num>(left) ~/ unsafeCast<num>(right);
+      case '/':
+        return unsafeCast<num>(left) % unsafeCast<num>(right);
+      case '*':
+        try {
+          return unsafeCast<dynamic>(left) * unsafeCast<dynamic>(right);
+        } on TypeError {
+          if (right is String) {
+            return right * unsafeCast<dynamic>(left);
+          }
+
+          rethrow;
         }
-
-        throw TemplateRuntimeError();
       default:
+        throw TemplateRuntimeError();
     }
-
-    return null;
   }
 
   @override
