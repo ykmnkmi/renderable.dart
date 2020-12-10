@@ -102,27 +102,27 @@ class Renderer extends Visitor<Object?> implements Context {
     final left = node.left.accept(this);
     final right = node.right.accept(this);
 
-    switch (node.operator) {
-      case '**':
-        return math.pow(unsafeCast<num>(left), unsafeCast<num>(right));
-      case '%':
-        return unsafeCast<num>(left) % unsafeCast<num>(right);
-      case '//':
-        return unsafeCast<num>(left) ~/ unsafeCast<num>(right);
-      case '/':
-        return unsafeCast<num>(left) % unsafeCast<num>(right);
-      case '*':
-        try {
+    try {
+      switch (node.operator) {
+        case '**':
+          return math.pow(unsafeCast<num>(left), unsafeCast<num>(right));
+        case '%':
+          return unsafeCast<num>(left) % unsafeCast<num>(right);
+        case '//':
+          return unsafeCast<num>(left) ~/ unsafeCast<num>(right);
+        case '/':
+          return unsafeCast<num>(left) % unsafeCast<num>(right);
+        case '*':
           return unsafeCast<dynamic>(left) * unsafeCast<dynamic>(right);
-        } on TypeError {
-          if (right is String) {
-            return right * unsafeCast<dynamic>(left);
-          }
+        default:
+          throw TemplateRuntimeError();
+      }
+    } on TypeError {
+      if (left is int && right is String) {
+        return right * left;
+      }
 
-          rethrow;
-        }
-      default:
-        throw TemplateRuntimeError();
+      rethrow;
     }
   }
 
@@ -301,27 +301,23 @@ class Renderer extends Visitor<Object?> implements Context {
 
   @override
   Object? visitUnary(Unary node) {
-    var value = node.expression.accept(this);
+    final value = node.expression.accept(this);
 
     switch (node.operator) {
       case '+':
-        if (value is! num) {
-          throw TypeError();
+        if (value is num) {
+          return value;
         }
 
-        break;
+        throw TypeError();
       case '-':
-        if (value is! num) {
-          throw TypeError();
+        if (value is num) {
+          return -value;
         }
 
-        value = -value;
-        break;
+        throw TypeError();
       case 'not':
-        value = !boolean(value);
-        break;
+        return !boolean(value);
     }
-
-    return value;
   }
 }
