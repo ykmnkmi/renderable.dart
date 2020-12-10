@@ -2,7 +2,7 @@ import 'package:renderable/jinja.dart';
 
 const source = '*{{ name is defined }}*';
 
-Future<void> main() async {
+void main() {
   final template = Template(source);
   print(template.render({'name': null}));
 }

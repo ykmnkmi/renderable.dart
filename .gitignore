@@ -3,4 +3,10 @@
 .packages
 bin/
 doc/api/
+*.aot
+*.dill
+*.jit
+*.js
+*.js.deps
+*.js.map
 pubspec.lock
