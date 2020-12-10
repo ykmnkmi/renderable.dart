@@ -1,8 +1,9 @@
 import 'package:renderable/jinja.dart';
 
-const source = '*{{ name is defined }}*';
+const source = '*{{ list[0:5:1] }}*';
 
 void main() {
   final template = Template(source);
-  print(template.render({'name': null}));
+  // print(template.render({'list': List<int>.generate(100, (index) => index, growable: false)}));
+  print(template.render({'list': ['a', 2, '3']}));
 }

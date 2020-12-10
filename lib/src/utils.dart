@@ -54,6 +54,35 @@ String represent(Object? object) {
   }
 }
 
+List<T> slice<T>(List<T> list, int start, [int? stop, int? step]) {
+  final result = <T>[];
+  final length = list.length;
+
+  if (stop == null) {
+    stop = length;
+  } else if (stop < 0) {
+    stop = length - stop;
+  }
+
+  step ??= 1;
+
+  if (step > 0) {
+    for (var i = start; i < stop; i += step) {
+      result.add(list[i]);
+    }
+  } else if (step < 0) {
+    step = step.abs();
+
+    for (var i = start; i < stop; i -= step) {
+      result.add(list[i]);
+    }
+  } else {
+    throw ArgumentError.value(step, 'step');
+  }
+
+  return result;
+}
+
 @tryInline
 @pragma('vm:prefer-inline')
 T unsafeCast<T>(dynamic object) {

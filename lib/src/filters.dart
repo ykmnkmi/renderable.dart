@@ -10,6 +10,22 @@ const contextFilter = _ContextFilter();
 
 const environmentFilter = _EnvironmentFilter();
 
+List<Object?> list(Object? value) {
+  if (value is List<Object?>) {
+    return value;
+  }
+
+  if (value is Iterable<Object?>) {
+    return value.toList();
+  }
+
+  if (value is String) {
+    return value.split('');
+  }
+
+  throw TypeError();
+}
+
 String lower(String value) {
   return value.toLowerCase();
 }
@@ -27,6 +43,7 @@ String string(Object? value) {
 }
 
 const filters = <String, Function>{
+  'list': list,
   'lower': lower,
   'string': string,
   // 'abs': doAbs,
@@ -47,7 +64,6 @@ const filters = <String, Function>{
   // 'join': doJoin,
   // 'last': doLast,
   // 'length': doCount,
-  // 'list': doList,
   // 'random': doRandom,
   // 'sum': doSum,
   // 'trim': doTrim,

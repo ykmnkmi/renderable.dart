@@ -4,6 +4,7 @@ import 'package:renderable/src/exceptions.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
+import 'filters.dart' as filters;
 import 'nodes.dart';
 import 'utils.dart';
 import 'visitor.dart';
@@ -265,8 +266,34 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  void visitSlice(Slice node) {
-    throw 'implement visitSlice';
+  Object? visitSlice(Slice node) {
+    final raw = node.expression.accept(this);
+    final list = filters.list(raw);
+    final start = unsafeCast<int>(node.start.accept(this));
+
+    var expression = node.stop;
+    int? stop;
+
+    if (expression != null) {
+      stop = math.min(list.length, unsafeCast<int>(expression.accept(this)));
+    } else {
+      stop = list.length;
+    }
+
+    expression = node.step;
+    int? step;
+
+    if (expression != null) {
+      step = unsafeCast<int>(expression.accept(this));
+    }
+
+    final result = slice(list, start, stop, step);
+
+    if (raw is String) {
+      return result.join('');
+    }
+
+    return result;
   }
 
   @override
@@ -305,17 +332,9 @@ class Renderer extends Visitor<Object?> implements Context {
 
     switch (node.operator) {
       case '+':
-        if (value is num) {
-          return value;
-        }
-
-        throw TypeError();
+        return unsafeCast<num>(value);
       case '-':
-        if (value is num) {
-          return -value;
-        }
-
-        throw TypeError();
+        return -unsafeCast<num>(value);
       case 'not':
         return !boolean(value);
     }
