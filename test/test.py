@@ -1,5 +1,5 @@
 from jinja2 import Template
 
-source = '*{{ list[0:5:1] }}*'
+source = '*{{ 1 < 2 < 0 == 0 }}*'
 tmpl = Template(source)
-print(tmpl.render(list=[1, 2]))
+print(tmpl.render(name=5))

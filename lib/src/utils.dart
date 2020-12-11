@@ -83,6 +83,35 @@ List<T> slice<T>(List<T> list, int start, [int? stop, int? step]) {
   return result;
 }
 
+String sliceString(String string, int start, [int? stop, int? step]) {
+  final buffer = StringBuffer();
+  final length = string.length;
+
+  if (stop == null) {
+    stop = length;
+  } else if (stop < 0) {
+    stop = length - stop;
+  }
+
+  step ??= 1;
+
+  if (step > 0) {
+    for (var i = start; i < stop; i += step) {
+      buffer.write(string[i]);
+    }
+  } else if (step < 0) {
+    step = step.abs();
+
+    for (var i = start; i < stop; i -= step) {
+      buffer.writeCharCode(string.codeUnitAt(i));
+    }
+  } else {
+    throw ArgumentError.value(step, 'step');
+  }
+
+  return buffer.toString();
+}
+
 @tryInline
 @pragma('vm:prefer-inline')
 T unsafeCast<T>(dynamic object) {

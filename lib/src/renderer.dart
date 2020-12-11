@@ -1,11 +1,10 @@
 import 'dart:math' as math;
 
-import 'package:renderable/src/exceptions.dart';
-
 import 'context.dart';
 import 'enirvonment.dart';
 import 'filters.dart' as filters;
 import 'nodes.dart';
+import 'tests.dart' as tests;
 import 'utils.dart';
 import 'visitor.dart';
 
@@ -112,11 +111,17 @@ class Renderer extends Visitor<Object?> implements Context {
         case '//':
           return unsafeCast<num>(left) ~/ unsafeCast<num>(right);
         case '/':
-          return unsafeCast<num>(left) % unsafeCast<num>(right);
+          return unsafeCast<num>(left) / unsafeCast<num>(right);
         case '*':
-          return unsafeCast<dynamic>(left) * unsafeCast<dynamic>(right);
-        default:
-          throw TemplateRuntimeError();
+          return unsafeCast<dynamic>(left) * right;
+        case '-':
+          return unsafeCast<dynamic>(left) - right;
+        case '+':
+          return unsafeCast<dynamic>(left) + right;
+        case 'or':
+          return boolean(left) ? left : right;
+        case 'and':
+          return boolean(left) ? right : right;
       }
     } on TypeError {
       if (left is int && right is String) {
@@ -148,12 +153,53 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  void visitCompare(Compare node) {
-    throw 'implement visitCompare';
+  Object? visitCompare(Compare node) {
+    var left = node.expression.accept(this);
+    var result = true;
+    Object? right;
+
+    for (final operand in node.operands) {
+      if (!result) {
+        return false;
+      }
+
+      right = operand.expression.accept(this);
+
+      switch (operand.operator) {
+        case 'eq':
+          result = result && tests.equal(left, right);
+          break;
+        case 'ne':
+          result = result && tests.notEqual(left, right);
+          break;
+        case 'lt':
+          result = result && tests.lessThan(left, right);
+          break;
+        case 'le':
+          result = result && tests.lessThanOrEqual(left, right);
+          break;
+        case 'gt':
+          result = result && tests.greaterThan(left, right);
+          break;
+        case 'ge':
+          result = result && tests.greaterThanOrEqual(left, right);
+          break;
+        case 'in':
+          result = result && tests.contains(left, right);
+          break;
+        case 'notin':
+          result = result && !tests.contains(left, right);
+          break;
+      }
+
+      left = right;
+    }
+
+    return result;
   }
 
   @override
-  String visitConcat(Concat node) {
+  Object? visitConcat(Concat node) {
     final buffer = StringBuffer();
 
     for (final expression in node.expressions) {
@@ -235,7 +281,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  List<Object?> visitListLiteral(ListLiteral node) {
+  Object? visitListLiteral(ListLiteral node) {
     final list = <Object?>[];
 
     for (final value in node.values) {
@@ -261,21 +307,20 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  MapEntry<Object?, Object?> visitPair(Pair node) {
+  Object? visitPair(Pair node) {
     return MapEntry<Object?, Object?>(node.key.accept(this), node.value.accept(this));
   }
 
   @override
   Object? visitSlice(Slice node) {
-    final raw = node.expression.accept(this);
-    final list = filters.list(raw);
+    final list = unsafeCast<dynamic>(node.expression.accept(this));
     final start = unsafeCast<int>(node.start.accept(this));
 
     var expression = node.stop;
     int? stop;
 
     if (expression != null) {
-      stop = math.min(list.length, unsafeCast<int>(expression.accept(this)));
+      stop = math.min(filters.count(list), unsafeCast<int>(expression.accept(this)));
     } else {
       stop = list.length;
     }
@@ -287,13 +332,11 @@ class Renderer extends Visitor<Object?> implements Context {
       step = unsafeCast<int>(expression.accept(this));
     }
 
-    final result = slice(list, start, stop, step);
-
-    if (raw is String) {
-      return result.join('');
+    if (list is String) {
+      return sliceString(list, start, stop, step);
     }
 
-    return result;
+    return slice(list, start, stop, step);
   }
 
   @override
@@ -316,7 +359,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  List<Object?> visitTupleLiteral(TupleLiteral node) {
+  Object? visitTupleLiteral(TupleLiteral node) {
     final tuple = <Object?>[];
 
     for (final value in node.values) {
@@ -332,9 +375,9 @@ class Renderer extends Visitor<Object?> implements Context {
 
     switch (node.operator) {
       case '+':
-        return unsafeCast<num>(value);
+        return 0 + unsafeCast<num>(value);
       case '-':
-        return -unsafeCast<num>(value);
+        return 0 - unsafeCast<num>(value);
       case 'not':
         return !boolean(value);
     }

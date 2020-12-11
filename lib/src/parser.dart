@@ -218,11 +218,13 @@ class Parser {
   Expression parseCompare(TokenReader reader) {
     final expression = parseMath1(reader);
     final operands = <Operand>[];
+    String type;
 
     while (true) {
       if (reader.current.testAny(['eq', 'ne', 'lt', 'lteq', 'gt', 'gteq'])) {
+        type = reader.current.type;
         reader.next();
-        operands.add(Operand(reader.current.type, parseMath1(reader)));
+        operands.add(Operand(type, parseMath1(reader)));
       } else if (reader.skipIf('name', 'in')) {
         operands.add(Operand('in', parseMath1(reader)));
       } else if (reader.current.test('name', 'not') && reader.look().test('name', 'in')) {

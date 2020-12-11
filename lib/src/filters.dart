@@ -1,3 +1,5 @@
+import 'package:renderable/src/utils.dart';
+
 class _ContextFilter {
   const _ContextFilter();
 }
@@ -10,48 +12,58 @@ const contextFilter = _ContextFilter();
 
 const environmentFilter = _EnvironmentFilter();
 
+int count(Object? value) {
+  return unsafeCast<dynamic>(value).length;
+}
+
 List<Object?> list(Object? value) {
-  if (value is List<Object?>) {
-    return value;
+  if (value is String) {
+    return value.split('');
   }
 
   if (value is Iterable<Object?>) {
     return value.toList();
   }
 
-  if (value is String) {
-    return value.split('');
+  if (value is Map<Object?, Object?>) {
+    return value.keys.toList();
   }
 
-  throw TypeError();
+  return unsafeCast<dynamic>(value).toList();
 }
 
-String lower(String value) {
-  return value.toLowerCase();
+String lower(Object? value) {
+  if (value is String) {
+    return value.toLowerCase();
+  }
+
+  return value.toString().toLowerCase();
 }
 
 String string(Object? value) {
-  if (value == null) {
-    return '';
-  }
-
-  if (value is String) {
-    return value;
-  }
-
   return value.toString();
 }
 
+String upper(Object? value) {
+  if (value is String) {
+    return value.toUpperCase();
+  }
+
+  return value.toString().toUpperCase();
+}
+
 const filters = <String, Function>{
+  'count': count,
+  'length': count,
   'list': list,
   'lower': lower,
   'string': string,
+  'upper': upper,
   // 'abs': doAbs,
   // 'attr': doAttr,
   // 'batch': doBatch,
   // 'capitalize': doCapitalize,
   // 'center': doCenter,
-  // 'count': doCount,
   // 'd': doDefault,
   // 'default': doDefault,
   // 'e': doEscape,
@@ -63,11 +75,9 @@ const filters = <String, Function>{
   // 'int': doInt,
   // 'join': doJoin,
   // 'last': doLast,
-  // 'length': doCount,
   // 'random': doRandom,
   // 'sum': doSum,
   // 'trim': doTrim,
-  // 'upper': doUpper,
 
   // 'dictsort': doDictSort,
   // 'format': doFormat,
