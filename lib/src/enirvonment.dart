@@ -1,3 +1,5 @@
+import 'dart:collection' show HashMap;
+
 import 'package:renderable/src/exceptions.dart';
 import 'package:renderable/src/utils.dart';
 
@@ -8,11 +10,11 @@ import 'parser.dart';
 import 'renderable.dart';
 import 'renderer.dart';
 
-typedef Finalizer = Object? Function([Object? value]);
+typedef Finalizer = dynamic Function([dynamic value]);
 
-typedef AttributeGetter = Object? Function(Object? object, String field);
+typedef AttributeGetter = dynamic Function(dynamic object, String field);
 
-typedef ItemGetter = Object? Function(Object? object, Object? key);
+typedef ItemGetter = dynamic Function(dynamic object, dynamic key);
 
 class Environment extends Configuration {
   Environment({
@@ -31,14 +33,14 @@ class Environment extends Configuration {
     this.finalize = defaults.finalizer,
     this.getAttribute = defaults.attributeGetter,
     this.getItem = defaults.itemGetter,
-    Map<String, Object>? globals,
+    Map<String, dynamic>? globals,
     Map<String, Function>? filters,
     Map<String, Function>? tests,
     Map<String, Template>? templates,
-  })  : globals = Map<String, Object>.from(defaults.globals),
-        filters = Map<String, Function>.from(defaults.filters),
-        tests = Map<String, Function>.from(defaults.tests),
-        templates = <String, Template>{},
+  })  : globals = HashMap.of(defaults.globals),
+        filters = HashMap.of(defaults.filters),
+        tests = HashMap.of(defaults.tests),
+        templates = HashMap<String, Template>(),
         super(
           commentBegin: commentBegin,
           commentEnd: commentEnd,
@@ -70,7 +72,7 @@ class Environment extends Configuration {
     }
   }
 
-  final Map<String, Object> globals;
+  final Map<String, dynamic> globals;
 
   final Map<String, Function> filters;
 
@@ -101,7 +103,7 @@ class Environment extends Configuration {
     Finalizer? finalize,
     AttributeGetter? getAttribute,
     ItemGetter? getItem,
-    Map<String, Object>? globals,
+    Map<String, dynamic>? globals,
     Map<String, Function>? filters,
     Map<String, Function>? tests,
   }) {
@@ -137,7 +139,7 @@ class Environment extends Configuration {
     return template;
   }
 
-  Object? callFilter(String name, [List<Object?> arguments = const <Object?>[], Map<Symbol, Object?> keywordArguments = const <Symbol, Object?>{}]) {
+  dynamic callFilter(String name, [List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}]) {
     if (filters.containsKey(name) && filters[name] != null) {
       return unsafeCast(Function.apply(filters[name]!, arguments, keywordArguments));
     }
@@ -145,7 +147,7 @@ class Environment extends Configuration {
     throw TemplateRuntimeError('filter not found: $name');
   }
 
-  bool callTest(String name, [List<Object?> arguments = const <Object?>[], Map<Symbol, Object?> keywordArguments = const <Symbol, Object?>{}]) {
+  bool callTest(String name, [List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}]) {
     if (tests.containsKey(name) && tests[name] != null) {
       return unsafeCast(Function.apply(tests[name]!, arguments, keywordArguments));
     }
@@ -241,7 +243,7 @@ class Template extends Renderable {
   final String? path;
 
   @override
-  String render([Map<String, Object?>? context]) {
+  String render([Map<String, dynamic>? context]) {
     // TODO: update
     final buffer = StringBuffer();
     Renderer(environment, buffer, nodes, context);

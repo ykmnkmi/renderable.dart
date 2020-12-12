@@ -234,10 +234,9 @@ class Lexer {
 
   Iterable<Token> expression(StringScanner scanner) sync* {
     while (!scanner.isDone) {
+      // print(scanner.rest);
       if (scanner.scan(whiteSpaceRe)) {
         yield Token(scanner.lastMatch!.start, 'whitespace', scanner.lastMatch![0]!);
-      } else if (scanner.matches(configuration.variableEnd)) {
-        return;
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch!.start, 'name', scanner.lastMatch![0]!);
       } else if (scanner.scan(stringRe)) {
@@ -254,7 +253,7 @@ class Lexer {
       } else if (scanner.scan(operatorsRe)) {
         yield Token.simple(scanner.lastMatch!.start, operators[scanner.lastMatch![0]]!);
       } else {
-        throw 'unexpected char: ${scanner.rest[0]}';
+        break;
       }
     }
   }

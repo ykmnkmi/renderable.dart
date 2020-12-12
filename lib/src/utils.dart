@@ -28,6 +28,12 @@ bool boolean(Object? value) {
   return true;
 }
 
+Iterable<int> range(int n) sync* {
+  for (var i = 0; i < n; i++) {
+    yield i;
+  }
+}
+
 String represent(Object? object) {
   if (object is Iterable<Object?>) {
     final buffer = StringBuffer('[')

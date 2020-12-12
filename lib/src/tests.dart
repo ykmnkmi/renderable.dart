@@ -1,6 +1,11 @@
+import 'markup.dart';
 import 'utils.dart';
 
-bool contains(Object? values, Object? value) {
+bool callable(dynamic object) {
+  return object is Function;
+}
+
+bool contains(dynamic values, dynamic value) {
   if (values is String) {
     if (value is Pattern) {
       return values.contains(value);
@@ -9,47 +14,115 @@ bool contains(Object? values, Object? value) {
     throw TypeError();
   }
 
-  if (values is Iterable<Object?>) {
+  if (values is Iterable) {
     return values.contains(value);
   }
 
-  if (values is Map<Object?, Object?>) {
+  if (values is Map) {
     return values.containsKey(value);
   }
 
-  return unsafeCast<dynamic>(values).conrains(value);
+  return values.contains(value);
 }
 
-bool defined(Object? value) {
-  if (value == null) {
-    return false;
-  }
-
-  return true;
+bool defined(dynamic value) {
+  return boolean(value);
 }
 
-bool equal(Object? value, Object? other) {
+bool divisibleBy(num value, num divider) {
+  return divider == 0 ? false : value % divider == 0;
+}
+
+bool equal(dynamic value, dynamic other) {
   return value == other;
 }
 
-bool greaterThanOrEqual(Object? value, Object? other) {
-  return unsafeCast<dynamic>(value) >= other;
+bool escaped(dynamic value) {
+  if (value is Markup) {
+    return true;
+  }
+
+  return false;
 }
 
-bool greaterThan(Object? value, Object? other) {
-  return unsafeCast<dynamic>(value) > other;
+bool even(int value) {
+  return value.isEven;
 }
 
-bool lessThanOrEqual(Object? value, Object? other) {
-  return unsafeCast<dynamic>(value) <= other;
+bool greaterThanOrEqual(dynamic value, dynamic other) {
+  return value >= other;
 }
 
-bool lessThan(Object? value, Object? other) {
-  return unsafeCast<dynamic>(value) < other;
+bool greaterThan(dynamic value, dynamic other) {
+  return value > other;
 }
 
-bool notEqual(Object? value, Object? other) {
+bool iterable(dynamic value) {
+  if (value is Iterable) {
+    return true;
+  }
+
+  return false;
+}
+
+bool lessThanOrEqual(dynamic value, dynamic other) {
+  return value <= other;
+}
+
+bool lessThan(dynamic value, dynamic other) {
+  return value < other;
+}
+
+bool lower(String value) {
+  return value == value.toLowerCase();
+}
+
+bool mapping(dynamic value) {
+  if (value is Map) {
+    return true;
+  }
+
+  return false;
+}
+
+bool none(dynamic value) {
+  if (value == null) {
+    return true;
+  }
+
+  return false;
+}
+
+bool notEqual(dynamic value, dynamic other) {
   return value != other;
+}
+
+bool number(dynamic object) {
+  return object is num;
+}
+
+bool odd(int value) {
+  return value.isOdd;
+}
+
+bool sameAs(dynamic value, dynamic other) {
+  return identical(value, other);
+}
+
+bool sequence(dynamic value) {
+  try {
+    return value.length != null;
+  } catch (e) {
+    return false;
+  }
+}
+
+bool string(dynamic object) {
+  return object is String;
+}
+
+bool upper(String value) {
+  return value == value.toUpperCase();
 }
 
 const tests = <String, Function>{
@@ -59,30 +132,30 @@ const tests = <String, Function>{
   '==': equal,
   '>': greaterThan,
   '>=': greaterThanOrEqual,
+  'callable': callable,
   'defined': defined,
+  'divisibleby': divisibleBy,
   'eq': equal,
   'equalto': equal,
+  'escaped': escaped,
+  'even': even,
   'ge': greaterThanOrEqual,
   'in': contains,
+  'iterable': iterable,
   'le': lessThanOrEqual,
   'lessthan': lessThan,
   'lt': lessThan,
   'gt': greaterThan,
   'greaterthan': greaterThan,
+  'lower': lower,
+  'mapping': mapping,
+  'none': none,
   'ne': notEqual,
-  // 'callable': isCallable,
-  // 'divisibleby': isDivisibleBy,
-  // 'escaped': isEscaped,
-  // 'even': isEven,
-  // 'iterable': isIterable,
-  // 'lower': isLower,
-  // 'mapping': isMapping,
-  // 'none': isNone,
-  // 'number': isNumber,
-  // 'odd': isOdd,
-  // 'sameas': isSameAs,
-  // 'sequence': isSequence,
-  // 'string': isString,
-  // 'undefined': isUndefined,
-  // 'upper': isUpper,
+  'number': number,
+  'odd': odd,
+  'sameas': sameAs,
+  'sequence': sequence,
+  'string': string,
+  'undefined': none,
+  'upper': upper,
 };

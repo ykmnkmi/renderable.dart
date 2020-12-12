@@ -12,27 +12,27 @@ const contextFilter = _ContextFilter();
 
 const environmentFilter = _EnvironmentFilter();
 
-int count(Object? value) {
-  return unsafeCast<dynamic>(value).length;
+int count(dynamic value) {
+  return value.length;
 }
 
-List<Object?> list(Object? value) {
+List<dynamic> list(dynamic value) {
   if (value is String) {
     return value.split('');
   }
 
-  if (value is Iterable<Object?>) {
+  if (value is Iterable) {
     return value.toList();
   }
 
-  if (value is Map<Object?, Object?>) {
+  if (value is Map) {
     return value.keys.toList();
   }
 
-  return unsafeCast<dynamic>(value).toList();
+  return value.toList();
 }
 
-String lower(Object? value) {
+String lower(dynamic value) {
   if (value is String) {
     return value.toLowerCase();
   }
@@ -40,11 +40,11 @@ String lower(Object? value) {
   return value.toString().toLowerCase();
 }
 
-String string(Object? value) {
+String string(dynamic value) {
   return value.toString();
 }
 
-String upper(Object? value) {
+String upper(dynamic value) {
   if (value is String) {
     return value.toUpperCase();
   }

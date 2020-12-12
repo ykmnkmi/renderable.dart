@@ -16,7 +16,7 @@ const lStripBlocks = false;
 const newLine = '\n';
 const keepTrailingNewLine = false;
 
-Object? finalizer([Object? value]) {
+dynamic finalizer([dynamic value]) {
   if (value == null) {
     return '';
   }
@@ -28,15 +28,17 @@ Object? finalizer([Object? value]) {
   return represent(value);
 }
 
-const globals = <String, Object>{};
+const globals = <String, dynamic>{
+  'range': range,
+};
 
-Object? attributeGetter(Object? object, String field) {
+dynamic attributeGetter(dynamic object, String field) {
   return null;
 }
 
-Object? itemGetter(Object? object, Object? key) {
+dynamic itemGetter(dynamic object, dynamic key) {
   try {
-    return unsafeCast<dynamic>(object)[key];
+    return object[key];
   } catch (e) {
     return null;
   }

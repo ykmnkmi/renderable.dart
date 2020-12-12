@@ -8,8 +8,8 @@ import 'tests.dart' as tests;
 import 'utils.dart';
 import 'visitor.dart';
 
-class Renderer extends Visitor<Object?> implements Context {
-  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, Object?>? context]) : contexts = <Map<String, Object?>>[environment.globals] {
+class Renderer extends Visitor<dynamic> implements Context {
+  Renderer(this.environment, this.sink, List<Node> nodes, [Map<String, dynamic>? context]) : contexts = <Map<String, dynamic>>[environment.globals] {
     if (context != null) {
       contexts.add(context);
     }
@@ -28,10 +28,10 @@ class Renderer extends Visitor<Object?> implements Context {
 
   final StringSink sink;
 
-  final List<Map<String, Object?>> contexts;
+  final List<Map<String, dynamic>> contexts;
 
   @override
-  Object? operator [](String key) {
+  dynamic operator [](String key) {
     return get(key);
   }
 
@@ -41,14 +41,14 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  void apply(Map<String, Object?> data, ContextCallback closure) {
+  void apply(Map<String, dynamic> data, ContextCallback closure) {
     push(data);
     closure(this);
     pop();
   }
 
   @override
-  Object? get(String key) {
+  dynamic get(String key) {
     for (final context in contexts.reversed) {
       if (context.containsKey(key)) {
         return context[key];
@@ -71,7 +71,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  void push(Map<String, Object?> context) {
+  void push(Map<String, dynamic> context) {
     contexts.add(context);
   }
 
@@ -93,12 +93,12 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitAttribute(Attribute node) {
+  dynamic visitAttribute(Attribute node) {
     return environment.getAttribute(node.expression.accept(this), node.attribute);
   }
 
   @override
-  Object? visitBinary(Binary node) {
+  dynamic visitBinary(Binary node) {
     final left = node.left.accept(this);
     final right = node.right.accept(this);
 
@@ -113,11 +113,11 @@ class Renderer extends Visitor<Object?> implements Context {
         case '/':
           return unsafeCast<num>(left) / unsafeCast<num>(right);
         case '*':
-          return unsafeCast<dynamic>(left) * right;
+          return left * right;
         case '-':
-          return unsafeCast<dynamic>(left) - right;
+          return left - right;
         case '+':
-          return unsafeCast<dynamic>(left) + right;
+          return left + right;
         case 'or':
           return boolean(left) ? left : right;
         case 'and':
@@ -133,19 +133,19 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitCall(Call node) {
+  dynamic visitCall(Call node) {
     final callable = unsafeCast<Function>(node.expression.accept(this));
-    final arguments = <Object?>[];
+    final arguments = <dynamic>[];
 
     for (final argument in node.arguments) {
       arguments.add(argument.accept(this));
     }
 
-    final keywordArguments = <Symbol, Object?>{};
-    MapEntry<Symbol, Object?> entry;
+    final keywordArguments = <Symbol, dynamic>{};
+    MapEntry<Symbol, dynamic> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      entry = unsafeCast<MapEntry<Symbol, Object?>>(keywordArgument.accept(this));
+      entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
     }
 
@@ -153,10 +153,10 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitCompare(Compare node) {
+  dynamic visitCompare(Compare node) {
     var left = node.expression.accept(this);
     var result = true;
-    Object? right;
+    dynamic right;
 
     for (final operand in node.operands) {
       if (!result) {
@@ -199,7 +199,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitConcat(Concat node) {
+  dynamic visitConcat(Concat node) {
     final buffer = StringBuffer();
 
     for (final expression in node.expressions) {
@@ -210,7 +210,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitCondition(Condition node) {
+  dynamic visitCondition(Condition node) {
     if (boolean(node.test.accept(this))) {
       return node.expression1.accept(this);
     }
@@ -225,7 +225,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitConstant(Constant<Object?> node) {
+  dynamic visitConstant(Constant<dynamic> node) {
     return node.value;
   }
 
@@ -235,30 +235,32 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  void visitDictLiteral(DictLiteral node) {
-    final dict = <Object?, Object?>{};
+  dynamic visitDictLiteral(DictLiteral node) {
+    final dict = <dynamic, dynamic>{};
 
-    MapEntry<Object?, Object?> entry;
+    MapEntry<dynamic, dynamic> entry;
 
     for (final pair in node.pairs) {
-      entry = unsafeCast<MapEntry<Object?, Object?>>(pair.accept(this));
+      entry = unsafeCast<MapEntry<dynamic, dynamic>>(pair.accept(this));
       dict[entry.key] = entry.value;
     }
+
+    return dict;
   }
 
   @override
-  Object? visitFilter(Filter node) {
-    final arguments = <Object?>[node.expression.accept(this)];
+  dynamic visitFilter(Filter node) {
+    final arguments = <dynamic>[node.expression.accept(this)];
 
     for (final argument in node.arguments) {
       arguments.add(argument.accept(this));
     }
 
-    final keywordArguments = <Symbol, Object?>{};
-    MapEntry<Symbol, Object?> entry;
+    final keywordArguments = <Symbol, dynamic>{};
+    MapEntry<Symbol, dynamic> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      entry = unsafeCast<MapEntry<Symbol, Object?>>(keywordArgument.accept(this));
+      entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
     }
 
@@ -271,7 +273,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitItem(Item node) {
+  dynamic visitItem(Item node) {
     return environment.getItem(node.expression.accept(this), node.key.accept(this));
   }
 
@@ -281,8 +283,8 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitListLiteral(ListLiteral node) {
-    final list = <Object?>[];
+  dynamic visitListLiteral(ListLiteral node) {
+    final list = <dynamic>[];
 
     for (final value in node.values) {
       list.add(value.accept(this));
@@ -292,7 +294,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitName(Name node) {
+  dynamic visitName(Name node) {
     return get(node.name);
   }
 
@@ -307,22 +309,22 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitPair(Pair node) {
-    return MapEntry<Object?, Object?>(node.key.accept(this), node.value.accept(this));
+  dynamic visitPair(Pair node) {
+    return MapEntry<dynamic, dynamic>(node.key.accept(this), node.value.accept(this));
   }
 
   @override
-  Object? visitSlice(Slice node) {
-    final list = unsafeCast<dynamic>(node.expression.accept(this));
+  dynamic visitSlice(Slice node) {
+    final value = node.expression.accept(this);
     final start = unsafeCast<int>(node.start.accept(this));
 
     var expression = node.stop;
     int? stop;
 
     if (expression != null) {
-      stop = math.min(filters.count(list), unsafeCast<int>(expression.accept(this)));
+      stop = math.min(filters.count(value), unsafeCast<int>(expression.accept(this)));
     } else {
-      stop = list.length;
+      stop = value.length;
     }
 
     expression = node.step;
@@ -332,26 +334,26 @@ class Renderer extends Visitor<Object?> implements Context {
       step = unsafeCast<int>(expression.accept(this));
     }
 
-    if (list is String) {
-      return sliceString(list, start, stop, step);
+    if (value is String) {
+      return sliceString(value, start, stop, step);
     }
 
-    return slice(list, start, stop, step);
+    return slice(value, start, stop, step);
   }
 
   @override
-  Object? visitTest(Test node) {
-    final arguments = <Object?>[node.expression.accept(this)];
+  dynamic visitTest(Test node) {
+    final arguments = <dynamic>[node.expression.accept(this)];
 
     for (final argument in node.arguments) {
       arguments.add(argument.accept(this));
     }
 
-    final keywordArguments = <Symbol, Object?>{};
-    MapEntry<Symbol, Object?> entry;
+    final keywordArguments = <Symbol, dynamic>{};
+    MapEntry<Symbol, dynamic> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      entry = unsafeCast<MapEntry<Symbol, Object?>>(keywordArgument.accept(this));
+      entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
     }
 
@@ -359,8 +361,8 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitTupleLiteral(TupleLiteral node) {
-    final tuple = <Object?>[];
+  dynamic visitTupleLiteral(TupleLiteral node) {
+    final tuple = <dynamic>[];
 
     for (final value in node.values) {
       tuple.add(value.accept(this));
@@ -370,7 +372,7 @@ class Renderer extends Visitor<Object?> implements Context {
   }
 
   @override
-  Object? visitUnary(Unary node) {
+  dynamic visitUnary(Unary node) {
     final value = node.expression.accept(this);
 
     switch (node.operator) {
