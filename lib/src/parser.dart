@@ -33,8 +33,7 @@ class Parser {
 
   List<Node> parse(String template, {String? path}) {
     // final tokens = Lexer(configuration).tokenize(template, path: path);
-    final tokens = Lexer(configuration).tokenize(template, path: path).toList();
-    tokens.forEach(print);
+    final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     return scan(reader);
   }

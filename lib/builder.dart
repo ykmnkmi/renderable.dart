@@ -98,7 +98,7 @@ class HtmlTemplateBuilder extends Builder {
   }
 }
 
-class TemplateBuilder extends Visitor {
+class TemplateBuilder extends Visitor<dynamic> {
   TemplateBuilder(this.name, this.templateBuffer, List<Node> nodes)
       : bodyBuffers = <StringBuffer>[],
         names = <Name>{} {

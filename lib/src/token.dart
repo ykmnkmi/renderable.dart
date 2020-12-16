@@ -1,7 +1,7 @@
 part of 'lexer.dart';
 
 abstract class Token {
-  static final Map<String, String> common = <String, String>{
+  static const Map<String, String> common = <String, String>{
     'add': '+',
     'assign': '=',
     'colon': ':',

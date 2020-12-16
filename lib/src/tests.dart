@@ -5,7 +5,7 @@ bool callable(dynamic object) {
   return object is Function;
 }
 
-bool contains(dynamic values, dynamic value) {
+bool contains(dynamic value, dynamic values) {
   if (values is String) {
     if (value is Pattern) {
       return values.contains(value);

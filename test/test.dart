@@ -1,14 +1,8 @@
-import 'package:renderable/jinja.dart';
+import 'package:renderable/src/enirvonment.dart';
+import 'package:renderable/src/lexer.dart';
 
-const source = '*{{ {1: 2} }}*';
-
-void main() {
-  // final template = Template(source);
-  final template = Template('{{ "o" is in "foo" }}|{{ "foo" is in "foo" }}|'
-      '{{ "b" is in "foo" }}|{{ 1 is in ((1, 2)) }}|'
-      '{{ 3 is in ((1, 2)) }}|{{ 1 is in [1, 2] }}|'
-      '{{ 3 is in [1, 2] }}|{{ "foo" is in {"foo": 1}}}|'
-      '{{ "baz" is in {"bar": 1}}}');
-  print(template.nodes);
-  print(template.render());
+void main(List<String> args) {
+  final environment = Environment();
+  final lexer = Lexer(environment);
+  lexer.tokenize('hello {{ name }}!{{ name }}').forEach(print);
 }
