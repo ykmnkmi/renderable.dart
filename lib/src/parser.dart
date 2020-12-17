@@ -32,7 +32,6 @@ class Parser {
   }
 
   List<Node> parse(String template, {String? path}) {
-    // final tokens = Lexer(configuration).tokenize(template, path: path);
     final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     return scan(reader);
@@ -51,7 +50,7 @@ class Parser {
       endRulesStack.add(endRules);
     }
 
-    void flush() {
+    void flushData() {
       if (buffer.isNotEmpty) {
         nodes.add(Data(buffer.toString()));
         buffer.clear();
@@ -68,13 +67,13 @@ class Parser {
             reader.next();
             break;
           case 'variable_begin':
-            flush();
+            flushData();
             reader.next();
             nodes.add(parseTuple(reader));
             reader.expect('variable_end');
             break;
           case 'block_begin':
-            flush();
+            flushData();
             reader.next();
 
             if (endRules.isNotEmpty && reader.current.testAny(endRules)) {
@@ -82,13 +81,14 @@ class Parser {
             }
 
             nodes.add(parseStatement(reader));
+            reader.expect('block_end');
             break;
           default:
             throw 'unexpected token: $token';
         }
       }
 
-      flush();
+      flushData();
     } finally {
       if (endRules.isNotEmpty) {
         endRulesStack.removeLast();
@@ -126,7 +126,7 @@ class Parser {
 
   List<Node> parseStatements(TokenReader reader, List<String> endRules, {bool dropNeedle = false}) {
     reader.skipIf('colon');
-    reader.expect('blockEnd');
+    reader.expect('block_end');
 
     final nodes = subParse(reader, endRules: endRules);
 
@@ -143,25 +143,26 @@ class Parser {
 
   Node parseIf(TokenReader reader) {
     If result, node;
-    result = node = If(Constant<bool>(true), <Node>[Constant<String>('')], <Node>[], <Node>[]);
+    result = node = If(Constant<bool>(true), <Node>[Constant<String>('')], <If>[], <Node>[]);
+    reader.expect('name');
 
     while (true) {
       node.test = parseTuple(reader, withCondExpr: false);
       node.body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-      node.elseIf = <Node>[];
+      node.elseIf = <If>[];
       node.$else = <Node>[];
 
       final token = reader.next();
 
       if (token.test('name', 'elif')) {
-        node = If(Constant<bool>(true), <Node>[Constant<String>('')], <Node>[], <Node>[]);
+        node = If(Constant<bool>(true), <Node>[Constant<String>('')], <If>[], <Node>[]);
         result.elseIf.add(node);
         continue;
       } else if (token.test('name', 'else')) {
-        result.elseIf = parseStatements(reader, <String>['name:endif']);
-      } else {
-        break;
+        result.$else = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
       }
+
+      break;
     }
 
     return result;
@@ -294,7 +295,7 @@ class Parser {
           reader.next();
           expression = Div(expression, parsePow(reader));
           break;
-        case 'floorDiv':
+        case 'floordiv':
           reader.next();
           expression = FloorDiv(expression, parsePow(reader));
           break;
@@ -714,10 +715,8 @@ class Parser {
         throw 'you cannot chain multiple tests with is';
       }
 
-      // print('current: ${reader.current}');
       var argument = parsePrimary(reader);
       argument = parsePostfix(reader, argument);
-      // print('current: ${reader.current}');
       call = Call(Constant<String>(''), arguments: <Expression>[argument]);
     } else {
       call = Call(Constant<String>(''));

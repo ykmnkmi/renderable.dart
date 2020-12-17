@@ -532,7 +532,7 @@ class If extends Statement {
 
   List<Node> body;
 
-  List<Node> elseIf;
+  List<If> elseIf;
 
   List<Node> $else;
 

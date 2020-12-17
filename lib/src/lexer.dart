@@ -90,7 +90,6 @@ class Lexer {
         commentBegin,
         (scanner) sync* {
           yield Token(scanner.lastMatch!.start, 'comment_begin', configuration.commentBegin);
-
           // yield Token(scanner.position, 'comment', text);
           yield Token(scanner.lastMatch!.start, 'comment_end', configuration.commentEnd);
         },
@@ -101,7 +100,7 @@ class Lexer {
         variableBegin,
         (scanner) sync* {
           yield Token(scanner.lastMatch!.start, 'variable_begin', configuration.variableBegin);
-          yield* expression(scanner);
+          yield* expression(scanner, variableEnd);
 
           if (!scanner.scan(variableEnd)) {
             throw 'expected expression end';
@@ -116,7 +115,7 @@ class Lexer {
         blockBegin,
         (scanner) sync* {
           yield Token(scanner.lastMatch!.start, 'block_begin', configuration.blockBegin);
-          yield* expression(scanner);
+          yield* expression(scanner, blockEnd);
 
           if (!scanner.scan(blockEnd)) {
             throw 'expected statement end';
@@ -243,11 +242,13 @@ class Lexer {
     }
   }
 
-  Iterable<Token> expression(StringScanner scanner) sync* {
+  Iterable<Token> expression(StringScanner scanner, RegExp end) sync* {
     final stack = <String>[];
 
     while (!scanner.isDone) {
-      if (scanner.scan(whiteSpaceRe)) {
+      if (stack.isEmpty && scanner.matches(end)) {
+        return;
+      } else if (scanner.scan(whiteSpaceRe)) {
         yield Token(scanner.lastMatch!.start, 'whitespace', scanner.lastMatch![0]!);
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch!.start, 'name', scanner.lastMatch![0]!);

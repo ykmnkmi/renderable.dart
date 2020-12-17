@@ -14,13 +14,7 @@ class Renderer extends Visitor<dynamic> implements Context {
       contexts.add(context);
     }
 
-    for (final node in nodes) {
-      if (node is Expression) {
-        sink.write(environment.finalize(node.accept(this)));
-      } else {
-        node.accept(this);
-      }
-    }
+    visitAll(nodes);
   }
 
   @override
@@ -92,6 +86,16 @@ class Renderer extends Visitor<dynamic> implements Context {
     contexts.last[key] = value;
   }
 
+  void visitAll(List<Node> nodes) {
+    for (final node in nodes) {
+      if (node is Expression) {
+        sink.write(environment.finalize(node.accept(this)));
+      } else {
+        node.accept(this);
+      }
+    }
+  }
+
   @override
   dynamic visitAttribute(Attribute node) {
     return environment.getAttribute(node.expression.accept(this), node.attribute);
@@ -147,6 +151,15 @@ class Renderer extends Visitor<dynamic> implements Context {
     for (final keywordArgument in node.keywordArguments) {
       entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
+    }
+
+    if (node.dArguments != null) {
+      arguments.addAll(unsafeCast<Iterable<dynamic>>(node.dArguments!.accept(this)));
+    }
+
+    if (node.dKeywordArguments != null) {
+      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(node.dKeywordArguments!.accept(this))
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return Function.apply(callable, arguments, keywordArguments);
@@ -264,12 +277,37 @@ class Renderer extends Visitor<dynamic> implements Context {
       keywordArguments[entry.key] = entry.value;
     }
 
+    if (node.dArguments != null) {
+      arguments.addAll(unsafeCast<Iterable<dynamic>>(node.dArguments!.accept(this)));
+    }
+
+    if (node.dKeywordArguments != null) {
+      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(node.dKeywordArguments!.accept(this))
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+    }
+
     return environment.callFilter(node.name, arguments, keywordArguments);
   }
 
   @override
-  void visitIf(If node) {
-    throw 'implement visitIf';
+  dynamic visitIf(If node) {
+    if (boolean(node.test.accept(this))) {
+      visitAll(node.body);
+      return;
+    }
+
+    if (node.elseIf.isNotEmpty) {
+      for (final ifNode in node.elseIf) {
+        if (boolean(ifNode.test.accept(this))) {
+          visitAll(ifNode.body);
+          return;
+        }
+      }
+    }
+
+    if (node.$else.isNotEmpty) {
+      visitAll(node.$else);
+    }
   }
 
   @override
@@ -355,6 +393,15 @@ class Renderer extends Visitor<dynamic> implements Context {
     for (final keywordArgument in node.keywordArguments) {
       entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
       keywordArguments[entry.key] = entry.value;
+    }
+
+    if (node.dArguments != null) {
+      arguments.addAll(unsafeCast<Iterable<dynamic>>(node.dArguments!.accept(this)));
+    }
+
+    if (node.dKeywordArguments != null) {
+      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(node.dKeywordArguments!.accept(this))
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return environment.callTest(node.name, arguments, keywordArguments);
