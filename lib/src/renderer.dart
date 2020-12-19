@@ -313,14 +313,14 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitListLiteral(ListLiteral node) {
-    final list = <dynamic>[];
+  dynamic visitListLiteral(ListLiteral list) {
+    final result = <dynamic>[];
 
-    for (final value in node.values) {
-      list.add(value.accept(this));
+    for (final node in list.nodes) {
+      result.add(node.accept(this));
     }
 
-    return list;
+    return result;
   }
 
   @override
@@ -398,21 +398,21 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitTupleLiteral(TupleLiteral node) {
-    final tuple = <dynamic>[];
+  dynamic visitTupleLiteral(TupleLiteral tuple) {
+    final result = <dynamic>[];
 
-    for (final value in node.values) {
-      tuple.add(value.accept(this));
+    for (final node in tuple.nodes) {
+      result.add(node.accept(this));
     }
 
-    return tuple;
+    return result;
   }
 
   @override
-  dynamic visitUnary(Unary node) {
-    final value = node.expression.accept(this);
+  dynamic visitUnary(Unary unaru) {
+    final value = unaru.expression.accept(this);
 
-    switch (node.operator) {
+    switch (unaru.operator) {
       case '+':
         return 0 + unsafeCast<num>(value);
       case '-':

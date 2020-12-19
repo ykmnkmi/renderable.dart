@@ -3,9 +3,11 @@ import 'dart:async';
 
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/configuration.dart';
+import 'src/defaults.dart' as defaults;
 import 'src/nodes.dart';
 import 'src/parser.dart';
 import 'src/utils.dart';
@@ -17,57 +19,13 @@ Builder htmlTemplateBuilder(BuilderOptions options) {
 
 class HtmlTemplateBuilder extends Builder {
   HtmlTemplateBuilder(Map<String, Object?> config) : formatter = DartFormatter() {
-    String commentStart;
-    String commentEnd;
-
-    if (config.containsKey('comment_start')) {
-      commentStart = config['comment_start'] as String;
-    } else {
-      commentStart = '{#';
-    }
-
-    if (config.containsKey('comment_end')) {
-      commentEnd = config['comment_end'] as String;
-    } else {
-      commentEnd = '#}';
-    }
-
-    String expressionStart, expressionEnd;
-
-    if (config.containsKey('expression_start')) {
-      expressionStart = config['expression_start'] as String;
-    } else {
-      expressionStart = '{{';
-    }
-
-    if (config.containsKey('expression_end')) {
-      expressionEnd = config['expression_end'] as String;
-    } else {
-      expressionEnd = '}}';
-    }
-
-    String statementStart;
-    String statementEnd;
-
-    if (config.containsKey('statement_start')) {
-      statementStart = config['statement_start'] as String;
-    } else {
-      statementStart = '{%';
-    }
-
-    if (config.containsKey('statement_end')) {
-      statementEnd = config['statement_end'] as String;
-    } else {
-      statementEnd = '%}';
-    }
-
     environment = Configuration(
-      commentBegin: commentStart,
-      commentEnd: commentEnd,
-      variableBegin: expressionStart,
-      variableEnd: expressionEnd,
-      blockBegin: statementStart,
-      blockEnd: statementEnd,
+      commentBegin: config['comment_begin'] as String? ?? defaults.commentBegin,
+      commentEnd: config['comment_end'] as String? ?? defaults.commentEnd,
+      variableBegin: config['variable_begin'] as String? ?? defaults.variableBegin,
+      variableEnd: config['variable_end'] as String? ?? defaults.variableEnd,
+      blockBegin: config['block_begin'] as String? ?? defaults.blockBegin,
+      blockEnd: config['block_end'] as String? ?? defaults.blockEnd,
     );
   }
 
@@ -101,31 +59,29 @@ class HtmlTemplateBuilder extends Builder {
 class TemplateBuilder extends Visitor<dynamic> {
   TemplateBuilder(this.name, this.templateBuffer, List<Node> nodes)
       : bodyBuffers = <StringBuffer>[],
+        imports = <String>{'import \'package:renderable/core.dart\';'},
         names = <Name>{} {
-    var isExpression = false;
     pushBodyBuffer();
 
-    if (nodes.length == 1) {
-      isExpression = true;
-      nodes.first.accept(this);
-    } else {
-      for (final node in nodes) {
-        if (node is Expression) {
-          bodyBuffer.write('buffer.write(');
-          node.accept(this);
-          bodyBuffer.writeln(');');
-        } else {
-          throw 'implment statements';
-        }
+    for (final node in nodes) {
+      if (node is Data || node is Expression) {
+        bodyBuffer.write('buffer.write(');
+        node.accept(this);
+        bodyBuffer.writeln(');');
+      } else {
+        throw 'implement statements: $node';
       }
     }
 
     final template = popBodyBuffer().toString();
 
-    templateBuffer.writeln('import \'package:renderable/renderable.dart\';');
+    final imports = this.imports.toList();
+    imports.sort();
+    imports.forEach(templateBuffer.writeln);
+
     templateBuffer.writeln();
 
-    templateBuffer.writeln('class $name implements Template {');
+    templateBuffer.writeln('class $name implements Renderable {');
     templateBuffer.writeln('const $name();');
     templateBuffer.writeln();
 
@@ -138,18 +94,11 @@ class TemplateBuilder extends Visitor<dynamic> {
     }
 
     templateBuffer.write(') {');
-
-    if (isExpression) {
-      templateBuffer.write('return ');
-      templateBuffer.write(template);
-      templateBuffer.writeln(';');
-    } else {
-      templateBuffer.writeln('final buffer = StringBuffer();');
-      templateBuffer.write(template);
-      templateBuffer.writeln('return buffer.toString();');
-    }
-
+    templateBuffer.writeln('final buffer = StringBuffer();');
+    templateBuffer.write(template);
+    templateBuffer.writeln('return buffer.toString();');
     templateBuffer.writeln('}');
+
     templateBuffer.writeln('}');
   }
 
@@ -159,18 +108,20 @@ class TemplateBuilder extends Visitor<dynamic> {
 
   final List<StringBuffer> bodyBuffers;
 
+  final Set<String> imports;
+
   final Set<Name> names;
 
   StringBuffer get bodyBuffer {
     return bodyBuffers.last;
   }
 
-  void pushBodyBuffer() {
-    bodyBuffers.add(StringBuffer());
-  }
-
   StringBuffer popBodyBuffer() {
     return bodyBuffers.removeLast();
+  }
+
+  void pushBodyBuffer([String content = '']) {
+    bodyBuffers.add(StringBuffer(content));
   }
 
   @override
@@ -181,8 +132,19 @@ class TemplateBuilder extends Visitor<dynamic> {
   }
 
   @override
+  void visitBinary(Binary node) {
+    throw 'implement visitBinary';
+  }
+
+  @override
   void visitCall(Call node) {
-    throw 'implement visitCall';
+    node.expression.accept(this);
+    writeCalling(node.arguments, node.keywordArguments, node.dArguments, node.dKeywordArguments);
+  }
+
+  @override
+  void visitCompare(Compare node) {
+    throw 'implement visitCompare';
   }
 
   @override
@@ -211,42 +173,30 @@ class TemplateBuilder extends Visitor<dynamic> {
   }
 
   @override
-  void visitConstant(Constant<Object?> node) {
+  void visitCondition(Condition node) {
+    throw 'implement visitCondition';
+  }
+
+  @override
+  void visitConstant(Constant<dynamic> node) {
     bodyBuffer.write(represent(node.value));
   }
 
   @override
   void visitData(Data node) {
-    bodyBuffer.write(_wrapData(node.data));
+    bodyBuffer.write(wrapData(node.data));
   }
 
   @override
   void visitDictLiteral(DictLiteral node) {
-    bodyBuffer.write('{');
-
-    for (final item in node.pairs) {
-      item.accept(this);
-
-      if (item != node.pairs.last) {
-        bodyBuffer.write(', ');
-      }
-    }
-
-    bodyBuffer.write('}');
+    writeCollection(node.pairs, '{', '}');
   }
 
   @override
   void visitFilter(Filter node) {
-    bodyBuffer.write(node.name);
-    bodyBuffer.write('(');
-    node.expression.accept(this);
-
-    for (final param in node.arguments.cast<Node>().followedBy(node.keywordArguments.cast<Node>())) {
-      bodyBuffer.write(', ');
-      param.accept(this);
-    }
-
-    bodyBuffer.write(')');
+    imports.add('import \'package:renderable/filters.dart\' as filters;');
+    bodyBuffer.write('filters.${node.name}');
+    writeCalling(<Expression>[node.expression, ...node.arguments], node.keywordArguments, node.dArguments, node.dKeywordArguments);
   }
 
   @override
@@ -271,17 +221,7 @@ class TemplateBuilder extends Visitor<dynamic> {
 
   @override
   void visitListLiteral(ListLiteral node) {
-    bodyBuffer.write('[');
-
-    for (final item in node.values) {
-      item.accept(this);
-
-      if (item != node.values.last) {
-        bodyBuffer.write(', ');
-      }
-    }
-
-    bodyBuffer.write(']');
+    writeCollection(node.nodes);
   }
 
   @override
@@ -291,9 +231,20 @@ class TemplateBuilder extends Visitor<dynamic> {
   }
 
   @override
+  void visitOperand(Operand node) {
+    throw 'implement visitOperand';
+  }
+
+  @override
   void visitOutput(Output node) {
-    for (final child in node.nodes) {
-      child.accept(this);
+    for (final node in node.nodes) {
+      if (node is Data || node is Expression) {
+        bodyBuffer.write('buffer.write(');
+        node.accept(this);
+        bodyBuffer.writeln(');');
+      } else {
+        throw 'implement statements: $node';
+      }
     }
   }
 
@@ -330,12 +281,14 @@ class TemplateBuilder extends Visitor<dynamic> {
 
   @override
   void visitTest(Test node) {
-    throw Exception();
+    imports.add('import \'package:renderable/tests.dart\' as tests;');
+    bodyBuffer.write('tests.${node.name}');
+    writeCalling(<Expression>[node.expression, ...node.arguments], node.keywordArguments, node.dArguments, node.dKeywordArguments);
   }
 
   @override
   void visitTupleLiteral(TupleLiteral node) {
-    throw Exception();
+    writeCollection(node.nodes);
   }
 
   @override
@@ -344,29 +297,37 @@ class TemplateBuilder extends Visitor<dynamic> {
     node.expression.accept(this);
   }
 
-  static String _wrapData(String value) {
-    final quote = value.contains(r'\n') || value.contains(r'\r\n') ? '\'' : "\'\'\'";
+  @protected
+  void writeCalling(List<Expression> arguments, List<Keyword> keywordArguments, [Expression? dArguments, Expression? dKeywordArguments]) {
+    bodyBuffer.write('(');
+
+    for (final param in arguments.cast<Node>().followedBy(keywordArguments.cast<Node>())) {
+      bodyBuffer.write(', ');
+      param.accept(this);
+    }
+
+    // TODO: add dynamic arguments
+
+    bodyBuffer.write(')');
+  }
+
+  @protected
+  void writeCollection(List<Node> nodes, [String open = '[', String close = ']']) {
+    bodyBuffer.write(open);
+
+    for (final node in nodes.take(nodes.length - 1)) {
+      node.accept(this);
+      bodyBuffer.write(', ');
+    }
+
+    nodes.last.accept(this);
+    bodyBuffer.write(close);
+  }
+
+  @protected
+  static String wrapData(String value) {
+    final quote = value.contains('\n') || value.contains('\r\n') ? "\'\'\'" : '\'';
     value = value.replaceAll('\'', '\\\'');
-    return quote + value + quote;
-  }
-
-  @override
-  void visitBinary(Binary node) {
-    throw 'implement visitBinary';
-  }
-
-  @override
-  void visitCompare(Compare node) {
-    throw 'implement visitCompare';
-  }
-
-  @override
-  void visitCondition(Condition node) {
-    throw 'implement visitCondition';
-  }
-
-  @override
-  void visitOperand(Operand node) {
-    throw 'implement visitOperand';
+    return '$quote$value$quote';
   }
 }

@@ -312,9 +312,9 @@ class Constant<T> extends Literal {
 }
 
 class TupleLiteral extends Literal {
-  TupleLiteral(this.values, {this.save = false});
+  TupleLiteral(this.nodes, {this.save = false});
 
-  List<Expression> values;
+  List<Expression> nodes;
 
   bool save;
 
@@ -325,14 +325,14 @@ class TupleLiteral extends Literal {
 
   @override
   String toString() {
-    return 'TupleLiteral($values)';
+    return 'TupleLiteral($nodes)';
   }
 }
 
 class ListLiteral extends Literal {
-  ListLiteral(this.values);
+  ListLiteral(this.nodes);
 
-  List<Expression> values;
+  List<Expression> nodes;
 
   @override
   R accept<R>(Visitor<R> visitor) {
@@ -341,7 +341,7 @@ class ListLiteral extends Literal {
 
   @override
   String toString() {
-    return 'ListLiteral($values)';
+    return 'ListLiteral($nodes)';
   }
 }
 
