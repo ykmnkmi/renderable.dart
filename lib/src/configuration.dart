@@ -15,9 +15,7 @@ class Configuration {
     this.trimBlocks = false,
     this.newLine = '\n',
     this.keepTrailingNewLine = false,
-  })  : assert(commentBegin != commentEnd),
-        assert(variableBegin != variableEnd),
-        assert(blockBegin != variableEnd);
+  });
 
   final String commentBegin;
 

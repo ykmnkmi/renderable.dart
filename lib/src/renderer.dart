@@ -146,11 +146,9 @@ class Renderer extends Visitor<dynamic> implements Context {
     }
 
     final keywordArguments = <Symbol, dynamic>{};
-    MapEntry<Symbol, dynamic> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
-      keywordArguments[entry.key] = entry.value;
+      keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this);
     }
 
     if (node.dArguments != null) {
@@ -169,14 +167,13 @@ class Renderer extends Visitor<dynamic> implements Context {
   dynamic visitCompare(Compare node) {
     var left = node.expression.accept(this);
     var result = true;
-    dynamic right;
 
     for (final operand in node.operands) {
       if (!result) {
         return false;
       }
 
-      right = operand.expression.accept(this);
+      final right = operand.expression.accept(this);
 
       switch (operand.operator) {
         case 'eq':
@@ -251,11 +248,8 @@ class Renderer extends Visitor<dynamic> implements Context {
   dynamic visitDictLiteral(DictLiteral node) {
     final dict = <dynamic, dynamic>{};
 
-    MapEntry<dynamic, dynamic> entry;
-
     for (final pair in node.pairs) {
-      entry = unsafeCast<MapEntry<dynamic, dynamic>>(pair.accept(this));
-      dict[entry.key] = entry.value;
+      dict[pair.key.accept(this)] = pair.value.accept(this);
     }
 
     return dict;
@@ -270,11 +264,9 @@ class Renderer extends Visitor<dynamic> implements Context {
     }
 
     final keywordArguments = <Symbol, dynamic>{};
-    MapEntry<Symbol, dynamic> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
-      keywordArguments[entry.key] = entry.value;
+      keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this);
     }
 
     if (node.dArguments != null) {
@@ -290,7 +282,7 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitIf(If node) {
+  void visitIf(If node) {
     if (boolean(node.test.accept(this))) {
       visitAll(node.body);
       return;
@@ -316,8 +308,8 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  void visitKeyword(Keyword node) {
-    throw 'implement visitKeyword';
+  MapEntry<Symbol, dynamic> visitKeyword(Keyword node) {
+    return MapEntry<Symbol, dynamic>(Symbol(node.key), node.value.accept(this));
   }
 
   @override
@@ -337,13 +329,13 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  void visitOperand(Operand node) {
-    throw 'implement visitOperand';
+  List<dynamic> visitOperand(Operand node) {
+    return [node.operator, node.expression.accept(this)];
   }
 
   @override
   void visitOutput(Output node) {
-    throw 'implement visitOutput';
+    visitAll(node.nodes);
   }
 
   @override
@@ -388,11 +380,9 @@ class Renderer extends Visitor<dynamic> implements Context {
     }
 
     final keywordArguments = <Symbol, dynamic>{};
-    MapEntry<Symbol, dynamic> entry;
 
     for (final keywordArgument in node.keywordArguments) {
-      entry = unsafeCast<MapEntry<Symbol, dynamic>>(keywordArgument.accept(this));
-      keywordArguments[entry.key] = entry.value;
+      keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this);
     }
 
     if (node.dArguments != null) {
