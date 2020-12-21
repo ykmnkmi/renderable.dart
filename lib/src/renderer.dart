@@ -86,28 +86,25 @@ class Renderer extends Visitor<dynamic> implements Context {
     contexts.last[key] = value;
   }
 
+  @override
   void visitAll(List<Node> nodes) {
     for (final node in nodes) {
-      if (node is Expression) {
-        sink.write(environment.finalize(node.accept(this)));
-      } else {
-        node.accept(this);
-      }
+      node.accept(this);
     }
   }
 
   @override
-  dynamic visitAttribute(Attribute node) {
-    return environment.getAttribute(node.expression.accept(this), node.attribute);
+  dynamic visitAttribute(Attribute attribute) {
+    return environment.getAttribute(attribute.expression.accept(this), attribute.attribute);
   }
 
   @override
-  dynamic visitBinary(Binary node) {
-    final left = node.left.accept(this);
-    final right = node.right.accept(this);
+  dynamic visitBinary(Binary binary) {
+    final left = binary.left.accept(this);
+    final right = binary.right.accept(this);
 
     try {
-      switch (node.operator) {
+      switch (binary.operator) {
         case '**':
           return math.pow(unsafeCast<num>(left), unsafeCast<num>(right));
         case '%':
@@ -137,38 +134,42 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitCall(Call node) {
-    final callable = unsafeCast<Function>(node.expression.accept(this));
+  dynamic visitCall(Call call) {
+    final callable = unsafeCast<Function>(call.expression.accept(this));
     final arguments = <dynamic>[];
 
-    for (final argument in node.arguments) {
+    for (final argument in call.arguments) {
       arguments.add(argument.accept(this));
     }
 
     final keywordArguments = <Symbol, dynamic>{};
 
-    for (final keywordArgument in node.keywordArguments) {
+    for (final keywordArgument in call.keywordArguments) {
       keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this);
     }
 
-    if (node.dArguments != null) {
-      arguments.addAll(unsafeCast<Iterable<dynamic>>(node.dArguments!.accept(this)));
+    var expression = call.dArguments;
+
+    if (expression != null) {
+      arguments.addAll(unsafeCast<Iterable<dynamic>>(expression.accept(this)));
     }
 
-    if (node.dKeywordArguments != null) {
-      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(node.dKeywordArguments!.accept(this))
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+    expression = call.dKeywordArguments;
+
+    if (expression != null) {
+      keywordArguments.addAll(
+          unsafeCast<Map<String, dynamic>>(expression.accept(this)).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return Function.apply(callable, arguments, keywordArguments);
   }
 
   @override
-  dynamic visitCompare(Compare node) {
-    var left = node.expression.accept(this);
+  dynamic visitCompare(Compare compare) {
+    var left = compare.expression.accept(this);
     var result = true;
 
-    for (final operand in node.operands) {
+    for (final operand in compare.operands) {
       if (!result) {
         return false;
       }
@@ -209,10 +210,10 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitConcat(Concat node) {
+  dynamic visitConcat(Concat concat) {
     final buffer = StringBuffer();
 
-    for (final expression in node.expressions) {
+    for (final expression in concat.expressions) {
       buffer.write(expression.accept(this));
     }
 
@@ -220,12 +221,12 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitCondition(Condition node) {
-    if (boolean(node.test.accept(this))) {
-      return node.expression1.accept(this);
+  dynamic visitCondition(Condition condition) {
+    if (boolean(condition.test.accept(this))) {
+      return condition.expression1.accept(this);
     }
 
-    final expression = node.expression2;
+    final expression = condition.expression2;
 
     if (expression != null) {
       return expression.accept(this);
@@ -235,50 +236,54 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitConstant(Constant<dynamic> node) {
-    return node.value;
+  dynamic visitConstant(Constant<dynamic> constant) {
+    return constant.value;
   }
 
   @override
-  void visitData(Data node) {
-    sink.write(node.data);
+  void visitData(Data data) {
+    sink.write(data.data);
   }
 
   @override
-  dynamic visitDictLiteral(DictLiteral node) {
-    final dict = <dynamic, dynamic>{};
+  dynamic visitDictLiteral(DictLiteral dict) {
+    final result = <dynamic, dynamic>{};
 
-    for (final pair in node.pairs) {
-      dict[pair.key.accept(this)] = pair.value.accept(this);
+    for (final pair in dict.pairs) {
+      result[pair.key.accept(this)] = pair.value.accept(this);
     }
 
-    return dict;
+    return result;
   }
 
   @override
-  dynamic visitFilter(Filter node) {
-    final arguments = <dynamic>[node.expression.accept(this)];
+  dynamic visitFilter(Filter filter) {
+    final arguments = <dynamic>[filter.expression.accept(this)];
 
-    for (final argument in node.arguments) {
+    for (final argument in filter.arguments) {
       arguments.add(argument.accept(this));
     }
 
     final keywordArguments = <Symbol, dynamic>{};
 
-    for (final keywordArgument in node.keywordArguments) {
+    for (final keywordArgument in filter.keywordArguments) {
       keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this);
     }
 
-    if (node.dArguments != null) {
-      arguments.addAll(unsafeCast<Iterable<dynamic>>(node.dArguments!.accept(this)));
+    var expression = filter.dArguments;
+
+    if (expression != null) {
+      arguments.addAll(unsafeCast<Iterable<dynamic>>(expression.accept(this)));
     }
 
-    if (node.dKeywordArguments != null) {
-      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(node.dKeywordArguments!.accept(this))
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+    expression = filter.dKeywordArguments;
+
+    if (expression != null) {
+      keywordArguments.addAll(
+          unsafeCast<Map<String, dynamic>>(expression.accept(this)).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
-    return environment.callFilter(node.name, arguments, keywordArguments);
+    return environment.callFilter(filter.name, arguments, keywordArguments);
   }
 
   @override
@@ -297,19 +302,19 @@ class Renderer extends Visitor<dynamic> implements Context {
       }
     }
 
-    if (node.$else.isNotEmpty) {
-      visitAll(node.$else);
+    if (node.else_.isNotEmpty) {
+      visitAll(node.else_);
     }
   }
 
   @override
-  dynamic visitItem(Item node) {
-    return environment.getItem(node.expression.accept(this), node.key.accept(this));
+  dynamic visitItem(Item item) {
+    return environment.getItem(item.expression.accept(this), item.key.accept(this));
   }
 
   @override
-  MapEntry<Symbol, dynamic> visitKeyword(Keyword node) {
-    return MapEntry<Symbol, dynamic>(Symbol(node.key), node.value.accept(this));
+  MapEntry<Symbol, dynamic> visitKeyword(Keyword keyword) {
+    return MapEntry<Symbol, dynamic>(Symbol(keyword.key), keyword.value.accept(this));
   }
 
   @override
@@ -324,31 +329,37 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitName(Name node) {
-    return get(node.name);
+  dynamic visitName(Name name) {
+    return get(name.name);
   }
 
   @override
-  List<dynamic> visitOperand(Operand node) {
-    return [node.operator, node.expression.accept(this)];
+  List<dynamic> visitOperand(Operand oprand) {
+    return [oprand.operator, oprand.expression.accept(this)];
   }
 
   @override
-  void visitOutput(Output node) {
-    visitAll(node.nodes);
+  void visitOutput(Output output) {
+    for (final node in output.nodes) {
+      if (node is Data) {
+        node.accept(this);
+      } else {
+        sink.write(environment.finalize(node.accept(this)));
+      }
+    }
   }
 
   @override
-  dynamic visitPair(Pair node) {
-    return MapEntry<dynamic, dynamic>(node.key.accept(this), node.value.accept(this));
+  dynamic visitPair(Pair pair) {
+    return MapEntry<dynamic, dynamic>(pair.key.accept(this), pair.value.accept(this));
   }
 
   @override
-  dynamic visitSlice(Slice node) {
-    final value = node.expression.accept(this);
-    final start = unsafeCast<int>(node.start.accept(this));
+  dynamic visitSlice(Slice slice_) {
+    final value = slice_.expression.accept(this);
+    final start = unsafeCast<int>(slice_.start.accept(this));
 
-    var expression = node.stop;
+    var expression = slice_.stop;
     int? stop;
 
     if (expression != null) {
@@ -357,7 +368,7 @@ class Renderer extends Visitor<dynamic> implements Context {
       stop = value.length;
     }
 
-    expression = node.step;
+    expression = slice_.step;
     int? step;
 
     if (expression != null) {
@@ -372,29 +383,33 @@ class Renderer extends Visitor<dynamic> implements Context {
   }
 
   @override
-  dynamic visitTest(Test node) {
-    final arguments = <dynamic>[node.expression.accept(this)];
+  dynamic visitTest(Test test) {
+    final arguments = <dynamic>[test.expression.accept(this)];
 
-    for (final argument in node.arguments) {
+    for (final argument in test.arguments) {
       arguments.add(argument.accept(this));
     }
 
     final keywordArguments = <Symbol, dynamic>{};
 
-    for (final keywordArgument in node.keywordArguments) {
+    for (final keywordArgument in test.keywordArguments) {
       keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this);
     }
 
-    if (node.dArguments != null) {
-      arguments.addAll(unsafeCast<Iterable<dynamic>>(node.dArguments!.accept(this)));
+    var expression = test.dArguments;
+
+    if (expression != null) {
+      arguments.addAll(unsafeCast<Iterable<dynamic>>(expression.accept(this)));
     }
 
-    if (node.dKeywordArguments != null) {
-      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(node.dKeywordArguments!.accept(this))
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+    expression = test.dKeywordArguments;
+
+    if (expression != null) {
+      keywordArguments.addAll(
+          unsafeCast<Map<String, dynamic>>(expression.accept(this)).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
-    return environment.callTest(node.name, arguments, keywordArguments);
+    return environment.callTest(test.name, arguments, keywordArguments);
   }
 
   @override

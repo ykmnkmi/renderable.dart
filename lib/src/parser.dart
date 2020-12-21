@@ -43,7 +43,7 @@ class Parser {
   }
 
   List<Node> subParse(TokenReader reader, {List<String> endRules = const <String>[]}) {
-    final buffer = StringBuffer();
+    final buffer = <Node>[];
     final nodes = <Node>[];
 
     if (endRules.isNotEmpty) {
@@ -52,7 +52,7 @@ class Parser {
 
     void flushData() {
       if (buffer.isNotEmpty) {
-        nodes.add(Data(buffer.toString()));
+        nodes.add(Output(buffer.toList()));
         buffer.clear();
       }
     }
@@ -63,13 +63,13 @@ class Parser {
 
         switch (token.type) {
           case 'data':
-            buffer.write(token.value);
+            buffer.add(Data(token.value));
             reader.next();
             break;
           case 'variable_begin':
             flushData();
             reader.next();
-            nodes.add(parseTuple(reader));
+            buffer.add(parseTuple(reader));
             reader.expect('variable_end');
             break;
           case 'block_begin':
@@ -150,7 +150,7 @@ class Parser {
       node.test = parseTuple(reader, withCondExpr: false);
       node.body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
       node.elseIf = <If>[];
-      node.$else = <Node>[];
+      node.else_ = <Node>[];
 
       final token = reader.next();
 
@@ -159,7 +159,7 @@ class Parser {
         result.elseIf.add(node);
         continue;
       } else if (token.test('name', 'else')) {
-        result.$else = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
+        result.else_ = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
       }
 
       break;

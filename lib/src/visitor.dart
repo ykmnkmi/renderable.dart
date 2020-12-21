@@ -7,6 +7,8 @@ abstract class Visitor<R> {
     return visitBinary(node);
   }
 
+  void visitAll(List<Node> nodes);
+
   R visitAnd(And node) {
     return visitBinary(node);
   }

@@ -526,7 +526,7 @@ class Output extends Statement {
 }
 
 class If extends Statement {
-  If(this.test, this.body, this.elseIf, this.$else);
+  If(this.test, this.body, this.elseIf, this.else_);
 
   Expression test;
 
@@ -534,7 +534,7 @@ class If extends Statement {
 
   List<If> elseIf;
 
-  List<Node> $else;
+  List<Node> else_;
 
   @override
   R accept<R>(Visitor<R> visitor) {
@@ -543,7 +543,7 @@ class If extends Statement {
 
   @override
   String toString() {
-    return 'If($test, $body, $elseIf, ${$else})';
+    return 'If($test, $body, $elseIf, ${else_})';
   }
 }
 
