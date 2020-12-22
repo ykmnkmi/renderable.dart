@@ -2,7 +2,7 @@ import 'exceptions.dart';
 import 'visitor.dart';
 
 abstract class Node {
-  R accept<R>(Visitor<R> visitor);
+  R accept<C, R>(Visitor<C, R> visitor, C context);
 }
 
 class Data extends Node {
@@ -11,8 +11,8 @@ class Data extends Node {
   String data;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitData(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitData(this, context);
   }
 
   @override
@@ -31,8 +31,8 @@ class Name extends Expression {
   String type;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitName(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitName(this, context);
   }
 
   @override
@@ -47,8 +47,8 @@ class Concat extends Expression {
   List<Expression> expressions;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitConcat(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitConcat(this, context);
   }
 
   @override
@@ -65,8 +65,8 @@ class Attribute extends Expression {
   Expression expression;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitAttribute(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitAttribute(this, context);
   }
 
   @override
@@ -83,8 +83,8 @@ class Item extends Expression {
   Expression expression;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitItem(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitItem(this, context);
   }
 
   @override
@@ -121,8 +121,8 @@ class Slice extends Expression {
   Expression? step;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitSlice(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitSlice(this, context);
   }
 
   @override
@@ -175,8 +175,8 @@ class Call extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitCall(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitCall(this, context);
   }
 
   @override
@@ -208,8 +208,8 @@ class Filter extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitFilter(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitFilter(this, context);
   }
 
   @override
@@ -240,8 +240,8 @@ class Test extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitTest(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitTest(this, context);
   }
 
   @override
@@ -258,8 +258,8 @@ class Compare extends Expression {
   List<Operand> operands;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitCompare(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitCompare(this, context);
   }
 
   @override
@@ -278,8 +278,8 @@ class Condition extends Expression {
   Expression? expression2;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitCondition(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitCondition(this, context);
   }
 
   @override
@@ -298,11 +298,11 @@ abstract class Literal extends Expression {
 class Constant<T> extends Literal {
   Constant(this.value);
 
-  T value;
+  T? value;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitConstant(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitConstant(this, context);
   }
 
   @override
@@ -319,8 +319,8 @@ class TupleLiteral extends Literal {
   bool save;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitTupleLiteral(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitTupleLiteral(this, context);
   }
 
   @override
@@ -335,8 +335,8 @@ class ListLiteral extends Literal {
   List<Expression> nodes;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitListLiteral(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitListLiteral(this, context);
   }
 
   @override
@@ -351,8 +351,8 @@ class DictLiteral extends Literal {
   List<Pair> pairs;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitDictLiteral(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitDictLiteral(this, context);
   }
 
   @override
@@ -369,8 +369,8 @@ abstract class Unary extends Expression {
   Expression expression;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitUnary(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitUnary(this, context);
   }
 
   @override
@@ -383,8 +383,8 @@ class Pos extends Unary {
   Pos(Expression expression) : super('+', expression);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitPos(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitPos(this, context);
   }
 }
 
@@ -392,8 +392,8 @@ class Neg extends Unary {
   Neg(Expression expression) : super('-', expression);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitNeg(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitNeg(this, context);
   }
 }
 
@@ -401,8 +401,8 @@ class Not extends Unary {
   Not(Expression expression) : super('not', expression);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitNot(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitNot(this, context);
   }
 }
 
@@ -416,8 +416,8 @@ abstract class Binary extends Expression {
   Expression right;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitBinary(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitBinary(this, context);
   }
 
   @override
@@ -430,8 +430,8 @@ class Pow extends Binary {
   Pow(Expression left, Expression right) : super('**', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitPow(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitPow(this, context);
   }
 }
 
@@ -439,8 +439,8 @@ class Mul extends Binary {
   Mul(Expression left, Expression right) : super('*', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitMul(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitMul(this, context);
   }
 }
 
@@ -448,8 +448,8 @@ class Div extends Binary {
   Div(Expression left, Expression right) : super('/', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitDiv(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitDiv(this, context);
   }
 }
 
@@ -457,8 +457,8 @@ class FloorDiv extends Binary {
   FloorDiv(Expression left, Expression right) : super('//', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitFloorDiv(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitFloorDiv(this, context);
   }
 }
 
@@ -466,8 +466,8 @@ class Mod extends Binary {
   Mod(Expression left, Expression right) : super('%', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitMod(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitMod(this, context);
   }
 }
 
@@ -475,8 +475,8 @@ class Add extends Binary {
   Add(Expression left, Expression right) : super('+', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitAdd(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitAdd(this, context);
   }
 }
 
@@ -484,8 +484,8 @@ class Sub extends Binary {
   Sub(Expression left, Expression right) : super('-', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitSub(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitSub(this, context);
   }
 }
 
@@ -493,8 +493,8 @@ class And extends Binary {
   And(Expression left, Expression right) : super('and', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitAnd(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitAnd(this, context);
   }
 }
 
@@ -502,8 +502,8 @@ class Or extends Binary {
   Or(Expression left, Expression right) : super('or', left, right);
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitOr(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitOr(this, context);
   }
 }
 
@@ -515,8 +515,8 @@ class Output extends Statement {
   List<Node> nodes;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitOutput(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitOutput(this, context);
   }
 
   @override
@@ -537,8 +537,8 @@ class If extends Statement {
   List<Node> else_;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitIf(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitIf(this, context);
   }
 
   @override
@@ -557,8 +557,8 @@ class Pair extends Helper {
   Expression value;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitPair(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitPair(this, context);
   }
 
   @override
@@ -575,8 +575,8 @@ class Keyword extends Helper {
   Expression value;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitKeyword(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitKeyword(this, context);
   }
 
   @override
@@ -593,8 +593,8 @@ class Operand extends Helper {
   Expression expression;
 
   @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitOperand(this);
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitOperand(this, context);
   }
 
   @override

@@ -2,24 +2,67 @@ import 'enirvonment.dart';
 
 typedef ContextCallback = void Function(Context context);
 
-abstract class Context {
-  Environment get environment;
+class Context {
+  Context(this.environment, [Map<String, dynamic>? context]) : contexts = <Map<String, dynamic>>[environment.globals] {
+    if (context != null) {
+      contexts.add(context);
+    }
+  }
 
-  Object? operator [](String key);
+  final Environment environment;
 
-  void operator []=(String key, Object value);
+  final List<Map<String, dynamic>> contexts;
 
-  void apply(Map<String, Object> data, ContextCallback closure);
+  dynamic operator [](String key) {
+    return get(key);
+  }
 
-  Object? get(String key);
+  void operator []=(String key, Object value) {
+    set(key, value);
+  }
 
-  bool has(String name);
+  void apply(Map<String, dynamic> data, ContextCallback closure) {
+    push(data);
+    closure(this);
+    pop();
+  }
 
-  void pop();
+  dynamic get(String key) {
+    for (final context in contexts.reversed) {
+      if (context.containsKey(key)) {
+        return context[key];
+      }
+    }
 
-  void push(Map<String, Object> context);
+    return null;
+  }
 
-  bool remove(String name);
+  bool has(String name) {
+    return contexts.any((context) => context.containsKey(name));
+  }
 
-  void set(String key, Object value);
+  void pop() {
+    if (contexts.length > 2) {
+      contexts.removeLast();
+    }
+  }
+
+  void push(Map<String, dynamic> context) {
+    contexts.add(context);
+  }
+
+  bool remove(String name) {
+    for (final context in contexts.reversed) {
+      if (context.containsKey(name)) {
+        context.remove(name);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void set(String key, Object value) {
+    contexts.last[key] = value;
+  }
 }

@@ -4,6 +4,7 @@ import 'package:renderable/src/exceptions.dart';
 import 'package:renderable/src/utils.dart';
 
 import 'configuration.dart';
+import 'context.dart';
 import 'defaults.dart' as defaults;
 import 'nodes.dart';
 import 'parser.dart';
@@ -230,7 +231,9 @@ class Template extends Renderable {
     return Template.parsed(environment, nodes, path);
   }
 
-  Template.parsed(this.environment, this.nodes, [String? path]) : path = path {
+  Template.parsed(this.environment, this.nodes, [String? path])
+      : renderer = Renderer(),
+        path = path {
     if (path != null) {
       environment.templates[path] = this;
     }
@@ -238,15 +241,17 @@ class Template extends Renderable {
 
   final Environment environment;
 
+  final Renderer renderer;
+
   final List<Node> nodes;
 
   final String? path;
 
   @override
-  String render([Map<String, dynamic>? context]) {
+  String render([Map<String, dynamic>? data]) {
     // TODO: update
     final buffer = StringBuffer();
-    Renderer(environment, buffer, nodes, context);
+    renderer.visitAll(nodes, RenderContext(environment, buffer, data));
     return buffer.toString();
   }
 }
