@@ -1,4 +1,4 @@
-import 'dart:collection' show HashMap;
+import 'dart:collection' show HashMap, HashSet;
 
 import 'package:renderable/src/exceptions.dart';
 import 'package:renderable/src/utils.dart';
@@ -38,9 +38,11 @@ class Environment extends Configuration {
     Map<String, Function>? filters,
     Map<String, Function>? tests,
     Map<String, Template>? templates,
-  })  : globals = HashMap.of(defaults.globals),
-        filters = HashMap.of(defaults.filters),
-        tests = HashMap.of(defaults.tests),
+  })  : globals = HashMap<String, dynamic>.of(defaults.globals),
+        filters = HashMap<String, Function>.of(defaults.filters),
+        contextFilters = HashSet<String>.of(defaults.contextFilters),
+        environmentFilters = HashSet<String>.of(defaults.environmentFilters),
+        tests = HashMap<String, Function>.of(defaults.tests),
         templates = HashMap<String, Template>(),
         super(
           commentBegin: commentBegin,
@@ -76,6 +78,10 @@ class Environment extends Configuration {
   final Map<String, dynamic> globals;
 
   final Map<String, Function> filters;
+
+  final Set<String> contextFilters;
+
+  final Set<String> environmentFilters;
 
   final Map<String, Function> tests;
 
@@ -140,20 +146,45 @@ class Environment extends Configuration {
     return template;
   }
 
-  dynamic callFilter(String name, [List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}]) {
-    if (filters.containsKey(name) && filters[name] != null) {
-      return unsafeCast(Function.apply(filters[name]!, arguments, keywordArguments));
+  dynamic callFilter(String name, dynamic value,
+      {List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}, Context? context}) {
+    Function filter;
+
+    if (filters.containsKey(name)) {
+      filter = filters[name]!;
+    } else {
+      throw TemplateRuntimeError('filter not found: $name');
     }
 
-    throw TemplateRuntimeError('filter not found: $name');
+    arguments.insert(0, value);
+
+    if (contextFilters.contains(name)) {
+      if (context == null) {
+        throw TemplateRuntimeError('context is null');
+      }
+
+      arguments.insert(0, context);
+    }
+
+    if (environmentFilters.contains(name)) {
+      arguments.insert(0, this);
+    }
+
+    return unsafeCast(Function.apply(filter, arguments, keywordArguments));
   }
 
-  bool callTest(String name, [List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}]) {
-    if (tests.containsKey(name) && tests[name] != null) {
-      return unsafeCast(Function.apply(tests[name]!, arguments, keywordArguments));
+  bool callTest(String name, dynamic value, {List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}}) {
+    Function test;
+
+    if (tests.containsKey(name)) {
+      test = tests[name]!;
+    } else {
+      throw TemplateRuntimeError('test not found: $name');
     }
 
-    throw TemplateRuntimeError('test not found: $name');
+    arguments.insert(0, value);
+
+    return unsafeCast(Function.apply(test, arguments, keywordArguments));
   }
 }
 

@@ -60,8 +60,20 @@ String represent(Object? object) {
   }
 }
 
-List<T> slice<T>(List<T> list, int start, [int? stop, int? step]) {
-  final result = <T>[];
+dynamic slice(dynamic list, int start, [int? stop, int? step]) {
+  if (list is List) {
+    return sliceList(list, start, stop, step);
+  }
+
+  if (list is String) {
+    return sliceString(list, start, stop, step);
+  }
+
+  return null;
+}
+
+List<dynamic> sliceList(List<dynamic> list, int start, [int? stop, int? step]) {
+  final result = <dynamic>[];
   final length = list.length;
 
   if (stop == null) {

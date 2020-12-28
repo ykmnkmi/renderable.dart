@@ -1,15 +1,3 @@
-class _ContextFilter {
-  const _ContextFilter();
-}
-
-class _EnvironmentFilter {
-  const _EnvironmentFilter();
-}
-
-const contextFilter = _ContextFilter();
-
-const environmentFilter = _EnvironmentFilter();
-
 int count(dynamic value) {
   return value.length;
 }
@@ -106,3 +94,7 @@ const filters = <String, Function>{
   // 'wordwrap': doWordwrap,
   // 'xmlattr': doXMLAttr,
 };
+
+const Set<String> contextFilters = <String>{};
+
+const Set<String> environmentFilters = <String>{};

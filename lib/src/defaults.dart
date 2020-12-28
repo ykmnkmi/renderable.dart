@@ -1,6 +1,6 @@
 import 'utils.dart';
 
-export 'filters.dart' show filters;
+export 'filters.dart' show filters, contextFilters, environmentFilters;
 export 'tests.dart' show tests;
 
 const blockBegin = '{%';

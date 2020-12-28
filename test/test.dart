@@ -5,8 +5,9 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> args) {
+  final source = '{% if a == 0 %}0' + List<String>.generate(1, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() + '{% else %}x{% endif %}';
+
   try {
-    final source = '{% if a == 0 %}0' + List<String>.generate(1, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() + '{% else %}x{% endif %}';
     print(source);
     final environment = Environment();
     final lexer = Lexer(environment);

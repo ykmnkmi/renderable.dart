@@ -73,117 +73,112 @@ class TemplateBuilder extends Visitor<Frame, String> {
   }
 
   @override
-  String visitAll(List<Node> nodes, Frame context) {
-    throw UnimplementedError('implement visitAll');
-  }
-
-  @override
-  String visitAttribute(Attribute node, Frame context) {
+  String visitAttribute(Attribute node, [Frame? frame]) {
     throw UnimplementedError('implement visitAttribute');
   }
 
   @override
-  String visitBinary(Binary node, Frame context) {
+  String visitBinary(Binary node, [Frame? frame]) {
     throw UnimplementedError('implement visitBinary');
   }
 
   @override
-  String visitCall(Call node, Frame context) {
+  String visitCall(Call node, [Frame? frame]) {
     throw UnimplementedError('implement visitCall');
   }
 
   @override
-  String visitCompare(Compare node, Frame context) {
+  String visitCompare(Compare node, [Frame? frame]) {
     throw UnimplementedError('implement visitCompare');
   }
 
   @override
-  String visitConcat(Concat node, Frame context) {
+  String visitConcat(Concat node, [Frame? frame]) {
     throw UnimplementedError('implement visitConcat');
   }
 
   @override
-  String visitCondition(Condition node, Frame context) {
+  String visitCondition(Condition node, [Frame? frame]) {
     throw UnimplementedError('implement visitCondition');
   }
 
   @override
-  String visitConstant(Constant<Object?> node, Frame context) {
+  String visitConstant(Constant<Object?> node, [Frame? frame]) {
     throw UnimplementedError('implement visitConstant');
   }
 
   @override
-  String visitData(Data node, Frame context) {
+  String visitData(Data node, [Frame? frame]) {
     throw UnimplementedError('implement visitData');
   }
 
   @override
-  String visitDictLiteral(DictLiteral node, Frame context) {
+  String visitDictLiteral(DictLiteral node, [Frame? frame]) {
     throw UnimplementedError('implement visitDictLiteral');
   }
 
   @override
-  String visitFilter(Filter node, Frame context) {
+  String visitFilter(Filter node, [Frame? frame]) {
     throw UnimplementedError('implement visitFilter');
   }
 
   @override
-  String visitIf(If node, Frame context) {
+  String visitIf(If node, [Frame? frame]) {
     throw UnimplementedError('implement visitIf');
   }
 
   @override
-  String visitItem(Item node, Frame context) {
+  String visitItem(Item node, [Frame? frame]) {
     throw UnimplementedError('implement visitItem');
   }
 
   @override
-  String visitKeyword(Keyword node, Frame context) {
+  String visitKeyword(Keyword node, [Frame? frame]) {
     throw UnimplementedError('implement visitKeyword');
   }
 
   @override
-  String visitListLiteral(ListLiteral node, Frame context) {
+  String visitListLiteral(ListLiteral node, [Frame? frame]) {
     throw UnimplementedError('implement visitListLiteral');
   }
 
   @override
-  String visitName(Name node, Frame context) {
+  String visitName(Name node, [Frame? frame]) {
     throw UnimplementedError('implement visitName');
   }
 
   @override
-  String visitOperand(Operand node, Frame context) {
+  String visitOperand(Operand node, [Frame? frame]) {
     throw UnimplementedError('implement visitOperand');
   }
 
   @override
-  String visitOutput(Output node, Frame context) {
+  String visitOutput(Output node, [Frame? frame]) {
     throw UnimplementedError('implement visitOutput');
   }
 
   @override
-  String visitPair(Pair node, Frame context) {
+  String visitPair(Pair node, [Frame? frame]) {
     throw UnimplementedError('implement visitPair');
   }
 
   @override
-  String visitSlice(Slice node, Frame context) {
+  String visitSlice(Slice node, [Frame? frame]) {
     throw UnimplementedError('implement visitSlice');
   }
 
   @override
-  String visitTest(Test node, Frame context) {
+  String visitTest(Test node, [Frame? frame]) {
     throw UnimplementedError('implement visitTest');
   }
 
   @override
-  String visitTupleLiteral(TupleLiteral node, Frame context) {
+  String visitTupleLiteral(TupleLiteral node, [Frame? frame]) {
     throw UnimplementedError('implement visitTupleLiteral');
   }
 
   @override
-  String visitUnary(Unary node, Frame context) {
+  String visitUnary(Unary node, [Frame? frame]) {
     throw UnimplementedError('implement visitUnary');
   }
 }
