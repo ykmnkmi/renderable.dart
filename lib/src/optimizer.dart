@@ -3,15 +3,12 @@ import 'nodes.dart';
 import 'utils.dart';
 import 'visitor.dart';
 
-class Optimizer extends Visitor<Context, Node?> {
-  static Constant<T> constant<T>(CanConstant node, Context? context) {
-    // wtf!
-
-    if (node is Constant<T>) {
-      return node;
+class Optimizer extends Visitor<Context, Node> {
+  @override
+  void visitAll(List<Node> nodes, [Context? context]) {
+    for (var i = 0; i < nodes.length; i += 1) {
+      nodes[i] = nodes[i].accept(this, context);
     }
-
-    return Constant<T>(unsafeCast<T>(node.asConstant(context)));
   }
 
   @override
@@ -46,7 +43,7 @@ class Optimizer extends Visitor<Context, Node?> {
 
   @override
   Node visitConstant(Constant<Object?> constant, [Context? context]) {
-    return visitExpression(constant, context);
+    return constant;
   }
 
   @override
@@ -59,8 +56,13 @@ class Optimizer extends Visitor<Context, Node?> {
     return visitExpression(dict, context);
   }
 
-  Node visitExpression(Expression expression, [Context? context]) {
-    return constant(expression, context);
+  Expression visitExpression(Expression expression, [Context? context]) {
+    try {
+      final value = expression.asConstant(context);
+      return Constant(value);
+    } on Impossible {
+      return expression;
+    }
   }
 
   @override
@@ -100,12 +102,13 @@ class Optimizer extends Visitor<Context, Node?> {
 
   @override
   Node visitOutput(Output output, [Context? context]) {
-    throw UnimplementedError();
+    visitAll(output.nodes, context);
+    return output;
   }
 
   @override
   Node visitPair(Pair pair, [Context? context]) {
-    throw UnimplementedError();
+    throw Impossible();
   }
 
   @override

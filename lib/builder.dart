@@ -3,14 +3,12 @@ import 'dart:async';
 
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/configuration.dart';
 import 'src/defaults.dart' as defaults;
 import 'src/nodes.dart';
 import 'src/parser.dart';
-import 'src/utils.dart';
 import 'src/visitor.dart';
 
 Builder htmlTemplateBuilder(BuilderOptions options) {

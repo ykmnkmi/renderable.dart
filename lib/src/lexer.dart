@@ -212,9 +212,9 @@ class Lexer {
         if (ignoredTokens.any(token.test)) {
           continue;
         } else if (token.test('linestatement_begin')) {
-          yield token.change(type: 'linestatement_begin');
+          yield token.change(type: 'block_begin');
         } else if (token.test('linestatement_end')) {
-          yield token.change(type: 'linestatement_end');
+          yield token.change(type: 'block_end');
         } else if (token.test('data') || token.test('string')) {
           yield token.change(value: normalizeNewLines(token.value));
         } else if (token.test('integer') || token.test('float')) {

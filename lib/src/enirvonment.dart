@@ -170,7 +170,7 @@ class Environment extends Configuration {
       arguments.insert(0, this);
     }
 
-    return unsafeCast(Function.apply(filter, arguments, keywordArguments));
+    return Function.apply(filter, arguments, keywordArguments);
   }
 
   bool callTest(String name, dynamic value, {List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}}) {
@@ -184,7 +184,7 @@ class Environment extends Configuration {
 
     arguments.insert(0, value);
 
-    return unsafeCast(Function.apply(test, arguments, keywordArguments));
+    return Function.apply(test, arguments, keywordArguments) as bool;
   }
 }
 

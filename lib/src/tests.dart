@@ -22,7 +22,7 @@ bool contains(dynamic value, dynamic values) {
     return values.containsKey(value);
   }
 
-  return values.contains(value);
+  return values.contains(value) as bool;
 }
 
 bool defined(dynamic value) {
@@ -50,15 +50,15 @@ bool even(int value) {
 }
 
 bool greaterThanOrEqual(dynamic value, dynamic other) {
-  return value >= other;
+  return (value >= other) as bool;
 }
 
 bool greaterThan(dynamic value, dynamic other) {
-  return value > other;
+  return (value > other) as bool;
 }
 
 bool iterable(dynamic value) {
-  if (value is Iterable) {
+  if (value is Iterable<dynamic>) {
     return true;
   }
 
@@ -66,11 +66,11 @@ bool iterable(dynamic value) {
 }
 
 bool lessThanOrEqual(dynamic value, dynamic other) {
-  return value <= other;
+  return (value <= other) as bool;
 }
 
 bool lessThan(dynamic value, dynamic other) {
-  return value < other;
+  return (value < other) as bool;
 }
 
 bool lower(String value) {

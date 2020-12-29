@@ -1,5 +1,5 @@
 int count(dynamic value) {
-  return value.length;
+  return value.length as int;
 }
 
 List<dynamic> list(dynamic value) {
@@ -15,7 +15,7 @@ List<dynamic> list(dynamic value) {
     return value.keys.toList();
   }
 
-  return value.toList();
+  return value.toList() as List<double>;
 }
 
 String lower(dynamic value) {

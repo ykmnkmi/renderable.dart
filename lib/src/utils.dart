@@ -60,7 +60,7 @@ String represent(Object? object) {
   }
 }
 
-dynamic slice(dynamic list, int start, [int? stop, int? step]) {
+dynamic slice(dynamic list, int start, int stop, [int step = 1]) {
   if (list is List) {
     return sliceList(list, start, stop, step);
   }
@@ -72,17 +72,8 @@ dynamic slice(dynamic list, int start, [int? stop, int? step]) {
   return null;
 }
 
-List<dynamic> sliceList(List<dynamic> list, int start, [int? stop, int? step]) {
+List<dynamic> sliceList(List<dynamic> list, int start, int stop, [int step = 1]) {
   final result = <dynamic>[];
-  final length = list.length;
-
-  if (stop == null) {
-    stop = length;
-  } else if (stop < 0) {
-    stop = length - stop;
-  }
-
-  step ??= 1;
 
   if (step > 0) {
     for (var i = start; i < stop; i += step) {
@@ -101,17 +92,8 @@ List<dynamic> sliceList(List<dynamic> list, int start, [int? stop, int? step]) {
   return result;
 }
 
-String sliceString(String string, int start, [int? stop, int? step]) {
+String sliceString(String string, int start, int stop, [int step = 1]) {
   final buffer = StringBuffer();
-  final length = string.length;
-
-  if (stop == null) {
-    stop = length;
-  } else if (stop < 0) {
-    stop = length - stop;
-  }
-
-  step ??= 1;
 
   if (step > 0) {
     for (var i = start; i < stop; i += step) {
@@ -130,9 +112,9 @@ String sliceString(String string, int start, [int? stop, int? step]) {
   return buffer.toString();
 }
 
-@tryInline
-@pragma('vm:prefer-inline')
-T unsafeCast<T>(dynamic object) {
-  // ignore: return_of_invalid_type
-  return object;
-}
+// @tryInline
+// @pragma('vm:prefer-inline')
+// T unsafeCast<T>(dynamic object) {
+//   // ignore: return_of_invalid_type
+//   return object;
+// }

@@ -67,7 +67,6 @@ class Parser {
             reader.next();
             break;
           case 'variable_begin':
-            flushData();
             reader.next();
             buffer.add(parseTuple(reader));
             reader.expect('variable_end');

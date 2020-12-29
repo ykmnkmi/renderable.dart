@@ -13,12 +13,12 @@ abstract class Node {
 }
 
 abstract class CanConstant {
-  Object? asConstant<C extends Context>([C? context]);
+  dynamic asConstant<C extends Context>([C? context]);
 }
 
 abstract class Expression extends Node implements CanConstant {
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     throw Impossible();
   }
 }
@@ -75,7 +75,7 @@ class Attribute extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     try {
       return context!.environment.getAttribute(expression.asConstant(context), attribute);
     } catch (e) {
@@ -102,7 +102,7 @@ class Item extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     try {
       return context!.environment.getItem(expression.asConstant(context), key.asConstant(context));
     } catch (e) {
@@ -149,9 +149,8 @@ class Slice extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
-    return slice(unsafeCast<List<Object?>>(expression.asConstant(context)), unsafeCast<int>(start.asConstant(context)),
-        unsafeCast<int?>(stop?.asConstant(context)), unsafeCast<int?>(step?.asConstant(context)));
+  dynamic asConstant<C extends Context>([C? context]) {
+    return Slice.slice(expression.asConstant(context), start.asConstant(context) as int, stop?.asConstant(context) as int?, step?.asConstant(context) as int?);
   }
 
   @override
@@ -159,34 +158,11 @@ class Slice extends Expression {
     return 'Slice($expression, $start, $stop, $step)';
   }
 
-  static List<Object?> slice(List<Object?> list, int start, [int? end, int? step]) {
-    final result = <Object?>[];
-    final length = list.length;
-
-    end ??= length;
+  static dynamic slice(dynamic list, int start, [int? stop, int? step]) {
+    final length = list.length as int;
+    stop ??= length;
     step ??= 1;
-
-    if (start < 0) {
-      start = length + start;
-    }
-
-    if (end < 0) {
-      end = length + end;
-    }
-
-    if (step > 0) {
-      for (var i = start; i < end; i += step) {
-        result.add(list[i]);
-      }
-    } else {
-      step = -step;
-
-      for (var i = end - 1; i >= start; i -= step) {
-        result.add(list[i]);
-      }
-    }
-
-    return list;
+    return slice(list, start, stop, step);
   }
 }
 
@@ -242,19 +218,21 @@ class Filter extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     if (!context!.environment.filters.containsKey(name) || context.environment.contextFilters.contains(name)) {
       throw Impossible();
     }
 
     final filter = context.environment.filters[name]!;
 
-    final arguments = [expression.asConstant(context), for (final argument in this.arguments) argument.asConstant()];
-    final keywordArguments = {for (final keywordArgument in this.keywordArguments) Symbol(keywordArgument.key): keywordArgument.value.asConstant()};
+    final arguments = <dynamic>[expression.asConstant(context), for (final argument in this.arguments) argument.asConstant()];
+    final keywordArguments = <Symbol, dynamic>{
+      for (final keywordArgument in this.keywordArguments) Symbol(keywordArgument.key): keywordArgument.value.asConstant()
+    };
 
     if (dArguments != null) {
       try {
-        arguments.addAll(unsafeCast<Iterable<Object?>>(dArguments!.asConstant(context)));
+        arguments.addAll(dArguments!.asConstant(context) as Iterable<dynamic>);
       } on Exception {
         throw Impossible();
       }
@@ -262,7 +240,7 @@ class Filter extends Expression {
 
     if (dKeywordArguments != null) {
       try {
-        keywordArguments.addAll(unsafeCast<Map<Symbol, Object?>>(dKeywordArguments!.asConstant(context)));
+        keywordArguments.addAll(dKeywordArguments!.asConstant(context) as Map<Symbol, dynamic>);
       } on Exception {
         throw Impossible();
       }
@@ -316,19 +294,21 @@ class Test extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     if (!context!.environment.tests.containsKey(name)) {
       throw Impossible();
     }
 
     final test = context.environment.tests[name]!;
 
-    final arguments = [expression.asConstant(context), for (final argument in this.arguments) argument.asConstant()];
-    final keywordArguments = {for (final keywordArgument in this.keywordArguments) Symbol(keywordArgument.key): keywordArgument.value.asConstant()};
+    final arguments = <dynamic>[expression.asConstant(context), for (final argument in this.arguments) argument.asConstant()];
+    final keywordArguments = <Symbol, dynamic>{
+      for (final keywordArgument in this.keywordArguments) Symbol(keywordArgument.key): keywordArgument.value.asConstant()
+    };
 
     if (dArguments != null) {
       try {
-        arguments.addAll(unsafeCast<Iterable<Object?>>(dArguments!.asConstant(context)));
+        arguments.addAll(dArguments!.asConstant(context) as Iterable<dynamic>);
       } on Exception {
         throw Impossible();
       }
@@ -336,7 +316,7 @@ class Test extends Expression {
 
     if (dKeywordArguments != null) {
       try {
-        keywordArguments.addAll(unsafeCast<Map<Symbol, Object?>>(dKeywordArguments!.asConstant(context)));
+        keywordArguments.addAll(dKeywordArguments!.asConstant(context) as Map<Symbol, dynamic>);
       } on Exception {
         throw Impossible();
       }
@@ -433,7 +413,7 @@ class Condition extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     if (boolean(test.asConstant(context))) {
       return expression1.asConstant(context);
     }
@@ -469,7 +449,7 @@ class Data extends Literal {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     return data;
   }
 
@@ -513,8 +493,8 @@ class TupleLiteral extends Literal {
   }
 
   @override
-  List<Object?> asConstant<C extends Context>([C? context]) {
-    return List<Object?>.of(expressions.map<Object?>((node) => node.asConstant(context)), growable: false);
+  List<dynamic> asConstant<C extends Context>([C? context]) {
+    return List<dynamic>.of(expressions.map<dynamic>((node) => node.asConstant(context)), growable: false);
   }
 
   @override
@@ -534,8 +514,8 @@ class ListLiteral extends Literal {
   }
 
   @override
-  List<Object?> asConstant<C extends Context>([C? context]) {
-    return List<Object?>.of(expressions.map<Object?>((node) => node.asConstant(context)), growable: false);
+  List<dynamic> asConstant<C extends Context>([C? context]) {
+    return List<dynamic>.of(expressions.map<dynamic>((node) => node.asConstant(context)), growable: false);
   }
 
   @override
@@ -555,8 +535,8 @@ class DictLiteral extends Literal {
   }
 
   @override
-  Map<Object?, Object?> asConstant<C extends Context>([C? context]) {
-    return Map<Object?, Object?>.fromEntries(pairs.map<MapEntry<Object?, Object?>>((pair) => pair.asConstant(context)));
+  Map<dynamic, dynamic> asConstant<C extends Context>([C? context]) {
+    return Map<dynamic, dynamic>.fromEntries(pairs.map<MapEntry<dynamic, dynamic>>((pair) => pair.asConstant(context)));
   }
 
   @override
@@ -578,15 +558,15 @@ abstract class Unary extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     try {
       final value = expression.asConstant(context);
 
       switch (operator) {
         case '+':
-          return 0 + unsafeCast<num>(value);
+          return value as num;
         case '-':
-          return 0 - unsafeCast<num>(value);
+          return -(value as num);
         case 'not':
           return !boolean(value);
       }
@@ -643,7 +623,7 @@ abstract class Binary extends Expression {
   }
 
   @override
-  Object? asConstant<C extends Context>([C? context]) {
+  dynamic asConstant<C extends Context>([C? context]) {
     try {
       final left = this.left.asConstant(context);
       final right = this.right.asConstant(context);
@@ -651,19 +631,19 @@ abstract class Binary extends Expression {
       try {
         switch (operator) {
           case '**':
-            return math.pow(unsafeCast<num>(left), unsafeCast<num>(right));
+            return math.pow(left as num, right as num);
           case '%':
-            return unsafeCast<num>(left) % unsafeCast<num>(right);
+            return left % right;
           case '//':
-            return unsafeCast<num>(left) ~/ unsafeCast<num>(right);
+            return left ~/ right;
           case '/':
-            return unsafeCast<num>(left) / unsafeCast<num>(right);
+            return left / right;
           case '*':
-            return unsafeCast<dynamic>(left) * right;
+            return left * right;
           case '-':
-            return unsafeCast<dynamic>(left) - right;
+            return left - right;
           case '+':
-            return unsafeCast<dynamic>(left) + right;
+            return left + right;
           case 'or':
             return boolean(left) ? left : right;
           case 'and':

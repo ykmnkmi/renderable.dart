@@ -37,13 +37,13 @@ class Renderer extends Visitor<RenderContext, dynamic> {
     try {
       switch (binary.operator) {
         case '**':
-          return math.pow(unsafeCast<num>(left), unsafeCast<num>(right));
+          return math.pow(left as num, right as num);
         case '%':
-          return unsafeCast<num>(left) % unsafeCast<num>(right);
+          return left % right;
         case '//':
-          return unsafeCast<num>(left) ~/ unsafeCast<num>(right);
+          return left ~/ right;
         case '/':
-          return unsafeCast<num>(left) / unsafeCast<num>(right);
+          return left / right;
         case '*':
           return left * right;
         case '-':
@@ -66,7 +66,7 @@ class Renderer extends Visitor<RenderContext, dynamic> {
 
   @override
   dynamic visitCall(Call call, [RenderContext? context]) {
-    final callable = unsafeCast<Function>(call.expression.accept(this, context));
+    final callable = call.expression.accept(this, context) as Function;
     final arguments = <dynamic>[];
 
     for (final argument in call.arguments) {
@@ -82,14 +82,14 @@ class Renderer extends Visitor<RenderContext, dynamic> {
     var expression = call.dArguments;
 
     if (expression != null) {
-      arguments.addAll(unsafeCast<Iterable<dynamic>>(expression.accept(this, context)));
+      arguments.addAll(expression.accept(this, context) as Iterable<dynamic>);
     }
 
     expression = call.dKeywordArguments;
 
     if (expression != null) {
-      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(expression.accept(this, context))
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+      keywordArguments.addAll(
+          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return Function.apply(callable, arguments, keywordArguments);
@@ -204,14 +204,14 @@ class Renderer extends Visitor<RenderContext, dynamic> {
     var expression = filter.dArguments;
 
     if (expression != null) {
-      arguments.addAll(unsafeCast<Iterable<dynamic>>(expression.accept(this, context)));
+      arguments.addAll(expression.accept(this, context) as Iterable<dynamic>);
     }
 
     expression = filter.dKeywordArguments;
 
     if (expression != null) {
-      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(expression.accept(this, context))
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+      keywordArguments.addAll(
+          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return context!.environment
@@ -289,22 +289,24 @@ class Renderer extends Visitor<RenderContext, dynamic> {
   @override
   dynamic visitSlice(Slice slice_, [RenderContext? context]) {
     final value = slice_.expression.accept(this, context);
-    final start = unsafeCast<int>(slice_.start.accept(this, context));
+    final start = slice_.start.accept(this, context) as int;
 
     var expression = slice_.stop;
-    int? stop;
+    int stop;
 
     if (expression != null) {
-      stop = math.min(filters.count(value), unsafeCast<int>(expression.accept(this, context)));
+      stop = math.min(filters.count(value), expression.accept(this, context) as int);
     } else {
-      stop = value.length;
+      stop = value.length as int;
     }
 
     expression = slice_.step;
-    int? step;
+    int step;
 
     if (expression != null) {
-      step = unsafeCast<int>(expression.accept(this, context));
+      step = expression.accept(this, context) as int;
+    } else {
+      step = 1;
     }
 
     return slice(value, start, stop, step);
@@ -327,14 +329,14 @@ class Renderer extends Visitor<RenderContext, dynamic> {
     var expression = test.dArguments;
 
     if (expression != null) {
-      arguments.addAll(unsafeCast<Iterable<dynamic>>(expression.accept(this, context)));
+      arguments.addAll(expression.accept(this, context) as Iterable<dynamic>);
     }
 
     expression = test.dKeywordArguments;
 
     if (expression != null) {
-      keywordArguments.addAll(unsafeCast<Map<String, dynamic>>(expression.accept(this, context))
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+      keywordArguments.addAll(
+          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return context!.environment.callTest(test.name, test.expression.accept(this, context), arguments: arguments, keywordArguments: keywordArguments);
@@ -357,9 +359,9 @@ class Renderer extends Visitor<RenderContext, dynamic> {
 
     switch (unaru.operator) {
       case '+':
-        return 0 + unsafeCast<num>(value);
+        return value as num;
       case '-':
-        return 0 - unsafeCast<num>(value);
+        return -(value as num);
       case 'not':
         return !boolean(value);
     }
