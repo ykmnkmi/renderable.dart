@@ -1,9 +1,14 @@
+import 'package:renderable/src/evaluator.dart';
+
 import 'context.dart';
 import 'nodes.dart';
-import 'utils.dart';
 import 'visitor.dart';
 
 class Optimizer extends Visitor<Context, Node> {
+  const Optimizer(this.evaluator);
+
+  final Evaluator evaluator;
+
   @override
   void visitAll(List<Node> nodes, [Context? context]) {
     for (var i = 0; i < nodes.length; i += 1) {
@@ -58,7 +63,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   Expression visitExpression(Expression expression, [Context? context]) {
     try {
-      final value = expression.asConstant(context);
+      final value = expression.accept(evaluator, context);
       return Constant(value);
     } on Impossible {
       return expression;

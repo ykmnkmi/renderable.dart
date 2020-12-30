@@ -263,7 +263,7 @@ class Template extends Renderable {
   }
 
   Template.parsed(this.environment, this.nodes, [String? path])
-      : renderer = Renderer(),
+      : renderer = Renderer(environment),
         path = path {
     if (path != null) {
       environment.templates[path] = this;
@@ -280,9 +280,6 @@ class Template extends Renderable {
 
   @override
   String render([Map<String, dynamic>? data]) {
-    // TODO: update
-    final buffer = StringBuffer();
-    renderer.visitAll(nodes, RenderContext(environment, buffer, data));
-    return buffer.toString();
+    return renderer.render(nodes, data);
   }
 }

@@ -3,9 +3,9 @@ import 'enirvonment.dart';
 typedef ContextCallback = void Function(Context context);
 
 class Context {
-  Context(this.environment, [Map<String, dynamic>? context]) : contexts = <Map<String, dynamic>>[environment.globals] {
-    if (context != null) {
-      contexts.add(context);
+  Context(this.environment, [Map<String, dynamic>? data]) : contexts = <Map<String, dynamic>>[environment.globals] {
+    if (data != null) {
+      contexts.add(data);
     }
   }
 
@@ -17,7 +17,7 @@ class Context {
     return get(key);
   }
 
-  void operator []=(String key, Object value) {
+  void operator []=(String key, dynamic value) {
     set(key, value);
   }
 
@@ -62,7 +62,7 @@ class Context {
     return false;
   }
 
-  void set(String key, Object value) {
+  void set(String key, dynamic value) {
     contexts.last[key] = value;
   }
 }
