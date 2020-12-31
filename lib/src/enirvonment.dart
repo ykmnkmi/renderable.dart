@@ -1,11 +1,9 @@
 import 'dart:collection' show HashMap, HashSet;
 
-import 'package:renderable/src/exceptions.dart';
-import 'package:renderable/src/utils.dart';
-
 import 'configuration.dart';
 import 'context.dart';
 import 'defaults.dart' as defaults;
+import 'exceptions.dart';
 import 'nodes.dart';
 import 'parser.dart';
 import 'renderable.dart';
@@ -32,6 +30,7 @@ class Environment extends Configuration {
     String newLine = defaults.newLine,
     bool keepTrailingNewLine = defaults.keepTrailingNewLine,
     this.finalize = defaults.finalizer,
+    this.autoEscape = false,
     this.getAttribute = defaults.attributeGetter,
     this.getItem = defaults.itemGetter,
     Map<String, dynamic>? globals,
@@ -87,6 +86,8 @@ class Environment extends Configuration {
 
   final Finalizer finalize;
 
+  final bool autoEscape;
+
   final AttributeGetter getAttribute;
 
   final ItemGetter getItem;
@@ -108,6 +109,7 @@ class Environment extends Configuration {
     String? newLine,
     bool? keepTrailingNewLine,
     Finalizer? finalize,
+    bool? autoEscape,
     AttributeGetter? getAttribute,
     ItemGetter? getItem,
     Map<String, dynamic>? globals,
@@ -128,6 +130,7 @@ class Environment extends Configuration {
       newLine: newLine ?? this.newLine,
       keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
       finalize: finalize ?? this.finalize,
+      autoEscape: autoEscape ?? this.autoEscape,
       getAttribute: getAttribute ?? this.getAttribute,
       getItem: getItem ?? this.getItem,
       globals: globals ?? this.globals,
@@ -206,6 +209,7 @@ class Template extends Renderable {
     String newLine = defaults.newLine,
     bool keepTrailingNewLine = defaults.keepTrailingNewLine,
     Finalizer finalize = defaults.finalizer,
+    bool autoEscape = false,
     AttributeGetter getAttribute = defaults.attributeGetter,
     ItemGetter getItem = defaults.itemGetter,
     Map<String, Object>? globals,
@@ -229,6 +233,7 @@ class Template extends Renderable {
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
         finalize: finalize,
+        autoEscape: autoEscape,
         getAttribute: getAttribute,
         getItem: getItem,
         globals: globals,
@@ -250,6 +255,7 @@ class Template extends Renderable {
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
         finalize: finalize,
+        autoEscape: autoEscape,
         getAttribute: getAttribute,
         getItem: getItem,
         globals: globals,

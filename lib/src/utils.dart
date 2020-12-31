@@ -1,5 +1,3 @@
-import 'package:meta/dart2js.dart';
-
 bool boolean(Object? value) {
   if (value == null) {
     return false;
@@ -60,53 +58,57 @@ String represent(Object? object) {
   }
 }
 
+T safe<T>(T arg, T Function(T arg) fn) {
+  try {
+    return fn(arg);
+  } catch (e) {
+    return arg;
+  }
+}
+
 dynamic slice(dynamic list, int start, int stop, [int step = 1]) {
-  if (list is List) {
-    return sliceList(list, start, stop, step);
+  var valid = false;
+
+  if (step > 0 && start < stop) {
+    valid = true;
+  } else if (step < 0 && start > stop) {
+    valid = true;
   }
 
   if (list is String) {
-    return sliceString(list, start, stop, step);
+    return valid ? _sliceString(list, start, stop, step) : '';
   }
 
-  return null;
+  return valid ? _slice(list, start, stop, step) : <dynamic>[];
 }
 
-List<dynamic> sliceList(List<dynamic> list, int start, int stop, [int step = 1]) {
+List<dynamic> _slice(dynamic list, int start, int stop, int step) {
   final result = <dynamic>[];
 
   if (step > 0) {
     for (var i = start; i < stop; i += step) {
       result.add(list[i]);
     }
-  } else if (step < 0) {
-    step = step.abs();
-
-    for (var i = start; i < stop; i -= step) {
+  } else {
+    for (var i = start; i > stop; i += step) {
       result.add(list[i]);
     }
-  } else {
-    throw ArgumentError.value(step, 'step');
   }
 
   return result;
 }
 
-String sliceString(String string, int start, int stop, [int step = 1]) {
+String _sliceString(String string, int start, int stop, int step) {
   final buffer = StringBuffer();
 
   if (step > 0) {
     for (var i = start; i < stop; i += step) {
       buffer.write(string[i]);
     }
-  } else if (step < 0) {
-    step = step.abs();
-
-    for (var i = start; i < stop; i -= step) {
-      buffer.writeCharCode(string.codeUnitAt(i));
-    }
   } else {
-    throw ArgumentError.value(step, 'step');
+    for (var i = start; i > stop; i += step) {
+      buffer.write(string[i]);
+    }
   }
 
   return buffer.toString();

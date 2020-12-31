@@ -1,33 +1,31 @@
-import 'dart:math' as math;
-
-import 'context.dart';
 import 'exceptions.dart';
-import 'tests.dart' as tests hide tests;
-import 'visitor.dart';
 import 'utils.dart';
-
-class Impossible implements Exception {}
+import 'visitor.dart';
 
 abstract class Node {
-  R accept<C, R>(Visitor<C, R> visitor, C context);
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]);
 }
 
 abstract class Expression extends Node {}
 
 class Name extends Expression {
-  Name(this.name, [this.type = 'dynamic']);
+  Name(this.name, [this.type]);
 
   String name;
 
-  String type;
+  String? type;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitName(this, context);
   }
 
   @override
   String toString() {
+    if (type == null) {
+      return 'Name($name)';
+    }
+
     return 'Name($name, $type)';
   }
 }
@@ -38,7 +36,7 @@ class Concat extends Expression {
   List<Expression> expressions;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitConcat(this, context);
   }
 
@@ -56,7 +54,7 @@ class Attribute extends Expression {
   Expression expression;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitAttribute(this, context);
   }
 
@@ -74,7 +72,7 @@ class Item extends Expression {
   Expression expression;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitItem(this, context);
   }
 
@@ -91,41 +89,48 @@ class Slice extends Expression {
 
     switch (expressions.length) {
       case 1:
-        return Slice(expression, expressions[0]!);
+        return Slice(expression, start: expressions[0]);
       case 2:
-        return Slice(expression, expressions[0]!, stop: expressions[1]);
+        return Slice(expression, start: expressions[0], stop: expressions[1]);
       case 3:
-        return Slice(expression, expressions[0]!, stop: expressions[1], step: expressions[2]);
+        return Slice(expression, start: expressions[0], stop: expressions[1], step: expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
   }
 
-  Slice(this.expression, this.start, {this.stop, this.step});
+  Slice(this.expression, {this.start, this.stop, this.step});
 
   Expression expression;
 
-  Expression start;
+  Expression? start;
 
   Expression? stop;
 
   Expression? step;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitSlice(this, context);
   }
 
   @override
   String toString() {
-    return 'Slice($expression, $start, $stop, $step)';
-  }
+    var result = 'Slice($expression';
 
-  static dynamic slice(dynamic list, int start, [int? stop, int? step]) {
-    final length = list.length as int;
-    stop ??= length;
-    step ??= 1;
-    return slice(list, start, stop, step);
+    if (start != null) {
+      result += ', start: $start';
+    }
+
+    if (stop != null) {
+      result += ', stop: $stop';
+    }
+
+    if (step != null) {
+      result += ', step: $step';
+    }
+    
+    return result;
   }
 }
 
@@ -143,13 +148,31 @@ class Call extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitCall(this, context);
   }
 
   @override
   String toString() {
-    return 'Call($expression, $arguments, $keywordArguments)';
+    var result = 'Call($expression';
+
+    if (arguments.isNotEmpty) {
+      result += ', ${arguments.join(', ')}';
+    }
+
+    if (keywordArguments.isNotEmpty) {
+      result += ', ${keywordArguments.join(', ')}';
+    }
+
+    if (dArguments != null) {
+      result += ', $dArguments';
+    }
+
+    if (dKeywordArguments != null) {
+      result += ', $dKeywordArguments';
+    }
+
+    return result;
   }
 }
 
@@ -176,13 +199,31 @@ class Filter extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitFilter(this, context);
   }
 
   @override
   String toString() {
-    return 'Filter($name, $expression, $arguments, $keywordArguments, $dArguments, $dKeywordArguments)';
+    var result = 'Filter(\'$name\', $expression';
+
+    if (arguments.isNotEmpty) {
+      result += ', ${arguments.join(', ')}';
+    }
+
+    if (keywordArguments.isNotEmpty) {
+      result += ', ${keywordArguments.join(', ')}';
+    }
+
+    if (dArguments != null) {
+      result += ', $dArguments';
+    }
+
+    if (dKeywordArguments != null) {
+      result += ', $dKeywordArguments';
+    }
+
+    return result;
   }
 }
 
@@ -208,13 +249,31 @@ class Test extends Expression {
   Expression? dKeywordArguments;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitTest(this, context);
   }
 
   @override
   String toString() {
-    return 'Test($name, $expression, $arguments, $keywordArguments, $dArguments, $dKeywordArguments)';
+    var result = 'Test(\'$name\', $expression';
+
+    if (arguments.isNotEmpty) {
+      result += ', ${arguments.join(', ')}';
+    }
+
+    if (keywordArguments.isNotEmpty) {
+      result += ', ${keywordArguments.join(', ')}';
+    }
+
+    if (dArguments != null) {
+      result += ', $dArguments';
+    }
+
+    if (dKeywordArguments != null) {
+      result += ', $dKeywordArguments';
+    }
+
+    return result;
   }
 }
 
@@ -226,13 +285,13 @@ class Compare extends Expression {
   List<Operand> operands;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitCompare(this, context);
   }
 
   @override
   String toString() {
-    return 'Compare($operands)';
+    return 'Compare($expression, $operands)';
   }
 }
 
@@ -246,7 +305,7 @@ class Condition extends Expression {
   Expression? expression2;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitCondition(this, context);
   }
 
@@ -269,13 +328,13 @@ class Data extends Literal {
   String data;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitData(this, context);
   }
 
   @override
   String toString() {
-    return 'Data("${data.replaceAll('"', r'\"').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}")';
+    return 'Data(\'${data.replaceAll('\'', '\\\'').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}\')';
   }
 }
 
@@ -285,13 +344,13 @@ class Constant<T> extends Literal {
   T? value;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitConstant(this, context);
   }
 
   @override
   String toString() {
-    return 'Constant<$T>($value)';
+    return 'Constant<$T>(${represent(value)})';
   }
 }
 
@@ -303,13 +362,13 @@ class TupleLiteral extends Literal {
   bool save;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitTupleLiteral(this, context);
   }
 
   @override
   String toString() {
-    return 'TupleLiteral($expressions)';
+    return 'Tuple(${expressions.join(', ')})';
   }
 }
 
@@ -319,13 +378,13 @@ class ListLiteral extends Literal {
   List<Expression> expressions;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitListLiteral(this, context);
   }
 
   @override
   String toString() {
-    return 'ListLiteral($expressions)';
+    return 'List(${expressions.join(', ')})';
   }
 }
 
@@ -335,13 +394,13 @@ class DictLiteral extends Literal {
   List<Pair> pairs;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitDictLiteral(this, context);
   }
 
   @override
   String toString() {
-    return 'DictLiteral($pairs)';
+    return 'Dict(${pairs.join(', ')})';
   }
 }
 
@@ -353,7 +412,7 @@ abstract class Unary extends Expression {
   Expression expression;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitUnary(this, context);
   }
 
@@ -367,8 +426,13 @@ class Pos extends Unary {
   Pos(Expression expression) : super('+', expression);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitPos(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Pos($expression)';
   }
 }
 
@@ -376,8 +440,13 @@ class Neg extends Unary {
   Neg(Expression expression) : super('-', expression);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitNeg(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Neg($expression)';
   }
 }
 
@@ -385,8 +454,13 @@ class Not extends Unary {
   Not(Expression expression) : super('not', expression);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitNot(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Not($expression)';
   }
 }
 
@@ -400,7 +474,7 @@ abstract class Binary extends Expression {
   Expression right;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitBinary(this, context);
   }
 
@@ -414,8 +488,13 @@ class Pow extends Binary {
   Pow(Expression left, Expression right) : super('**', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitPow(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Pow($left, $right)';
   }
 }
 
@@ -423,8 +502,13 @@ class Mul extends Binary {
   Mul(Expression left, Expression right) : super('*', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitMul(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Mul($left, $right)';
   }
 }
 
@@ -432,8 +516,13 @@ class Div extends Binary {
   Div(Expression left, Expression right) : super('/', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitDiv(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Div($left, $right)';
   }
 }
 
@@ -441,8 +530,13 @@ class FloorDiv extends Binary {
   FloorDiv(Expression left, Expression right) : super('//', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitFloorDiv(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'FloorDiv($left, $right)';
   }
 }
 
@@ -450,8 +544,13 @@ class Mod extends Binary {
   Mod(Expression left, Expression right) : super('%', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitMod(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Mod($left, $right)';
   }
 }
 
@@ -459,8 +558,13 @@ class Add extends Binary {
   Add(Expression left, Expression right) : super('+', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitAdd(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Add($left, $right)';
   }
 }
 
@@ -468,8 +572,13 @@ class Sub extends Binary {
   Sub(Expression left, Expression right) : super('-', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitSub(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Sub($left, $right)';
   }
 }
 
@@ -477,8 +586,13 @@ class And extends Binary {
   And(Expression left, Expression right) : super('and', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitAnd(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'And($left, $right)';
   }
 }
 
@@ -486,8 +600,13 @@ class Or extends Binary {
   Or(Expression left, Expression right) : super('or', left, right);
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitOr(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Or($left, $right)';
   }
 }
 
@@ -499,7 +618,7 @@ class Output extends Statement {
   List<Node> nodes;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitOutput(this, context);
   }
 
@@ -521,7 +640,7 @@ class If extends Statement {
   List<Node> else_;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitIf(this, context);
   }
 
@@ -541,7 +660,7 @@ class Pair extends Helper {
   Expression value;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitPair(this, context);
   }
 
@@ -559,7 +678,7 @@ class Keyword extends Helper {
   Expression value;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitKeyword(this, context);
   }
 
@@ -577,7 +696,7 @@ class Operand extends Helper {
   Expression expression;
 
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) {
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitOperand(this, context);
   }
 

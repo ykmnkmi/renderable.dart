@@ -558,7 +558,7 @@ class Parser {
         final key = arguments.removeLast();
 
         if (key is Slice) {
-          expression = Slice(expression, key.start, stop: key.stop, step: key.step);
+          expression = Slice(expression, start: key.start, stop: key.stop, step: key.step);
         } else {
           expression = Item(key, expression);
         }

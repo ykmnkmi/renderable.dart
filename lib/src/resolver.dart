@@ -1,14 +1,19 @@
 import 'dart:math' as math;
 
+import 'package:meta/meta.dart';
+
 import 'context.dart';
-import 'filters.dart' as filters;
+import 'markup.dart';
 import 'nodes.dart';
 import 'tests.dart' as tests;
 import 'utils.dart';
 import 'visitor.dart';
 
-class Evaluator<C extends Context> extends Visitor<C, dynamic> {
-  const Evaluator();
+const Resolver resolver = Resolver();
+
+class Resolver<C extends Context> extends Visitor<C, dynamic> {
+  @literal
+  const Resolver();
 
   @override
   void visitAll(List<Node> nodes, [C? context]) {
@@ -165,7 +170,11 @@ class Evaluator<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  String visitData(Data data, [C? context]) {
+  dynamic visitData(Data data, [C? context]) {
+    if (context!.environment.autoEscape) {
+      return Markup.escape(data.data);
+    }
+
     return data.data;
   }
 
@@ -287,24 +296,45 @@ class Evaluator<C extends Context> extends Visitor<C, dynamic> {
   @override
   dynamic visitSlice(Slice $slice, [C? context]) {
     final value = $slice.expression.accept(this, context);
-    final start = $slice.start.accept(this, context) as int;
+    final length = value.length as int;
 
-    var expression = $slice.stop;
-    int stop;
-
-    if (expression != null) {
-      stop = math.min(filters.count(value), expression.accept(this, context) as int);
-    } else {
-      stop = value.length as int;
-    }
-
-    expression = $slice.step;
+    var expression = $slice.step;
     int step;
 
     if (expression != null) {
       step = expression.accept(this, context) as int;
     } else {
       step = 1;
+    }
+
+    if (step == 0) {
+      throw ArgumentError.value(step, 'step');
+    }
+
+    expression = $slice.start;
+    int start;
+
+    if (expression != null) {
+      start = expression.accept(this, context) as int;
+
+      if (start < 0) {
+        start = start + length;
+      }
+    } else {
+      start = step > 0 ? 0 : length - 1;
+    }
+
+    expression = $slice.stop;
+    int stop;
+
+    if (expression != null) {
+      stop = expression.accept(this, context) as int;
+
+      if (stop < 0) {
+        stop = stop + length;
+      }
+    } else {
+      stop = step > 0 ? length : -1;
     }
 
     return slice(value, start, stop, step);
@@ -357,9 +387,9 @@ class Evaluator<C extends Context> extends Visitor<C, dynamic> {
 
     switch (unaru.operator) {
       case '+':
-        return value as num;
+        return value;
       case '-':
-        return -(value as num);
+        return -value;
       case 'not':
         return !boolean(value);
     }

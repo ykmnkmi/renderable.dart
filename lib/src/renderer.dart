@@ -1,7 +1,7 @@
 import 'context.dart';
 import 'enirvonment.dart';
-import 'evaluator.dart';
 import 'nodes.dart';
+import 'resolver.dart';
 
 class RenderContext extends Context {
   RenderContext(Environment environment, this.sink, [Map<String, dynamic>? data]) : super(environment, data);
@@ -9,7 +9,7 @@ class RenderContext extends Context {
   final StringSink sink;
 }
 
-class Renderer extends Evaluator<RenderContext> {
+class Renderer extends Resolver<RenderContext> {
   const Renderer(this.environment);
 
   final Environment environment;
