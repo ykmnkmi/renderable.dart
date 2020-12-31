@@ -3,18 +3,18 @@ import 'utils.dart';
 export 'filters.dart' show filters, contextFilters, environmentFilters;
 export 'tests.dart' show tests;
 
-const blockBegin = '{%';
-const blockEnd = '%}';
-const variableBegin = '{{';
-const variableEnd = '}}';
-const commentBegin = '{#';
-const commentEnd = '#}';
-const lineCommentPrefix = '##';
-const lineStatementPrefix = '#';
-const trimBlocks = false;
-const lStripBlocks = false;
-const newLine = '\n';
-const keepTrailingNewLine = false;
+const String blockBegin = '{%';
+const String blockEnd = '%}';
+const String variableBegin = '{{';
+const String variableEnd = '}}';
+const String commentBegin = '{#';
+const String commentEnd = '#}';
+const String lineCommentPrefix = '##';
+const String lineStatementPrefix = '#';
+const bool trimBlocks = false;
+const bool lStripBlocks = false;
+const String newLine = '\n';
+const bool keepTrailingNewLine = false;
 
 dynamic finalizer([dynamic value]) {
   if (value == null) {
@@ -28,18 +28,24 @@ dynamic finalizer([dynamic value]) {
   return represent(value);
 }
 
-const globals = <String, dynamic>{
+const Map<String, dynamic> globals = <String, dynamic>{
   'range': range,
 };
 
-dynamic attributeGetter(dynamic object, String field) {
+dynamic getAttribute(dynamic object, String field) {
   return null;
 }
 
-dynamic itemGetter(dynamic object, dynamic key) {
-  try {
-    return object[key];
-  } catch (e) {
-    return null;
+dynamic getItem(dynamic object, dynamic key) {
+  if (key is Iterable<int> Function(int) && object is Iterable) {
+    return slice(object.toList(), key);
+  }
+
+  return object[key];
+}
+
+Iterable<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) sync* {
+  for (final i in indices(list.length)) {
+    yield list[i];
   }
 }

@@ -83,25 +83,23 @@ class Item extends Expression {
 }
 
 class Slice extends Expression {
-  factory Slice.fromList(Expression expression, List<Expression?> expressions) {
+  factory Slice.fromList(List<Expression?> expressions) {
     assert(expressions.isNotEmpty);
     assert(expressions.length <= 3);
 
     switch (expressions.length) {
       case 1:
-        return Slice(expression, start: expressions[0]);
+        return Slice(start: expressions[0]);
       case 2:
-        return Slice(expression, start: expressions[0], stop: expressions[1]);
+        return Slice(start: expressions[0], stop: expressions[1]);
       case 3:
-        return Slice(expression, start: expressions[0], stop: expressions[1], step: expressions[2]);
+        return Slice(start: expressions[0], stop: expressions[1], step: expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
   }
 
-  Slice(this.expression, {this.start, this.stop, this.step});
-
-  Expression expression;
+  Slice({this.start, this.stop, this.step});
 
   Expression? start;
 
@@ -116,7 +114,7 @@ class Slice extends Expression {
 
   @override
   String toString() {
-    var result = 'Slice($expression';
+    var result = 'Slice(';
 
     if (start != null) {
       result += ', start: $start';

@@ -1,3 +1,5 @@
+library utils;
+
 bool boolean(Object? value) {
   if (value == null) {
     return false;
@@ -26,8 +28,18 @@ bool boolean(Object? value) {
   return true;
 }
 
-Iterable<int> range(int n) sync* {
-  for (var i = 0; i < n; i++) {
+Iterable<int> range(int startOrStop, [int? stop, int step = 1]) sync* {
+  int start;
+
+  if (stop == null) {
+    start = 0;
+    stop = startOrStop;
+  } else {
+    start = startOrStop;
+    stop = stop;
+  }
+
+  for (var i = start; i < stop; i += step) {
     yield i;
   }
 }
@@ -56,62 +68,6 @@ String represent(Object? object) {
   } else {
     return object.toString();
   }
-}
-
-T safe<T>(T arg, T Function(T arg) fn) {
-  try {
-    return fn(arg);
-  } catch (e) {
-    return arg;
-  }
-}
-
-dynamic slice(dynamic list, int start, int stop, [int step = 1]) {
-  var valid = false;
-
-  if (step > 0 && start < stop) {
-    valid = true;
-  } else if (step < 0 && start > stop) {
-    valid = true;
-  }
-
-  if (list is String) {
-    return valid ? _sliceString(list, start, stop, step) : '';
-  }
-
-  return valid ? _slice(list, start, stop, step) : <dynamic>[];
-}
-
-List<dynamic> _slice(dynamic list, int start, int stop, int step) {
-  final result = <dynamic>[];
-
-  if (step > 0) {
-    for (var i = start; i < stop; i += step) {
-      result.add(list[i]);
-    }
-  } else {
-    for (var i = start; i > stop; i += step) {
-      result.add(list[i]);
-    }
-  }
-
-  return result;
-}
-
-String _sliceString(String string, int start, int stop, int step) {
-  final buffer = StringBuffer();
-
-  if (step > 0) {
-    for (var i = start; i < stop; i += step) {
-      buffer.write(string[i]);
-    }
-  } else {
-    for (var i = start; i > stop; i += step) {
-      buffer.write(string[i]);
-    }
-  }
-
-  return buffer.toString();
 }
 
 // @tryInline

@@ -38,7 +38,7 @@ String upper(dynamic value) {
   return value.toString().toUpperCase();
 }
 
-const filters = <String, Function>{
+const Map<String, Function> filters = <String, Function>{
   'count': count,
   'length': count,
   'list': list,

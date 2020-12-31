@@ -294,50 +294,14 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitSlice(Slice $slice, [C? context]) {
-    final value = $slice.expression.accept(this, context);
-    final length = value.length as int;
-
-    var expression = $slice.step;
-    int step;
-
-    if (expression != null) {
-      step = expression.accept(this, context) as int;
-    } else {
-      step = 1;
-    }
-
-    if (step == 0) {
-      throw ArgumentError.value(step, 'step');
-    }
-
-    expression = $slice.start;
-    int start;
-
-    if (expression != null) {
-      start = expression.accept(this, context) as int;
-
-      if (start < 0) {
-        start = start + length;
-      }
-    } else {
-      start = step > 0 ? 0 : length - 1;
-    }
-
-    expression = $slice.stop;
-    int stop;
-
-    if (expression != null) {
-      stop = expression.accept(this, context) as int;
-
-      if (stop < 0) {
-        stop = stop + length;
-      }
-    } else {
-      stop = step > 0 ? length : -1;
-    }
-
-    return slice(value, start, stop, step);
+  Iterable<int> Function(int) visitSlice(Slice slice, [C? context]) {
+    var start = slice.start?.accept(this, context) as int?;
+    var stop = slice.stop?.accept(this, context) as int?;
+    var step = slice.step?.accept(this, context) as int?;
+    return (int length) {
+      // TODO: add checks
+      return range(start!, stop, step!);
+    };
   }
 
   @override
@@ -386,6 +350,7 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
     final value = unaru.expression.accept(this, context);
 
     switch (unaru.operator) {
+      // how i should implement this?
       case '+':
         return value;
       case '-':

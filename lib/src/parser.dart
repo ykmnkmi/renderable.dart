@@ -555,13 +555,7 @@ class Parser {
       arguments = arguments.reversed.toList();
 
       while (arguments.isNotEmpty) {
-        final key = arguments.removeLast();
-
-        if (key is Slice) {
-          expression = Slice(expression, start: key.start, stop: key.stop, step: key.step);
-        } else {
-          expression = Item(key, expression);
-        }
+        expression = Item(arguments.removeLast(), expression);
       }
 
       return expression;
@@ -607,7 +601,7 @@ class Parser {
       arguments.add(null);
     }
 
-    return Slice.fromList(Constant<String>(''), arguments);
+    return Slice.fromList(arguments);
   }
 
   Call parseCall(TokenReader reader, Expression expression) {

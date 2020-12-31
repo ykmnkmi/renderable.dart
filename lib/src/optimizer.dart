@@ -224,8 +224,6 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitSlice(Slice slice, [Context? context]) {
-    slice.expression = optimize(slice.expression, context);
-
     if (slice.start != null) {
       slice.start = optimize(slice.start!, context);
     }
@@ -238,7 +236,7 @@ class Optimizer extends Visitor<Context, Node> {
       slice.step = optimize(slice.step!, context);
     }
 
-    return constant(slice, context);
+    return slice;
   }
 
   @override
