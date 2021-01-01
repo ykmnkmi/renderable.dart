@@ -70,6 +70,27 @@ String represent(Object? object) {
   }
 }
 
+List<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) {
+  final result = <dynamic>[];
+  
+  for (final i in indices(list.length)) {
+    result.add(list[i]);
+  }
+
+  return result;
+}
+
+String sliceString(String string, Iterable<int> Function(int) indices) {
+  final buffer = StringBuffer();
+  
+  for (final i in indices(string.length)) {
+    buffer.write(string[i]);
+  }
+
+  return buffer.toString();
+}
+
+
 // @tryInline
 // @pragma('vm:prefer-inline')
 // T unsafeCast<T>(dynamic object) {

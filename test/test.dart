@@ -7,7 +7,7 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> args) {
-  final source = 'hello {{ "hello"[-1:-3:-1] }}!';
+  final source = 'hello {{ "hello"[1:3] }}!';
 
   try {
     final environment = Environment();

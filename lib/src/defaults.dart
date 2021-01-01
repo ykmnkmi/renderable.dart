@@ -37,15 +37,19 @@ dynamic getAttribute(dynamic object, String field) {
 }
 
 dynamic getItem(dynamic object, dynamic key) {
-  if (key is Iterable<int> Function(int) && object is Iterable) {
-    return slice(object.toList(), key);
+  if (key is Iterable<int> Function(int)) {
+    if (object is List) {
+      return slice(object, key);
+    }
+
+    if (object is String) {
+      return sliceString(object, key);
+    }
+
+    if (object is Iterable) {
+      return slice(object.toList(), key);
+    }
   }
 
   return object[key];
-}
-
-Iterable<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) sync* {
-  for (final i in indices(list.length)) {
-    yield list[i];
-  }
 }

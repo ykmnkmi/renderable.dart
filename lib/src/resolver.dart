@@ -299,7 +299,7 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
     var stop = slice.stop?.accept(this, context) as int?;
     var step = slice.step?.accept(this, context) as int?;
     return (int length) {
-      // TODO: add checks
+      step ??= 1;
       return range(start!, stop, step!);
     };
   }
