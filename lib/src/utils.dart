@@ -29,6 +29,10 @@ bool boolean(Object? value) {
 }
 
 Iterable<int> range(int startOrStop, [int? stop, int step = 1]) sync* {
+  if (step == 0) {
+    throw StateError('range() argument 3 must not be zero');
+  }
+
   int start;
 
   if (stop == null) {
@@ -39,8 +43,14 @@ Iterable<int> range(int startOrStop, [int? stop, int step = 1]) sync* {
     stop = stop;
   }
 
-  for (var i = start; i < stop; i += step) {
-    yield i;
+  if (step > 0) {
+    for (var i = start; i < stop; i += step) {
+      yield i;
+    }
+  } else {
+    for (var i = start; i > stop; i += step) {
+      yield i;
+    }
   }
 }
 
@@ -72,7 +82,7 @@ String represent(Object? object) {
 
 List<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) {
   final result = <dynamic>[];
-  
+
   for (final i in indices(list.length)) {
     result.add(list[i]);
   }
@@ -82,14 +92,13 @@ List<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) {
 
 String sliceString(String string, Iterable<int> Function(int) indices) {
   final buffer = StringBuffer();
-  
+
   for (final i in indices(string.length)) {
     buffer.write(string[i]);
   }
 
   return buffer.toString();
 }
-
 
 // @tryInline
 // @pragma('vm:prefer-inline')

@@ -6,8 +6,8 @@ import 'package:renderable/src/parser.dart';
 import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
-void main(List<String> args) {
-  final source = 'hello {{ "hello"[1:3] }}!';
+void main(List<String> arguments) {
+  final source = 'bar\n{% raw %}\n  {{baz}}2 spaces\n{% endraw %}\nfoo';
 
   try {
     final environment = Environment();
@@ -18,8 +18,8 @@ void main(List<String> args) {
     final lexer = Lexer(environment);
     final tokens = lexer.tokenize(source);
 
-    // print('\ntokens:');
-    // tokens.forEach(print);
+    print('\ntokens:');
+    tokens.forEach(print);
 
     final reader = TokenReader(tokens);
     final parser = Parser(environment);
@@ -28,14 +28,16 @@ void main(List<String> args) {
     print('\nnodes:');
     nodes.forEach(print);
 
-    const Optimizer().visitAll(nodes, Context(environment));
+    optimizer.visitAll(nodes, Context(environment));
 
     print('\noptimized nodes:');
     nodes.forEach(print);
 
     print('\nrender:');
     final template = Template.parsed(environment, nodes);
-    print(template.render({'one': 1, 'two': 2, 'three': '三'}));
+    print(template.render({
+      'slice': [0, 5, 1]
+    }));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

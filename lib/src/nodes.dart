@@ -84,10 +84,11 @@ class Item extends Expression {
 
 class Slice extends Expression {
   factory Slice.fromList(List<Expression?> expressions) {
-    assert(expressions.isNotEmpty);
     assert(expressions.length <= 3);
 
     switch (expressions.length) {
+      case 0:
+        return Slice();
       case 1:
         return Slice(start: expressions[0]);
       case 2:
@@ -117,23 +118,37 @@ class Slice extends Expression {
     var result = 'Slice(';
 
     if (start != null) {
-      result += ', start: $start';
+      result += 'start: $start';
     }
 
     if (stop != null) {
-      result += ', stop: $stop';
+      if (!result.endsWith('(')) {
+        result += ', ';
+      }
+
+      result += 'stop: $stop';
     }
 
     if (step != null) {
-      result += ', step: $step';
+      if (!result.endsWith('(')) {
+        result += ', ';
+      }
+
+      result += 'step: $step';
     }
-    
-    return result;
+
+    return result + ')';
   }
 }
 
 class Call extends Expression {
-  Call(this.expression, {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
+  Call(
+    this.expression, {
+    this.arguments = const <Expression>[],
+    this.keywordArguments = const <Keyword>[],
+    this.dArguments,
+    this.dKeywordArguments,
+  });
 
   Expression expression;
 
@@ -175,8 +190,14 @@ class Call extends Expression {
 }
 
 class Filter extends Expression {
-  Filter(this.name, this.expression,
-      {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
+  Filter(
+    this.name,
+    this.expression, {
+    this.arguments = const <Expression>[],
+    this.keywordArguments = const <Keyword>[],
+    this.dArguments,
+    this.dKeywordArguments,
+  });
 
   Filter.fromCall(this.name, this.expression, Call call)
       : arguments = call.arguments,
@@ -226,7 +247,14 @@ class Filter extends Expression {
 }
 
 class Test extends Expression {
-  Test(this.name, this.expression, {this.arguments = const <Expression>[], this.keywordArguments = const <Keyword>[], this.dArguments, this.dKeywordArguments});
+  Test(
+    this.name,
+    this.expression, {
+    this.arguments = const <Expression>[],
+    this.keywordArguments = const <Keyword>[],
+    this.dArguments,
+    this.dKeywordArguments,
+  });
 
   Test.fromCall(this.name, this.expression, Call call)
       : arguments = call.arguments,

@@ -15,6 +15,7 @@ class Optimizer extends Visitor<Context, Node> {
   @literal
   const Optimizer();
 
+  @protected
   Expression constant(Expression expression, [Context? context]) {
     try {
       final value = resolve(expression, context);
@@ -40,13 +41,12 @@ class Optimizer extends Visitor<Context, Node> {
       }
 
       return Constant(value);
-    } catch (e) {
-      // ignore
+    } catch (_) {
+      return expression;
     }
-
-    return expression;
   }
 
+  @protected
   Expression optimize(Expression expression, [Context? context]) {
     try {
       expression = expression.accept(this, context) as Expression;
@@ -129,14 +129,14 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Expression visitConstant(Constant<dynamic> constant, [Context? context]) {
+  Constant<dynamic> visitConstant(Constant<dynamic> constant, [Context? context]) {
     return constant;
   }
 
   @override
-  Expression visitData(Data data, [Context? context]) {
+  Data visitData(Data data, [Context? context]) {
     if (context!.environment.autoEscape) {
-      // TODO: wtf
+      // TODO: check
       return Data(escape(data.data));
     }
 
@@ -144,7 +144,7 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Expression visitDictLiteral(DictLiteral dict, [Context? context]) {
+  DictLiteral visitDictLiteral(DictLiteral dict, [Context? context]) {
     visitAll(dict.pairs);
     return dict;
   }
@@ -173,7 +173,6 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   Node visitIf(If node, [Context? context]) {
     try {
-      // print(node.test.accept(this, context));
       return node;
     } on Impossible {
       return node;
@@ -194,13 +193,13 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Expression visitListLiteral(ListLiteral list, [Context? context]) {
+  ListLiteral visitListLiteral(ListLiteral list, [Context? context]) {
     visitAll(list.expressions);
     return list;
   }
 
   @override
-  Expression visitName(Name name, [Context? context]) {
+  Name visitName(Name name, [Context? context]) {
     throw Impossible();
   }
 
@@ -223,7 +222,7 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Expression visitSlice(Slice slice, [Context? context]) {
+  Slice visitSlice(Slice slice, [Context? context]) {
     if (slice.start != null) {
       slice.start = optimize(slice.start!, context);
     }
@@ -261,7 +260,7 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Expression visitTupleLiteral(TupleLiteral tuple, [Context? context]) {
+  TupleLiteral visitTupleLiteral(TupleLiteral tuple, [Context? context]) {
     visitAll(tuple.expressions);
     return tuple;
   }
@@ -272,6 +271,7 @@ class Optimizer extends Visitor<Context, Node> {
     return constant(unary, context);
   }
 
+  @protected
   static dynamic resolve(Expression expression, [Context? context]) {
     return expression.accept(resolver, context);
   }

@@ -146,7 +146,7 @@ class Parser {
     reader.expect('name');
 
     while (true) {
-      node.test = parseTuple(reader, withCondExpr: false);
+      node.test = parseTuple(reader, withCondition: false);
       node.body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
       node.elseIf = <If>[];
       node.else_ = <Node>[];
@@ -167,8 +167,8 @@ class Parser {
     return result;
   }
 
-  Expression parseExpression(TokenReader reader, [bool withCondExpr = true]) {
-    return withCondExpr ? parseCondition(reader) : parseOr(reader);
+  Expression parseExpression(TokenReader reader, [bool withCondition = true]) {
+    return withCondition ? parseCondition(reader) : parseOr(reader);
   }
 
   Expression parseCondition(TokenReader reader, [bool withCondExpr = true]) {
@@ -393,7 +393,7 @@ class Parser {
         break;
       case 'lparen':
         reader.next();
-        expression = parseTuple(reader);
+        expression = parseTuple(reader, explicitParentheses: true);
         reader.expect('rparen');
         break;
       case 'lbracket':
@@ -409,12 +409,17 @@ class Parser {
     return expression;
   }
 
-  Expression parseTuple(TokenReader reader,
-      {bool simplified = false, bool withCondExpr = true, List<String> extraEndRules = const <String>[], bool explicitParentheses = false}) {
+  Expression parseTuple(
+    TokenReader reader, {
+    bool simplified = false,
+    bool withCondition = true,
+    List<String> extraEndRules = const <String>[],
+    bool explicitParentheses = false,
+  }) {
     Expression Function(TokenReader) parse;
     if (simplified) {
       parse = parsePrimary;
-    } else if (withCondExpr) {
+    } else if (withCondition) {
       parse = parseExpression;
     } else {
       parse = (reader) => parseExpression(reader, false);
@@ -610,6 +615,8 @@ class Parser {
     final keywordArguments = <Keyword>[];
     Expression? dArguments, dKeywordArguments;
 
+    var requireComma = false;
+
     void ensure(bool ensure) {
       if (!ensure) {
         throw 'invalid syntax for function call expression';
@@ -617,10 +624,10 @@ class Parser {
     }
 
     while (!reader.current.test('rparen')) {
-      if (arguments.isNotEmpty || keywordArguments.isNotEmpty) {
+      if (requireComma) {
         reader.expect('comma');
 
-        if (reader.current.type == 'rparen') {
+        if (reader.current.test('rparen')) {
           break;
         }
       }
@@ -635,19 +642,27 @@ class Parser {
         dArguments = parseExpression(reader);
       } else {
         if (reader.current.test('name') && reader.look().test('assign')) {
-          var key = reader.current.value;
+          final key = reader.current.value;
           reader.skip(2);
-          var value = parseExpression(reader);
+          final value = parseExpression(reader);
           keywordArguments.add(Keyword(key, value));
         } else {
-          ensure(keywordArguments.isEmpty);
+          ensure(dArguments == null && dKeywordArguments == null && keywordArguments.isEmpty);
           arguments.add(parseExpression(reader));
         }
       }
+
+      requireComma = true;
     }
 
     reader.expect('rparen');
-    return Call(expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
+    return Call(
+      expression,
+      arguments: arguments,
+      keywordArguments: keywordArguments,
+      dArguments: dArguments,
+      dKeywordArguments: dKeywordArguments,
+    );
   }
 
   Expression parseFilter(TokenReader reader, Expression expression, [bool startInline = false]) {

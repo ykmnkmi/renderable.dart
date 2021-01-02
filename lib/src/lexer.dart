@@ -1,7 +1,5 @@
 library tokenizer;
 
-import 'dart:io' show exit;
-
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 

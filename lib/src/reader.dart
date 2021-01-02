@@ -64,7 +64,9 @@ class TokenReader {
   Token next() {
     final result = _current;
 
-    if (_current.type != 'eof') {
+    if (_pushed.isNotEmpty) {
+      _current = _pushed.removeAt(0);
+    } else if (_current.type != 'eof') {
       if (_iterator.moveNext()) {
         _current = _iterator.current;
       } else {

@@ -86,8 +86,8 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
     expression = call.dKeywordArguments;
 
     if (expression != null) {
-      keywordArguments.addAll(
-          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+      keywordArguments.addAll((expression.accept(this, context) as Map<String, dynamic>)
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
     return Function.apply(callable, arguments, keywordArguments);
@@ -212,12 +212,12 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
     expression = filter.dKeywordArguments;
 
     if (expression != null) {
-      keywordArguments.addAll(
-          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+      keywordArguments.addAll((expression.accept(this, context) as Map<String, dynamic>)
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
-    return context!.environment
-        .callFilter(filter.name, filter.expression.accept(this, context), arguments: arguments, keywordArguments: keywordArguments, context: context);
+    return context!.environment.callFilter(filter.name, filter.expression.accept(this, context),
+        arguments: arguments, keywordArguments: keywordArguments, context: context);
   }
 
   @override
@@ -295,12 +295,37 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   Iterable<int> Function(int) visitSlice(Slice slice, [C? context]) {
-    var start = slice.start?.accept(this, context) as int?;
-    var stop = slice.stop?.accept(this, context) as int?;
-    var step = slice.step?.accept(this, context) as int?;
+    final sliceStart = slice.start?.accept(this, context) as int?;
+    final sliceStop = slice.stop?.accept(this, context) as int?;
+    final sliceStep = slice.step?.accept(this, context) as int?;
     return (int length) {
-      step ??= 1;
-      return range(start!, stop, step!);
+      int step;
+
+      if (sliceStep == null) {
+        step = 1;
+      } else if (sliceStep == 0) {
+        throw StateError('slice step cannot be zero');
+      } else {
+        step = sliceStep;
+      }
+
+      int start;
+
+      if (sliceStart == null) {
+        start = step > 0 ? 0 : length - 1;
+      } else {
+        start = sliceStart < 0 ? sliceStart + length : sliceStart;
+      }
+
+      int stop;
+
+      if (sliceStop == null) {
+        stop = step > 0 ? length : -1;
+      } else {
+        stop = sliceStop < 0 ? sliceStop + length : sliceStop;
+      }
+
+      return range(start, stop, step);
     };
   }
 
@@ -327,11 +352,12 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
     expression = test.dKeywordArguments;
 
     if (expression != null) {
-      keywordArguments.addAll(
-          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+      keywordArguments.addAll((expression.accept(this, context) as Map<String, dynamic>)
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
-    return context!.environment.callTest(test.name, test.expression.accept(this, context), arguments: arguments, keywordArguments: keywordArguments);
+    return context!.environment.callTest(test.name, test.expression.accept(this, context),
+        arguments: arguments, keywordArguments: keywordArguments);
   }
 
   @override
