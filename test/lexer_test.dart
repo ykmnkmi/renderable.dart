@@ -11,7 +11,6 @@ void main() {
       expect(reader.current.test('block_begin'), isTrue);
       reader.next();
       expect(reader.current.test('block_end'), isTrue);
-      reader.next();
     });
 
     test('simple', () {

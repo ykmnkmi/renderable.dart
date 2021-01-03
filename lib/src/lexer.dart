@@ -49,7 +49,7 @@ const List<String> defaultIgnoredTokens = <String>[
 ];
 
 RegExp compile(String pattern, [bool escape = true]) {
-  return RegExp(escape ? RegExp.escape(pattern) : pattern);
+  return RegExp(escape ? RegExp.escape(pattern) : pattern, dotAll: true, multiLine: true);
 }
 
 class Rule {
@@ -81,6 +81,9 @@ class Lexer {
     blockBegin = compile(configuration.blockBegin);
     blockEnd = compile(configuration.blockEnd);
 
+    final rawBegin = compile('(?<raw_begin>${blockBegin.pattern}\\s*raw\\s*${blockEnd.pattern})', false);
+    final rawEnd = compile('(.*?)${blockBegin.pattern}\\s*endraw\\s*${blockEnd.pattern}', false);
+
     final tagRules = <Rule>[
       Rule(
         'comment_begin',
@@ -88,8 +91,10 @@ class Lexer {
         commentBegin,
         (scanner) sync* {
           yield Token(scanner.lastMatch!.start, 'comment_begin', configuration.commentBegin);
-          // yield Token(scanner.position, 'comment', text);
-          yield Token(scanner.lastMatch!.start, 'comment_end', configuration.commentEnd);
+          if (scanner.scan(commentEnd)) {
+            // yield Token(scanner.position, 'comment', text);
+            yield Token(scanner.lastMatch!.start, 'comment_end', configuration.commentEnd);
+          } else {}
         },
       ),
       Rule(
@@ -126,7 +131,9 @@ class Lexer {
 
     tagRules.sort((a, b) => b.pattern.compareTo(a.pattern));
 
-    final rootPartsRe = tagRules.map((rule) => '(?<${rule.name}>${rule.regExp.pattern})').join('|');
+    final rootPartsRe =
+        [rawBegin.pattern, for (final rule in tagRules) '(?<${rule.name}>${rule.regExp.pattern})'].join('|');
+
     final dataRe = '(.*?)(?:${rootPartsRe})';
 
     rules = <String, List<Rule>>{
@@ -159,7 +166,29 @@ class Lexer {
           },
         ),
       ],
-      for (final rule in tagRules) rule.name: <Rule>[rule]
+      'raw_begin': [
+        Rule(
+          'raw_begin',
+          rawBegin.pattern,
+          rawBegin,
+          (scanner) sync* {
+            yield Token.simple(scanner.lastMatch!.start, 'raw_begin');
+            
+            if (!scanner.scan(rawEnd)) {
+              throw 'missing end of raw directive';
+            }
+
+            final raw = scanner.lastMatch![1]!;
+
+            if (raw.isNotEmpty) {
+              yield Token(scanner.lastMatch!.start, 'data', raw);
+            }
+
+            yield Token.simple(scanner.lastMatch!.start + raw.length, 'raw_end');
+          },
+        ),
+      ],
+      for (final rule in tagRules) rule.name: <Rule>[rule],
     };
   }
 
@@ -223,7 +252,7 @@ class Lexer {
       }
 
       if (notFound) {
-        throw 'unexpected char ${scanner.rest[0]} at ${scanner.position}';
+        throw 'unexpected char ${scanner.rest[0]} at ${scanner.position}.';
       }
     }
 
@@ -279,7 +308,7 @@ class Lexer {
           final expected = stack.removeLast();
 
           if (operator != expected) {
-            throw 'unexpected char ${scanner.rest[0]} at ${scanner.position}\'$operator\', expected \'$expected\'';
+            throw 'unexpected char ${scanner.rest[0]} at ${scanner.position}\'$operator\', expected \'$expected\'.';
           }
         }
 

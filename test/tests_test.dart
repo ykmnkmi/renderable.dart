@@ -4,7 +4,7 @@ import 'package:renderable/jinja.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Tests', () {
+  group('Test', () {
     final environment = Environment();
 
     test('no paren for arg 1', () {

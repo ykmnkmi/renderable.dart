@@ -7,7 +7,6 @@ Status
 ------
 Nodes:
 - Comments
-- Variables
 - Expressions
   - calls
   - comparison
@@ -19,20 +18,40 @@ Nodes:
   - tests
   - variables
 - Statements
+  - Raw
   - If
 
 API:
 - Environment
+- Template
 - Lexer
 - Parser
 - Optimizer
-- Template
 - Filters
+  - abs
+  - attr
+  - batch
+  - capitalize
+  - center
   - count
+  - d
+  - default
+  - e
+  - escape
+  - filesizeformat
+  - first
+  - float
+  - forceescape
+  - int
+  - join
+  - last
   - length
   - list
   - lower
+  - random
   - string
+  - sum
+  - trim
   - upper
 - Tests
   - callable

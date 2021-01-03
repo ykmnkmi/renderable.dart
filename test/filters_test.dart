@@ -11,7 +11,7 @@ class User {
 }
 
 void main() {
-  group('Filters', () {
+  group('Filter', () {
     final environment = Environment();
 
     test('attr', () {
