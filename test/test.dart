@@ -12,7 +12,7 @@ void main(List<String> arguments) {
   final source = '1  {%- raw -%}   2   {%- endraw -%}   3';
 
   try {
-    final environment = Environment();
+    final environment = Environment(variableBegin: '{{{', variableEnd: '}}}');
 
     print('source:');
     print(source);
@@ -20,8 +20,8 @@ void main(List<String> arguments) {
     final lexer = Lexer(environment);
     final tokens = lexer.tokenize(source);
 
-    print('\ntokens:');
-    tokens.forEach(print);
+    // print('\ntokens:');
+    // tokens.forEach(print);
 
     final reader = TokenReader(tokens);
     final parser = Parser(environment);

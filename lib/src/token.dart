@@ -30,7 +30,6 @@ abstract class Token {
     'semicolon': ';',
     'sub': '-',
     'tilde': '~',
-    'whitespace': ' ',
   };
 
   const factory Token(int start, String type, String value) = _ValueToken;
@@ -69,6 +68,10 @@ abstract class Token {
 
   @override
   String toString() {
+    if (value.isEmpty) {
+      return '#$type:$start';
+    }
+
     return '#$type:$start $value';
   }
 }
@@ -136,6 +139,10 @@ abstract class _BaseToken implements Token {
 
   @override
   String toString() {
+    if (value.isEmpty) {
+      return '$type:$start';
+    }
+
     return '$type:$start:$length $value';
   }
 }
@@ -151,7 +158,7 @@ class _SimpleToken extends _BaseToken {
 
   @override
   String get value {
-    return Token.common[type]!;
+    return Token.common[type] ?? '';
   }
 }
 

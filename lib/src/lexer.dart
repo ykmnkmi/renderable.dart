@@ -48,12 +48,16 @@ const List<String> defaultIgnoredTokens = <String>[
   'linecomment',
 ];
 
-RegExp compile(String pattern, [bool escape = true]) {
-  return RegExp(escape ? RegExp.escape(pattern) : pattern, dotAll: true, multiLine: true);
+String escape(String pattern) {
+  return RegExp.escape(pattern);
+}
+
+RegExp compile(String pattern) {
+  return RegExp(pattern, dotAll: true, multiLine: true);
 }
 
 class Rule {
-  Rule(this.name, this.pattern, this.regExp, [this.parse]);
+  Rule(this.name, this.pattern, this.regExp, this.parse);
 
   final String name;
 
@@ -61,7 +65,7 @@ class Rule {
 
   final RegExp regExp;
 
-  final Iterable<Token> Function(StringScanner scanner)? parse;
+  final Iterable<Token> Function(StringScanner scanner) parse;
 }
 
 class Lexer {
@@ -74,15 +78,22 @@ class Lexer {
         integerRe = RegExp(r'(\d+_)*\d+'),
         floatRe = RegExp(r'\.(\d+_)*\d+[eE][+\-]?(\d+_)*\d+|\.(\d+_)*\d+'),
         operatorsRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;') {
-    commentBegin = compile(configuration.commentBegin);
-    commentEnd = compile(configuration.commentEnd);
-    variableBegin = compile(configuration.variableBegin);
-    variableEnd = compile(configuration.variableEnd);
-    blockBegin = compile(configuration.blockBegin);
-    blockEnd = compile(configuration.blockEnd);
+    final blockSuffixRe = configuration.trimBlocks ? r'\n?' : '';
 
-    final rawBegin = compile('(?<raw_begin>${blockBegin.pattern}\\s*raw\\s*${blockEnd.pattern})', false);
-    final rawEnd = compile('(.*?)${blockBegin.pattern}\\s*endraw\\s*${blockEnd.pattern}', false);
+    final commentBeginRe = escape(configuration.commentBegin);
+    final commentBegin = compile(commentBeginRe);
+    final commentEndRe = escape(configuration.commentEnd);
+    final commentEnd = compile('(.*?)((?:\\+${commentEndRe}|-${commentEndRe}\\s*|${commentEndRe}${blockSuffixRe}))');
+
+    final variableBeginRe = escape(configuration.variableBegin);
+    final variableBegin = compile(variableBeginRe);
+    final variableEndRe = escape(configuration.variableEnd);
+    final variableEnd = compile(variableEndRe);
+
+    final blockBeginRe = escape(configuration.blockBegin);
+    final blockBegin = compile(blockBeginRe);
+    final blockEndRe = escape(configuration.blockEnd);
+    final blockEnd = compile(blockEndRe);
 
     final tagRules = <Rule>[
       Rule(
@@ -91,10 +102,14 @@ class Lexer {
         commentBegin,
         (scanner) sync* {
           yield Token(scanner.lastMatch!.start, 'comment_begin', configuration.commentBegin);
-          if (scanner.scan(commentEnd)) {
-            // yield Token(scanner.position, 'comment', text);
-            yield Token(scanner.lastMatch!.start, 'comment_end', configuration.commentEnd);
-          } else {}
+
+          if (!scanner.scan(commentEnd)) {
+            throw 'comment end expected.';
+          }
+
+          final comment = scanner.lastMatch![1]!;
+          yield Token(scanner.lastMatch!.start, 'comment', comment.trim());
+          yield Token(scanner.lastMatch!.start + comment.length, 'comment_end', configuration.commentEnd);
         },
       ),
       Rule(
@@ -106,7 +121,7 @@ class Lexer {
           yield* expression(scanner, variableEnd);
 
           if (!scanner.scan(variableEnd)) {
-            throw 'expected expression end';
+            throw 'expression end expected.';
           }
 
           yield Token(scanner.lastMatch!.start, 'variable_end', configuration.variableEnd);
@@ -121,7 +136,7 @@ class Lexer {
           yield* expression(scanner, blockEnd);
 
           if (!scanner.scan(blockEnd)) {
-            throw 'expected statement end';
+            throw 'statement end expected.';
           }
 
           yield Token(scanner.lastMatch!.start, 'block_end', configuration.blockEnd);
@@ -129,10 +144,25 @@ class Lexer {
       ),
     ];
 
-    tagRules.sort((a, b) => b.pattern.compareTo(a.pattern));
+    tagRules.sort((a, b) => b.pattern.length.compareTo(a.pattern.length));
 
-    final rootPartsRe =
-        [rawBegin.pattern, for (final rule in tagRules) '(?<${rule.name}>${rule.regExp.pattern})'].join('|');
+    // 0 - full match
+    // 1 - data
+    // 2 - raw_being group
+    // 3 - raw_being sign
+    // n - *_begin group
+    // n + 1 - *_begin sign
+
+    final rawBegin = compile('(?<raw_begin>${blockBeginRe}(-|\\+|)\\s*raw\\s*(?:-${blockEndRe}\\s*|${blockEndRe}))');
+    final rawEnd = compile('(.*?)((?:${blockBeginRe}(-|\\+|))\\s*endraw\\s*'
+        '(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe}))');
+
+    final rootParts = [
+      rawBegin.pattern,
+      for (final rule in tagRules) '(?<${rule.name}>${rule.regExp.pattern}(-|\\+|))',
+    ];
+
+    final rootPartsRe = rootParts.join('|');
 
     final dataRe = '(.*?)(?:${rootPartsRe})';
 
@@ -141,26 +171,42 @@ class Lexer {
         Rule(
           'data',
           dataRe,
-          compile(dataRe, false),
+          compile(dataRe),
           (scanner) sync* {
             final match = scanner.lastMatch as RegExpMatch;
+            final names = match.groupNames.toList();
             final data = match[1]!;
+            var state = '';
+            var sign = '';
+
+            final groups = match.groups([3, 5, 7, 9]);
+
+            for (var i = 0; i < names.length; i += 1) {
+              if (match.namedGroup(names[i]) == null) {
+                continue;
+              }
+
+              state = names[i];
+              sign = groups[i]!;
+              break;
+            }
+
+            final stripped = strip(data, sign);
 
             if (data.isNotEmpty) {
-              yield Token(match.start, 'data', data);
+              yield Token(match.start, 'data', stripped);
               scanner.position = match.start + data.length;
             } else {
               scanner.position = match.start;
             }
 
-            final state = match.groupNames.firstWhere((groupName) => match.namedGroup(groupName) != null);
             yield* scan(scanner, state);
           },
         ),
         Rule(
           'data',
           '.+',
-          compile('.+', false),
+          compile('.+'),
           (scanner) sync* {
             yield Token(scanner.position, 'data', scanner.lastMatch![0]!);
           },
@@ -173,26 +219,23 @@ class Lexer {
           rawBegin,
           (scanner) sync* {
             yield Token.simple(scanner.lastMatch!.start, 'raw_begin');
-            
+
             if (!scanner.scan(rawEnd)) {
               throw 'missing end of raw directive';
             }
 
-            final raw = scanner.lastMatch![1]!;
+            final data = scanner.lastMatch![1]!;
+            final sign = scanner.lastMatch![3]!;
+            final stripped = strip(data, sign);
 
-            if (raw.isNotEmpty) {
-              yield Token(scanner.lastMatch!.start, 'data', raw);
-            }
-
-            yield Token.simple(scanner.lastMatch!.start + raw.length, 'raw_end');
+            yield Token(scanner.lastMatch!.start, 'data', stripped);
+            yield Token.simple(scanner.lastMatch!.start + data.length, 'raw_end');
           },
         ),
       ],
       for (final rule in tagRules) rule.name: <Rule>[rule],
     };
   }
-
-  final List<String> ignoredTokens;
 
   final String newLine;
 
@@ -210,23 +253,9 @@ class Lexer {
 
   final RegExp operatorsRe;
 
-  late RegExp commentBegin;
-
-  late RegExp commentEnd;
-
-  late RegExp variableBegin;
-
-  late RegExp variableEnd;
-
-  late RegExp blockBegin;
-
-  late RegExp blockEnd;
+  final List<String> ignoredTokens;
 
   late Map<String, List<Rule>> rules;
-
-  String normalizeNewLines(String value) {
-    return value.replaceAll(newLineRe, newLine);
-  }
 
   Iterable<Token> tokenize(String template, {String? path}) sync* {
     final scanner = StringScanner(template, sourceUrl: path);
@@ -260,15 +289,30 @@ class Lexer {
   }
 
   @protected
+  String normalizeNewLines(String value) {
+    return value.replaceAll(newLineRe, newLine);
+  }
+
+  @protected
   Iterable<Token> scan(StringScanner scanner, [String state = 'root']) sync* {
     for (final rule in rules[state]!) {
       if (scanner.scan(rule.regExp)) {
-        yield* rule.parse!(scanner);
+        yield* rule.parse(scanner);
         break;
       }
     }
   }
 
+  @protected
+  String strip(String data, String sign) {
+    if (sign == '-') {
+      return data.trimRight();
+    }
+
+    return data;
+  }
+
+  @protected
   Iterable<Token> expression(StringScanner scanner, RegExp end) sync* {
     final stack = <String>[];
 

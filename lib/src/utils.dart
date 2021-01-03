@@ -28,7 +28,9 @@ bool boolean(Object? value) {
   return true;
 }
 
-Iterable<int> range(int startOrStop, [int? stop, int step = 1]) sync* {
+typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
+
+Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
   if (step == 0) {
     throw StateError('range() argument 3 must not be zero');
   }
@@ -37,9 +39,9 @@ Iterable<int> range(int startOrStop, [int? stop, int step = 1]) sync* {
 
   if (stop == null) {
     start = 0;
-    stop = startOrStop;
+    stop = stopOrStart;
   } else {
-    start = startOrStop;
+    start = stopOrStart;
     stop = stop;
   }
 
@@ -80,8 +82,8 @@ String represent(Object? object) {
   }
 }
 
-List<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) {
-  final result = <dynamic>[];
+List<T> slice<T>(List<T> list, Indices indices) {
+  final result = <T>[];
 
   for (final i in indices(list.length)) {
     result.add(list[i]);
@@ -90,7 +92,7 @@ List<dynamic> slice(List<dynamic> list, Iterable<int> Function(int) indices) {
   return result;
 }
 
-String sliceString(String string, Iterable<int> Function(int) indices) {
+String sliceString(String string, Indices indices) {
   final buffer = StringBuffer();
 
   for (final i in indices(string.length)) {

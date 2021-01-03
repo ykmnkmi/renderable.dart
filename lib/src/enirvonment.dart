@@ -153,7 +153,7 @@ class Environment extends Configuration {
   }
 
   dynamic getItem(dynamic object, dynamic key) {
-    if (key is Iterable<int> Function(int)) {
+    if (key is Indices) {
       if (object is List) {
         return slice(object, key);
       }

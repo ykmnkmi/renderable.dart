@@ -294,13 +294,11 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  Iterable<int> Function(int) visitSlice(Slice slice, [C? context]) {
+  Indices visitSlice(Slice slice, [C? context]) {
     final sliceStart = slice.start?.accept(this, context) as int?;
     final sliceStop = slice.stop?.accept(this, context) as int?;
     final sliceStep = slice.step?.accept(this, context) as int?;
-    return (int length) {
-      int step;
-
+    return (int stopOrStart, [int? stop, int? step]) {
       if (sliceStep == null) {
         step = 1;
       } else if (sliceStep == 0) {
@@ -312,17 +310,15 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
       int start;
 
       if (sliceStart == null) {
-        start = step > 0 ? 0 : length - 1;
+        start = step > 0 ? 0 : stopOrStart - 1;
       } else {
-        start = sliceStart < 0 ? sliceStart + length : sliceStart;
+        start = sliceStart < 0 ? sliceStart + stopOrStart : sliceStart;
       }
 
-      int stop;
-
       if (sliceStop == null) {
-        stop = step > 0 ? length : -1;
+        stop = step > 0 ? stopOrStart : -1;
       } else {
-        stop = sliceStop < 0 ? sliceStop + length : sliceStop;
+        stop = sliceStop < 0 ? sliceStop + stopOrStart : sliceStop;
       }
 
       return range(start, stop, step);
