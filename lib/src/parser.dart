@@ -16,14 +16,14 @@ class Parser {
 
   final List<String> tagStack;
 
-  bool isTupleEnd(TokenReader reader, [List<String> extraEndRules = const <String>[]]) {
+  bool isTupleEnd(TokenReader reader, [List<String>? extraEndRules]) {
     switch (reader.current.type) {
       case 'variable_end':
       case 'block_end':
       case 'rparen':
         return true;
       default:
-        if (extraEndRules.isNotEmpty) {
+        if (extraEndRules != null && extraEndRules.isNotEmpty) {
           return reader.current.testAny(extraEndRules);
         }
 
@@ -42,12 +42,12 @@ class Parser {
     return subParse(reader);
   }
 
-  List<Node> subParse(TokenReader reader, {List<String> endRules = const <String>[]}) {
+  List<Node> subParse(TokenReader reader, {List<String>? endTokens}) {
     final buffer = <Node>[];
     final nodes = <Node>[];
 
-    if (endRules.isNotEmpty) {
-      endRulesStack.add(endRules);
+    if (endTokens != null) {
+      endRulesStack.add(endTokens);
     }
 
     void flushData() {
@@ -75,7 +75,7 @@ class Parser {
             flushData();
             reader.next();
 
-            if (endRules.isNotEmpty && reader.current.testAny(endRules)) {
+            if (endTokens != null && reader.current.testAny(endTokens)) {
               return nodes;
             }
 
@@ -89,7 +89,7 @@ class Parser {
 
       flushData();
     } finally {
-      if (endRules.isNotEmpty) {
+      if (endTokens != null) {
         endRulesStack.removeLast();
       }
     }
@@ -111,6 +111,8 @@ class Parser {
       switch (token.value) {
         case 'if':
           return parseIf(reader);
+        case 'for':
+          return parseFor(reader);
         default:
           popTag = false;
           tagStack.removeLast();
@@ -123,11 +125,11 @@ class Parser {
     }
   }
 
-  List<Node> parseStatements(TokenReader reader, List<String> endRules, {bool dropNeedle = false}) {
+  List<Node> parseStatements(TokenReader reader, List<String> endTokens, {bool dropNeedle = false}) {
     reader.skipIf('colon');
     reader.expect('block_end');
 
-    final nodes = subParse(reader, endRules: endRules);
+    final nodes = subParse(reader, endTokens: endTokens);
 
     if (reader.current.test('eof')) {
       throw 'unexpected end of file';
@@ -140,10 +142,23 @@ class Parser {
     return nodes;
   }
 
-  Node parseIf(TokenReader reader) {
+  For parseFor(TokenReader reader) {
+    reader.expect('name', 'for');
+
+    final target = parseAssignTarget(reader, extraEndRules: <String>['name:in']);
+
+    reader.expect('name', 'in');
+
+    final iterable = parseTuple(reader, withCondition: false);
+    final body = parseStatements(reader, <String>['name:endfor'], dropNeedle: true);
+    return For(target, iterable, body);
+  }
+
+  If parseIf(TokenReader reader) {
     If result, node;
-    result = node = If(Constant<bool>(true), <Node>[Constant<String>('')], <If>[], <Node>[]);
-    reader.expect('name');
+    result = node = If();
+
+    reader.expect('name', 'if');
 
     while (true) {
       node.test = parseTuple(reader, withCondition: false);
@@ -151,13 +166,14 @@ class Parser {
       node.elseIf = <If>[];
       node.else_ = <Node>[];
 
-      final token = reader.next();
+      final tag = reader.next();
 
-      if (token.test('name', 'elif')) {
-        node = If(Constant<bool>(true), <Node>[Constant<String>('')], <If>[], <Node>[]);
-        result.elseIf.add(node);
+      if (tag.test('name', 'elif')) {
+        node = If();
+        result.elseIf ??= <If>[];
+        result.elseIf!.add(node);
         continue;
-      } else if (token.test('name', 'else')) {
+      } else if (tag.test('name', 'else')) {
         result.else_ = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
       }
 
@@ -165,6 +181,37 @@ class Parser {
     }
 
     return result;
+  }
+
+  Expression parseAssignTarget(TokenReader reader,
+      {List<String>? extraEndRules, bool nameOnly = false, bool withNameSpace = false, bool withTuple = true}) {
+    Expression target;
+
+    if (withNameSpace && reader.look().test('dot')) {
+      final nameSpace = reader.expect('name');
+
+      reader.next(); // skip dot
+
+      final attribute = reader.expect('name');
+      target = NameSpaceReference(nameSpace.value, attribute.value);
+    } else if (nameOnly) {
+      final name = reader.expect('name');
+      target = Name(name.value, AssignContext.store);
+    } else {
+      if (withTuple) {
+        target = parseTuple(reader, simplified: true, extraEndRules: extraEndRules);
+      } else {
+        target = parsePrimary(reader);
+      }
+
+      if (target is CanAssign) {
+        (target as CanAssign).context = AssignContext.store;
+      } else {
+        throw 'can\'t assign to ${target.runtimeType}';
+      }
+    }
+
+    return target;
   }
 
   Expression parseExpression(TokenReader reader, [bool withCondition = true]) {
@@ -224,12 +271,15 @@ class Parser {
     while (true) {
       if (reader.current.testAny(['eq', 'ne', 'lt', 'lteq', 'gt', 'gteq'])) {
         type = reader.current.type;
+
         reader.next();
+
         operands.add(Operand(type, parseMath1(reader)));
       } else if (reader.skipIf('name', 'in')) {
         operands.add(Operand('in', parseMath1(reader)));
       } else if (reader.current.test('name', 'not') && reader.look().test('name', 'in')) {
         reader.skip(2);
+
         operands.add(Operand('notin', parseMath1(reader)));
       } else {
         break;
@@ -251,10 +301,12 @@ class Parser {
       switch (reader.current.type) {
         case 'add':
           reader.next();
+
           expression = Add(expression, parseConcat(reader));
           break;
         case 'sub':
           reader.next();
+
           expression = Sub(expression, parseConcat(reader));
           break;
         default:
@@ -270,6 +322,7 @@ class Parser {
 
     while (reader.current.test('tilde')) {
       reader.next();
+
       expressions.add(parseMath2(reader));
     }
 
@@ -288,14 +341,17 @@ class Parser {
       switch (reader.current.type) {
         case 'mul':
           reader.next();
+
           expression = Mul(expression, parsePow(reader));
           break;
         case 'div':
           reader.next();
+
           expression = Div(expression, parsePow(reader));
           break;
         case 'floordiv':
           reader.next();
+
           expression = FloorDiv(expression, parsePow(reader));
           break;
         case 'mod':
@@ -315,6 +371,7 @@ class Parser {
 
     while (reader.current.test('pow')) {
       reader.next();
+
       expression = Pow(expression, parseUnary(reader));
     }
 
@@ -327,11 +384,13 @@ class Parser {
     switch (reader.current.type) {
       case 'add':
         reader.next();
+
         expression = parseUnary(reader, withFilter: false);
         expression = Pos(expression);
         break;
       case 'sub':
         reader.next();
+
         expression = parseUnary(reader, withFilter: false);
         expression = Neg(expression);
         break;
@@ -374,10 +433,12 @@ class Parser {
         break;
       case 'string':
         final buffer = StringBuffer(reader.current.value);
+
         reader.next();
 
         while (reader.current.test('string')) {
           buffer.write(reader.current.value);
+
           reader.next();
         }
 
@@ -386,14 +447,18 @@ class Parser {
       case 'integer':
         expression = Constant<int>(int.parse(reader.current.value));
         reader.next();
+
         break;
       case 'float':
         expression = Constant<double>(double.parse(reader.current.value));
         reader.next();
+
         break;
       case 'lparen':
         reader.next();
+
         expression = parseTuple(reader, explicitParentheses: true);
+
         reader.expect('rparen');
         break;
       case 'lbracket':
@@ -409,13 +474,11 @@ class Parser {
     return expression;
   }
 
-  Expression parseTuple(
-    TokenReader reader, {
-    bool simplified = false,
-    bool withCondition = true,
-    List<String> extraEndRules = const <String>[],
-    bool explicitParentheses = false,
-  }) {
+  Expression parseTuple(TokenReader reader,
+      {bool simplified = false,
+      bool withCondition = true,
+      List<String>? extraEndRules,
+      bool explicitParentheses = false}) {
     Expression Function(TokenReader) parse;
     if (simplified) {
       parse = parsePrimary;
@@ -461,6 +524,7 @@ class Parser {
 
   Expression parseList(TokenReader reader) {
     reader.expect('lbracket');
+
     final values = <Expression>[];
 
     while (!reader.current.test('rbracket')) {
@@ -476,11 +540,13 @@ class Parser {
     }
 
     reader.expect('rbracket');
+
     return ListLiteral(values);
   }
 
   Expression parseDict(TokenReader reader) {
     reader.expect('lbrace');
+
     final pairs = <Pair>[];
 
     while (!reader.current.test('rbrace')) {
@@ -493,7 +559,9 @@ class Parser {
       }
 
       final key = parseExpression(reader);
+
       reader.expect('colon');
+
       final value = parseExpression(reader);
       pairs.add(Pair(key, value));
     }
@@ -557,6 +625,7 @@ class Parser {
       }
 
       reader.expect('rbracket');
+
       arguments = arguments.reversed.toList();
 
       while (arguments.isNotEmpty) {
@@ -574,6 +643,7 @@ class Parser {
 
     if (reader.current.test('colon')) {
       reader.next();
+
       arguments.add(null);
     } else {
       final expression = parseExpression(reader);
@@ -583,6 +653,7 @@ class Parser {
       }
 
       reader.next();
+
       arguments.add(expression);
     }
 
@@ -611,6 +682,7 @@ class Parser {
 
   Call parseCall(TokenReader reader, Expression expression) {
     reader.expect('lparen');
+
     final arguments = <Expression>[];
     final keywordArguments = <Keyword>[];
     Expression? dArguments, dKeywordArguments;
@@ -634,16 +706,22 @@ class Parser {
 
       if (reader.current.test('mul')) {
         ensure(dArguments == null && dKeywordArguments == null);
+
         reader.next();
+
         dArguments = parseExpression(reader);
       } else if (reader.current.test('pow')) {
         ensure(dKeywordArguments == null);
+
         reader.next();
+
         dArguments = parseExpression(reader);
       } else {
         if (reader.current.test('name') && reader.look().test('assign')) {
           final key = reader.current.value;
+
           reader.skip(2);
+
           final value = parseExpression(reader);
           keywordArguments.add(Keyword(key, value));
         } else {
@@ -656,13 +734,12 @@ class Parser {
     }
 
     reader.expect('rparen');
-    return Call(
-      expression,
-      arguments: arguments,
-      keywordArguments: keywordArguments,
-      dArguments: dArguments,
-      dKeywordArguments: dKeywordArguments,
-    );
+
+    return Call(expression,
+        arguments: arguments,
+        keywordArguments: keywordArguments,
+        dArguments: dArguments,
+        dKeywordArguments: dKeywordArguments);
   }
 
   Expression parseFilter(TokenReader reader, Expression expression, [bool startInline = false]) {
@@ -676,6 +753,7 @@ class Parser {
 
       while (reader.current.test('dot')) {
         reader.next();
+
         token = reader.expect('name');
         name = '$name.${token.value}';
       }
@@ -697,10 +775,12 @@ class Parser {
 
   Expression parseTest(TokenReader reader, Expression expression) {
     reader.next();
+
     var negated = false;
 
     if (reader.current.test('name', 'not')) {
       reader.next();
+
       negated = true;
     }
 
@@ -709,6 +789,7 @@ class Parser {
 
     while (reader.current.test('dot')) {
       reader.next();
+
       token = reader.expect('name');
       name = '$name.${token.value}';
     }

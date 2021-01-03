@@ -9,10 +9,10 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '1  {%- raw -%}   2   {%- endraw -%}   3';
+  final source = '{% for item in seq %}|{{ item }}{% endfor %}';
 
   try {
-    final environment = Environment(variableBegin: '{{{', variableEnd: '}}}');
+    final environment = Environment();
 
     print('source:');
     print(source);
@@ -37,9 +37,7 @@ void main(List<String> arguments) {
 
     print('\nrender:');
     final template = Template.parsed(environment, nodes);
-    print(template.render({
-      'slice': [0, 5, 1]
-    }));
+    print(template.render({'seq': [null, 1, 'foo']}));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

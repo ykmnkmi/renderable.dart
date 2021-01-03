@@ -171,12 +171,13 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Node visitIf(If node, [Context? context]) {
-    try {
-      return node;
-    } on Impossible {
-      return node;
-    }
+  Node visitFor(For forNode, [Context? context]) {
+    return forNode;
+  }
+
+  @override
+  Node visitIf(If ifNode, [Context? context]) {
+    return ifNode;
   }
 
   @override

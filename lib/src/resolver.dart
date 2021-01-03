@@ -9,17 +9,15 @@ import 'tests.dart' as tests;
 import 'utils.dart';
 import 'visitor.dart';
 
-const Resolver resolver = Resolver();
+const ExpressionResolver resolver = ExpressionResolver();
 
-class Resolver<C extends Context> extends Visitor<C, dynamic> {
+class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   @literal
-  const Resolver();
+  const ExpressionResolver();
 
   @override
   void visitAll(List<Node> nodes, [C? context]) {
-    for (final node in nodes) {
-      node.accept(this, context);
-    }
+    throw UnimplementedError();
   }
 
   @override
@@ -170,12 +168,8 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitData(Data data, [C? context]) {
-    if (context!.environment.autoEscape) {
-      return Markup.escape(data.data);
-    }
-
-    return data.data;
+  void visitData(Data data, [C? context]) {
+    throw UnimplementedError();
   }
 
   @override
@@ -221,25 +215,13 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  void visitIf(If node, [C? context]) {
-    if (boolean(node.test.accept(this, context))) {
-      visitAll(node.body, context);
-      return;
-    }
+  void visitFor(For forNode, [C? context]) {
+    throw UnimplementedError();
+  }
 
-    if (node.elseIf.isNotEmpty) {
-      for (final ifNode in node.elseIf) {
-        if (boolean(ifNode.test.accept(this, context))) {
-          visitAll(ifNode.body, context);
-          return;
-        }
-      }
-    }
-
-    if (node.else_.isNotEmpty) {
-      visitAll(node.else_, context);
-      return;
-    }
+  @override
+  void visitIf(If ifNode, [C? context]) {
+    throw UnimplementedError();
   }
 
   @override
@@ -274,18 +256,8 @@ class Resolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitOutput(Output output, [C? context]) {
-    final result = <dynamic>[];
-
-    for (final node in output.nodes) {
-      if (node is Data) {
-        result.add(node.accept(this, context));
-      } else {
-        result.add(context!.environment.finalize(node.accept(this, context)));
-      }
-    }
-
-    return result;
+  void visitOutput(Output output, [C? context]) {
+    throw UnimplementedError();
   }
 
   @override

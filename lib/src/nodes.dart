@@ -2,16 +2,47 @@ import 'exceptions.dart';
 import 'utils.dart';
 import 'visitor.dart';
 
+enum AssignContext {
+  load,
+  store,
+  parameter,
+}
+
 abstract class Node {
+  const Node();
+
   R accept<C, R>(Visitor<C, R> visitor, [C? context]);
+}
+
+class Data extends Node {
+  Data([this.data = '']);
+
+  String data;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitData(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Data(\'${data.replaceAll('\'', '\\\'').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}\')';
+  }
+}
+
+abstract class CanAssign {
+  AssignContext? context;
 }
 
 abstract class Expression extends Node {}
 
-class Name extends Expression {
-  Name(this.name, [this.type]);
+class Name extends Expression implements CanAssign {
+  Name(this.name, [this.context = AssignContext.load, this.type]);
 
   String name;
+
+  @override
+  AssignContext? context;
 
   String? type;
 
@@ -27,6 +58,22 @@ class Name extends Expression {
     }
 
     return 'Name($name, $type)';
+  }
+}
+
+class NameSpaceReference extends Expression implements CanAssign {
+  NameSpaceReference(this.name, this.attribute) : context = AssignContext.store;
+
+  String name;
+
+  String attribute;
+
+  @override
+  AssignContext? context;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    throw UnimplementedError();
   }
 }
 
@@ -348,23 +395,15 @@ abstract class Literal extends Expression {
   }
 }
 
-class Data extends Literal {
-  Data([this.data = '']);
-
-  String data;
-
-  @override
-  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitData(this, context);
-  }
-
-  @override
-  String toString() {
-    return 'Data(\'${data.replaceAll('\'', '\\\'').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}\')';
-  }
-}
-
 class Constant<T> extends Literal {
+  static Constant<bool> get False {
+    return Constant<bool>(false);
+  }
+
+  static Constant<bool> get True {
+    return Constant<bool>(true);
+  }
+
   Constant(this.value);
 
   T? value;
@@ -380,12 +419,13 @@ class Constant<T> extends Literal {
   }
 }
 
-class TupleLiteral extends Literal {
-  TupleLiteral(this.expressions, {this.save = false});
+class TupleLiteral extends Literal implements CanAssign {
+  TupleLiteral(this.expressions, [this.context = AssignContext.load]);
 
   List<Expression> expressions;
 
-  bool save;
+  @override
+  AssignContext? context;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -654,16 +694,38 @@ class Output extends Statement {
   }
 }
 
+class For extends Statement {
+  For(this.target, this.iterable, this.body);
+
+  Expression target;
+
+  Expression iterable;
+
+  List<Node> body;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitFor(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'For()';
+  }
+}
+
 class If extends Statement {
-  If(this.test, this.body, this.elseIf, this.else_);
+  If({Expression? test, List<Node>? body, this.elseIf, this.else_})
+      : test = test ?? Constant.False,
+        body = body ?? <Node>[];
 
   Expression test;
 
   List<Node> body;
 
-  List<If> elseIf;
+  List<If>? elseIf;
 
-  List<Node> else_;
+  List<Node>? else_;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
