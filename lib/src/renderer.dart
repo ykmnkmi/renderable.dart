@@ -1,5 +1,8 @@
+import 'package:meta/meta.dart';
+
 import 'context.dart';
 import 'enirvonment.dart';
+import 'exceptions.dart';
 import 'nodes.dart';
 import 'resolver.dart';
 import 'utils.dart';
@@ -35,8 +38,14 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitFor(For forNode, [RenderContext? context]) {
+    final targets = forNode.target.accept(this, context) as List<String>;
     final iterable = forNode.iterable.accept(this, context);
-    throw UnimplementedError();
+
+    for (final value in iterable) {
+      context!.apply<RenderContext>(unpack(targets, value), (context) {
+        visitAll(forNode.body, context);
+      });
+    }
   }
 
   @override
@@ -73,5 +82,40 @@ class Renderer extends ExpressionResolver<RenderContext> {
         context!.sink.write(context.environment.finalize(node.accept(this, context)));
       }
     }
+  }
+
+  @protected
+  static Map<String, dynamic> unpack(List<String> targets, dynamic current) {
+    if (targets.length == 1) {
+      return <String, dynamic>{targets[0]: current};
+    }
+
+    final data = <String, dynamic>{};
+
+    List<dynamic> list;
+
+    if (current is List) {
+      list = current;
+    } else if (current is Iterable) {
+      list = current.toList();
+    } else if (current is String) {
+      list = current.split('');
+    } else {
+      throw TypeError();
+    }
+
+    if (list.length < targets.length) {
+      throw StateError('not enough values to unpack (expected ${targets.length}, got ${list.length})');
+    }
+
+    if (list.length > targets.length) {
+      throw StateError('too many values to unpack (expected ${targets.length})');
+    }
+
+    for (var i = 0; i < targets.length; i++) {
+      data[targets[i]] = list[i];
+    }
+
+    return data;
   }
 }

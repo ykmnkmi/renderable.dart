@@ -1,6 +1,6 @@
 import 'enirvonment.dart';
 
-typedef ContextCallback = void Function(Context context);
+typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
   Context(this.environment, [Map<String, dynamic>? data]) : contexts = <Map<String, dynamic>>[environment.globals] {
@@ -21,9 +21,9 @@ class Context {
     set(key, value);
   }
 
-  void apply(Map<String, dynamic> data, ContextCallback closure) {
+  void apply<C extends Context>(Map<String, dynamic> data, ContextCallback<C> closure) {
     push(data);
-    closure(this);
+    closure(this as C);
     pop();
   }
 

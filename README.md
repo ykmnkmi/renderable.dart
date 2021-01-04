@@ -20,6 +20,7 @@ Nodes:
 - Statements
   - Raw
   - If
+  - For (single/multi target)
 
 API:
 - Environment

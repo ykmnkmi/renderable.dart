@@ -60,9 +60,13 @@ class Optimizer extends Visitor<Context, Node> {
   void visitAll(List<Node> nodes, [Context? context]) {
     for (var i = 0; i < nodes.length; i += 1) {
       try {
+        if (nodes[i] is Data) {
+          continue;
+        }
+
         nodes[i] = nodes[i].accept(this, context);
       } on Impossible {
-        // ignore
+        // pass
       }
     }
   }
@@ -172,11 +176,26 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Node visitFor(For forNode, [Context? context]) {
+    forNode.iterable = optimize(forNode.iterable, context);
+    visitAll(forNode.body);
     return forNode;
   }
 
   @override
   Node visitIf(If ifNode, [Context? context]) {
+    ifNode.test = optimize(ifNode.test, context);
+    visitAll(ifNode.body);
+
+    if (ifNode.elseIf != null) {
+      for (final childIfNode in ifNode.elseIf!) {
+        visitIf(childIfNode, context);
+      }
+    }
+
+    if (ifNode.else_ != null) {
+      visitAll(ifNode.else_!, context);
+    }
+
     return ifNode;
   }
 

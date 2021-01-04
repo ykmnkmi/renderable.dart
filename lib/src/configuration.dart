@@ -41,7 +41,7 @@ class Configuration {
 
   final bool keepTrailingNewLine;
 
-  Configuration change({
+  Configuration copy({
     String? commentBegin,
     String? commentEnd,
     String? variableBegin,

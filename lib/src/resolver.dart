@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
+import 'package:renderable/src/exceptions.dart';
 
 import 'context.dart';
-import 'markup.dart';
 import 'nodes.dart';
 import 'tests.dart' as tests;
 import 'utils.dart';
@@ -247,7 +247,14 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   dynamic visitName(Name name, [C? context]) {
-    return context!.get(name.name);
+    switch (name.context) {
+      case AssignContext.load:
+        return context!.get(name.name);
+      case AssignContext.store:
+        return <String>[name.name];
+      default:
+        throw UnimplementedError();
+    }
   }
 
   @override
@@ -330,13 +337,30 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   List<dynamic> visitTupleLiteral(TupleLiteral tuple, [C? context]) {
-    final result = <dynamic>[];
+    switch (tuple.context) {
+      case AssignContext.load:
+        final result = <dynamic>[];
 
-    for (final node in tuple.expressions) {
-      result.add(node.accept(this, context));
+        for (final node in tuple.expressions) {
+          result.add(node.accept(this, context));
+        }
+
+        return result;
+      case AssignContext.store:
+        final result = <String>[];
+
+        for (final node in tuple.expressions.cast<Name>()) {
+          if (node.context != AssignContext.store) {
+            throw TemplateRuntimeError(/* TODO: add error message */);
+          }
+
+          result.add(node.name);
+        }
+
+        return result;
+      default:
+        throw UnimplementedError();
     }
-
-    return result;
   }
 
   @override

@@ -96,7 +96,7 @@ class Environment extends Configuration {
   final Map<String, Template> templates;
 
   @override
-  Environment change({
+  Environment copy({
     String? commentBegin,
     String? commentEnd,
     String? variableBegin,
@@ -260,7 +260,7 @@ class Template extends Renderable {
     Environment environment;
 
     if (parent != null) {
-      environment = parent.change(
+      environment = parent.copy(
         commentBegin: commentBegin,
         commentEnd: commentEnd,
         variableBegin: variableBegin,
