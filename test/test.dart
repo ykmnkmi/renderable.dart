@@ -9,7 +9,9 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{% for item in seq %}|{{ item }}{% endfor %}';
+  // final source = '''
+// {% for item in seq -%}{{ loop.index }}|{{ loop.index0 }}|{{ loop.revindex }}|{{ loop.revindex0 }}|{{ loop.first }}|{{ loop.last }}|{{ loop.length }}###{% endfor %}''';
+  final source = '{% if true -%}hehe{% endif %}';
 
   try {
     final environment = Environment();
@@ -20,8 +22,8 @@ void main(List<String> arguments) {
     final lexer = Lexer(environment);
     final tokens = lexer.tokenize(source);
 
-    // print('\ntokens:');
-    // tokens.forEach(print);
+    print('\ntokens:');
+    tokens.forEach(print);
 
     final reader = TokenReader(tokens);
     final parser = Parser(environment);
@@ -37,7 +39,9 @@ void main(List<String> arguments) {
 
     print('\nrender:');
     final template = Template.parsed(environment, nodes);
-    print(template.render({'seq': [null, 1, 'foo']}));
+    print(template.render({
+      'seq': [42, 24]
+    }));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

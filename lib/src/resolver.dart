@@ -350,7 +350,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
         final result = <String>[];
 
         for (final node in tuple.expressions.cast<Name>()) {
-          if (node.context != AssignContext.store) {
+          if (node.context != AssignContext.load) {
             throw TemplateRuntimeError(/* TODO: add error message */);
           }
 

@@ -2,7 +2,7 @@ import 'package:renderable/jinja.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('if', () {
+  group('If', () {
     final env = Environment();
 
     test('simple', () {

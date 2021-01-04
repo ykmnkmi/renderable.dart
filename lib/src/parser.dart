@@ -150,41 +150,46 @@ class Parser {
     reader.expect('name', 'in');
 
     final iterable = parseTuple(reader, withCondition: false);
-    final body = parseStatements(reader, <String>['name:endfor'], dropNeedle: true);
-    return For(target, iterable, body);
+    final body = parseStatements(reader, <String>['name:endfor', 'name:else']);
+    List<Node>? orElse;
+
+    if (reader.next().test('name', 'else')) {
+      orElse = parseStatements(reader, <String>['name:endfor'], dropNeedle: true);
+    }
+
+    return For(target, iterable, body, orElse: orElse);
   }
 
   If parseIf(TokenReader reader) {
-    If result, node;
-    result = node = If();
-
     reader.expect('name', 'if');
 
-    while (true) {
-      node.test = parseTuple(reader, withCondition: false);
-      node.body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-      node.elseIf = <If>[];
-      node.else_ = <Node>[];
+    final test = parseTuple(reader, withCondition: false);
+    final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
+    final root = If(test, body);
+    var node = root;
 
+    while (true) {
       final tag = reader.next();
 
       if (tag.test('name', 'elif')) {
-        node = If();
-        result.elseIf ??= <If>[];
-        result.elseIf!.add(node);
+        final test = parseTuple(reader, withCondition: false);
+        final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
+        node.nextIf = If(test, body);
+        node = node.nextIf!;
         continue;
-      } else if (tag.test('name', 'else')) {
-        result.else_ = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
+      }
+
+      if (tag.test('name', 'else')) {
+        root.orElse = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
       }
 
       break;
     }
 
-    return result;
+    return root;
   }
 
-  Expression parseAssignTarget(TokenReader reader,
-      {List<String>? extraEndRules, bool nameOnly = false, bool withNameSpace = false, bool withTuple = true}) {
+  Expression parseAssignTarget(TokenReader reader, {List<String>? extraEndRules, bool nameOnly = false, bool withNameSpace = false, bool withTuple = true}) {
     Expression target;
 
     if (withNameSpace && reader.look().test('dot')) {
@@ -196,7 +201,7 @@ class Parser {
       target = NameSpaceReference(nameSpace.value, attribute.value);
     } else if (nameOnly) {
       final name = reader.expect('name');
-      target = Name(name.value, AssignContext.store);
+      target = Name(name.value, context: AssignContext.store);
     } else {
       if (withTuple) {
         target = parseTuple(reader, simplified: true, extraEndRules: extraEndRules);
@@ -205,7 +210,7 @@ class Parser {
       }
 
       if (target is CanAssign) {
-        (target as CanAssign).context = AssignContext.store;
+        target.context = AssignContext.store;
       } else {
         throw 'can\'t assign to ${target.runtimeType}';
       }
@@ -475,10 +480,7 @@ class Parser {
   }
 
   Expression parseTuple(TokenReader reader,
-      {bool simplified = false,
-      bool withCondition = true,
-      List<String>? extraEndRules,
-      bool explicitParentheses = false}) {
+      {bool simplified = false, bool withCondition = true, List<String>? extraEndRules, bool explicitParentheses = false}) {
     Expression Function(TokenReader) parse;
     if (simplified) {
       parse = parsePrimary;
@@ -735,11 +737,7 @@ class Parser {
 
     reader.expect('rparen');
 
-    return Call(expression,
-        arguments: arguments,
-        keywordArguments: keywordArguments,
-        dArguments: dArguments,
-        dKeywordArguments: dKeywordArguments);
+    return Call(expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
   }
 
   Expression parseFilter(TokenReader reader, Expression expression, [bool startInline = false]) {

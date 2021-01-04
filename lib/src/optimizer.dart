@@ -103,7 +103,9 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitCompare(Compare compare, [Context? context]) {
-    return optimize(compare, context);
+    compare.expression = optimize(compare.expression, context);
+    visitAll(compare.operands, context);
+    return constant(compare, context);
   }
 
   @override
@@ -186,14 +188,16 @@ class Optimizer extends Visitor<Context, Node> {
     ifNode.test = optimize(ifNode.test, context);
     visitAll(ifNode.body);
 
-    if (ifNode.elseIf != null) {
-      for (final childIfNode in ifNode.elseIf!) {
-        visitIf(childIfNode, context);
-      }
+    var next = ifNode.nextIf;
+
+    while (next != null) {
+      next.test = optimize(next.test, context);
+      visitAll(next.body, context);
+      next = next.nextIf;
     }
 
-    if (ifNode.else_ != null) {
-      visitAll(ifNode.else_!, context);
+    if (ifNode.orElse != null) {
+      visitAll(ifNode.orElse!, context);
     }
 
     return ifNode;
@@ -225,7 +229,8 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Operand visitOperand(Operand operand, [Context? context]) {
-    throw Impossible();
+    operand.expression = optimize(operand.expression, context);
+    return operand;
   }
 
   @override

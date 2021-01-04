@@ -6,17 +6,16 @@ enum AssignContext {
   parameter,
 }
 
-abstract class CanAssign {
+mixin CanAssign on Expression {
   AssignContext? context;
 }
 
-class Name extends Expression implements CanAssign {
-  Name(this.name, [this.context = AssignContext.load, this.type]);
+class Name extends Expression with CanAssign {
+  Name(this.name, {AssignContext? context, this.type}) {
+    this.context = context ?? AssignContext.load;
+  }
 
   String name;
-
-  @override
-  AssignContext? context;
 
   String? type;
 
@@ -62,6 +61,11 @@ class Concat extends Expression {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    expressions.forEach(visitor);
+  }
+
+  @override
   String toString() {
     return 'Concat($expressions)';
   }
@@ -80,6 +84,11 @@ class Attribute extends Expression {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
+  }
+
+  @override
   String toString() {
     return 'Attribute($attribute, $expression)';
   }
@@ -95,6 +104,12 @@ class Item extends Expression {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitItem(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(key);
+    visitor(expression);
   }
 
   @override
@@ -132,6 +147,21 @@ class Slice extends Expression {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitSlice(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    if (start != null) {
+      visitor(start!);
+    }
+
+    if (stop != null) {
+      visitor(stop!);
+    }
+
+    if (step != null) {
+      visitor(step!);
+    }
   }
 
   @override
@@ -184,6 +214,21 @@ class Call extends Expression {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitCall(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
+    arguments.forEach(visitor);
+    keywordArguments.forEach(visitor);
+
+    if (dArguments != null) {
+      visitor(dArguments!);
+    }
+
+    if (dKeywordArguments != null) {
+      visitor(dKeywordArguments!);
+    }
   }
 
   @override
@@ -244,6 +289,21 @@ class Filter extends Expression {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
+    arguments.forEach(visitor);
+    keywordArguments.forEach(visitor);
+
+    if (dArguments != null) {
+      visitor(dArguments!);
+    }
+
+    if (dKeywordArguments != null) {
+      visitor(dKeywordArguments!);
+    }
+  }
+
+  @override
   String toString() {
     var result = 'Filter(\'$name\', $expression';
 
@@ -301,6 +361,21 @@ class Test extends Expression {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
+    arguments.forEach(visitor);
+    keywordArguments.forEach(visitor);
+
+    if (dArguments != null) {
+      visitor(dArguments!);
+    }
+
+    if (dKeywordArguments != null) {
+      visitor(dKeywordArguments!);
+    }
+  }
+
+  @override
   String toString() {
     var result = 'Test(\'$name\', $expression';
 
@@ -337,6 +412,12 @@ class Compare extends Expression {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
+    operands.forEach(visitor);
+  }
+
+  @override
   String toString() {
     return 'Compare($expression, $operands)';
   }
@@ -354,6 +435,16 @@ class Condition extends Expression {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitCondition(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(test);
+    visitor(expression1);
+
+    if (expression2 != null) {
+      visitor(expression2!);
+    }
   }
 
   @override
@@ -394,7 +485,9 @@ class Constant<T> extends Literal {
 }
 
 class TupleLiteral extends Literal implements CanAssign {
-  TupleLiteral(this.expressions, [this.context = AssignContext.load]);
+  TupleLiteral(this.expressions, [AssignContext? context]) {
+    this.context = context ?? AssignContext.load;
+  }
 
   List<Expression> expressions;
 
@@ -404,6 +497,11 @@ class TupleLiteral extends Literal implements CanAssign {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitTupleLiteral(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    expressions.forEach(visitor);
   }
 
   @override
@@ -423,6 +521,11 @@ class ListLiteral extends Literal {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    expressions.forEach(visitor);
+  }
+
+  @override
   String toString() {
     return 'List(${expressions.join(', ')})';
   }
@@ -436,6 +539,11 @@ class DictLiteral extends Literal {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitDictLiteral(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    pairs.forEach(visitor);
   }
 
   @override
@@ -454,6 +562,11 @@ abstract class Unary extends Expression {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitUnary(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
   }
 
   @override
@@ -516,6 +629,12 @@ abstract class Binary extends Expression {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitBinary(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(left);
+    visitor(right);
   }
 
   @override

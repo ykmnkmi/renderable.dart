@@ -13,6 +13,12 @@ class Pair extends Helper {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(key);
+    visitor(value);
+  }
+
+  @override
   String toString() {
     return 'Pair($key, $value)';
   }
@@ -31,6 +37,11 @@ class Keyword extends Helper {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(value);
+  }
+
+  @override
   String toString() {
     return 'Keyword($key, $value)';
   }
@@ -46,6 +57,11 @@ class Operand extends Helper {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitOperand(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(expression);
   }
 
   @override

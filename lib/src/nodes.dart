@@ -6,10 +6,14 @@ part 'nodes/expressions.dart';
 part 'nodes/helpers.dart';
 part 'nodes/statements.dart';
 
+typedef NodeVisitor = void Function(Node node);
+
 abstract class Node {
   const Node();
 
   R accept<C, R>(Visitor<C, R> visitor, [C? context]);
+
+  void visitChildNodes(NodeVisitor visitor) {}
 }
 
 class Data extends Node {

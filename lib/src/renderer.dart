@@ -1,4 +1,5 @@
 import 'package:meta/meta.dart';
+import 'package:renderable/src/runtime.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
@@ -41,10 +42,67 @@ class Renderer extends ExpressionResolver<RenderContext> {
     final targets = forNode.target.accept(this, context) as List<String>;
     final iterable = forNode.iterable.accept(this, context);
 
-    for (final value in iterable) {
-      context!.apply<RenderContext>(unpack(targets, value), (context) {
-        visitAll(forNode.body, context);
-      });
+    List<dynamic>? list;
+
+    if (iterable is List) {
+      list = iterable;
+    } else if (iterable is Iterable) {
+      list = iterable.toList();
+    } else if (iterable is String) {
+      list = iterable.split('s');
+    } else if (iterable is Map) {
+      list = iterable.entries.map((entry) => [entry.key, entry.value]).toList();
+    } else if (iterable != null) {
+      throw TypeError();
+    }
+
+    if (list == null || list.isEmpty) {
+      if (forNode.orElse != null) {
+        visitAll(forNode.orElse!, context);
+      }
+
+      return;
+    }
+
+    final length = list.length;
+
+    if (forNode.hasLoop) {
+      for (var i = 0, value = list[i]; i < length; i += 1) {
+        final data = unpack(targets, value);
+        dynamic previous, next;
+
+        if (i > 0) {
+          previous = list[i - 1];
+        }
+
+        if (i < length - 1) {
+          next = list[i + 1];
+        }
+
+        bool changed(dynamic item) {
+          if (i == 0) {
+            return true;
+          }
+
+          if (item == previous) {
+            return false;
+          }
+
+          return true;
+        }
+
+        data['loop'] = LoopContext(i, length, previous, next, changed);
+
+        context!.apply<RenderContext>(data, (context) {
+          visitAll(forNode.body, context);
+        });
+      }
+    } else {
+      for (final value in list) {
+        context!.apply<RenderContext>(unpack(targets, value), (context) {
+          visitAll(forNode.body, context);
+        });
+      }
     }
   }
 
@@ -55,21 +113,19 @@ class Renderer extends ExpressionResolver<RenderContext> {
       return;
     }
 
-    final ifNodes = ifNode.elseIf;
+    var next = ifNode.nextIf;
 
-    if (ifNodes != null) {
-      for (final ifNode in ifNodes) {
-        if (boolean(ifNode.test.accept(this, context))) {
-          visitAll(ifNode.body, context);
-          return;
-        }
+    while (next != null) {
+      if (boolean(next.test.accept(this, context))) {
+        visitAll(next.body, context);
+        return;
       }
+
+      next = next.nextIf;
     }
 
-    final nodes = ifNode.else_;
-
-    if (nodes != null) {
-      visitAll(nodes, context);
+    if (ifNode.orElse != null) {
+      visitAll(ifNode.orElse!, context);
     }
   }
 
@@ -77,6 +133,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   void visitOutput(Output output, [RenderContext? context]) {
     for (final node in output.nodes) {
       if (node is Data) {
+        // TODO: check autoescape
         node.accept(this, context);
       } else {
         context!.sink.write(context.environment.finalize(node.accept(this, context)));

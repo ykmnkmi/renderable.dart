@@ -11,13 +11,18 @@ class Output extends Statement {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    nodes.forEach(visitor);
+  }
+
+  @override
   String toString() {
-    return 'Output($nodes)';
+    return 'Output(${nodes.join(', ')})';
   }
 }
 
 class For extends Statement {
-  For(this.target, this.iterable, this.body);
+  For(this.target, this.iterable, this.body, {this.hasLoop = false, this.orElse});
 
   Expression target;
 
@@ -25,29 +30,45 @@ class For extends Statement {
 
   List<Node> body;
 
+  bool hasLoop;
+
+  List<Node>? orElse;
+
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitFor(this, context);
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(target);
+    visitor(iterable);
+    body.forEach(visitor);
+    orElse?.forEach(visitor);
+  }
+
+  @override
   String toString() {
-    return 'For($target, $iterable, $body)';
+    var result = 'For($target, $iterable, $body';
+
+    if (orElse != null) {
+      result += ', orElse: $orElse';
+    }
+
+    return result + ')';
   }
 }
 
 class If extends Statement {
-  If({Expression? test, List<Node>? body, this.elseIf, this.else_})
-      : test = test ?? Constant.False,
-        body = body ?? <Node>[];
+  If(this.test, this.body, {this.nextIf, this.orElse});
 
   Expression test;
 
   List<Node> body;
 
-  List<If>? elseIf;
+  If? nextIf;
 
-  List<Node>? else_;
+  List<Node>? orElse;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -55,7 +76,29 @@ class If extends Statement {
   }
 
   @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(test);
+
+    for (final node in body) {
+      visitor(node);
+    }
+
+    nextIf?.visitChildNodes(visitor);
+    orElse?.forEach(visitor);
+  }
+
+  @override
   String toString() {
-    return 'If($test, $body, $elseIf, ${else_})';
+    var result = 'If($test, $body';
+
+    if (nextIf != null) {
+      result += ', next: $nextIf';
+    }
+
+    if (orElse != null) {
+      result += ', orElse: $orElse';
+    }
+
+    return result + ')';
   }
 }

@@ -43,4 +43,13 @@ class TemplateSyntaxError extends TemplateError {
 
 class TemplateRuntimeError extends TemplateError {
   TemplateRuntimeError([Object? error, StackTrace? stack]) : super(error, stack ?? StackTrace.current);
+
+  @override
+  String toString() {
+    if (error == null) {
+      return 'TemplateRuntimeError()';
+    }
+
+    return 'TemplateRuntimeError($error)';
+  }
 }

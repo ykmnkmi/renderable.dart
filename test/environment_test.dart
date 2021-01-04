@@ -27,11 +27,5 @@ void main() {
       final template = environment.fromString('<{{ value }}>');
       expect(template.render({'value': 123}), equals('<int>'));
     });
-
-    test('no finalize template data', () {
-      final environment = Environment(finalize: (obj) => obj.runtimeType);
-      final template = environment.fromString('<{{ value }}>');
-      expect(template.render({'value': 123}), equals('<int>'));
-    });
   });
 }
