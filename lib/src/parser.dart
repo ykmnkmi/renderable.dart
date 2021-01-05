@@ -151,13 +151,27 @@ class Parser {
 
     final iterable = parseTuple(reader, withCondition: false);
     final body = parseStatements(reader, <String>['name:endfor', 'name:else']);
+    var hasLoop = false;
+
+    void visit(Node node) {
+      if (node is Name) {
+        if (node.name == 'loop') {
+          hasLoop = true;
+        }
+      } else {
+        node.visitChildNodes(visit);
+      }
+    }
+
+    body.forEach(visit);
+
     List<Node>? orElse;
 
     if (reader.next().test('name', 'else')) {
       orElse = parseStatements(reader, <String>['name:endfor'], dropNeedle: true);
     }
 
-    return For(target, iterable, body, orElse: orElse);
+    return For(target, iterable, body, hasLoop: hasLoop, orElse: orElse);
   }
 
   If parseIf(TokenReader reader) {

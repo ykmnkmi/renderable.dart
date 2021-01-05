@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print, invalid_use_of_protected_member
 
+import 'package:renderable/reflection.dart';
 import 'package:renderable/src/context.dart';
 import 'package:renderable/src/enirvonment.dart';
 import 'package:renderable/src/lexer.dart';
@@ -10,8 +11,8 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
   // final source = '''
-// {% for item in seq -%}{{ loop.index }}|{{ loop.index0 }}|{{ loop.revindex }}|{{ loop.revindex0 }}|{{ loop.first }}|{{ loop.last }}|{{ loop.length }}###{% endfor %}''';
-  final source = '{% if true -%}hehe{% endif %}';
+  // {%- for item in seq -%}{{ loop.index }}|{{ loop.index0 }}|{{ loop.revindex }}|{{ loop.revindex0 }}|{{ loop.first }}|{{ loop.last }}|{{ loop.length }}###{% endfor %}''';
+  final source = 'hello {{- name -}}!';
 
   try {
     final environment = Environment();
@@ -39,9 +40,8 @@ void main(List<String> arguments) {
 
     print('\nrender:');
     final template = Template.parsed(environment, nodes);
-    print(template.render({
-      'seq': [42, 24]
-    }));
+    final render = RenderWrapper.wrap(template.render);
+    print(render(name: ' world'));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

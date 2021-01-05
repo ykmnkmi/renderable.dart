@@ -1,11 +1,11 @@
 import 'package:meta/meta.dart';
-import 'package:renderable/src/runtime.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
 import 'exceptions.dart';
 import 'nodes.dart';
 import 'resolver.dart';
+import 'runtime.dart';
 import 'utils.dart';
 
 class RenderContext extends Context {
@@ -40,6 +40,11 @@ class Renderer extends ExpressionResolver<RenderContext> {
   @override
   void visitFor(For forNode, [RenderContext? context]) {
     final targets = forNode.target.accept(this, context) as List<String>;
+
+    if (targets.contains('loop')) {
+      throw StateError('can\'t assign to special loop variable in for-loop target');
+    }
+
     final iterable = forNode.iterable.accept(this, context);
 
     List<dynamic>? list;

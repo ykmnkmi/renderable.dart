@@ -232,7 +232,7 @@ class Environment extends Configuration {
   }
 }
 
-class Template extends Renderable {
+class Template implements Renderable {
   factory Template(
     String source, {
     String? path,
