@@ -57,11 +57,7 @@ RegExp compile(String pattern) {
 }
 
 class Rule {
-  Rule(this.name, this.pattern, this.regExp, this.parse);
-
-  final String name;
-
-  final String pattern;
+  Rule(this.regExp, this.parse);
 
   final RegExp regExp;
 
@@ -81,70 +77,24 @@ class Lexer {
     final blockSuffixRe = configuration.trimBlocks ? r'\n?' : '';
 
     final commentBeginRe = escape(configuration.commentBegin);
-    final commentBegin = compile(commentBeginRe);
     final commentEndRe = escape(configuration.commentEnd);
     final commentEnd = compile('(.*?)((?:\\+${commentEndRe}|-${commentEndRe}\\s*|${commentEndRe}${blockSuffixRe}))');
 
     final variableBeginRe = escape(configuration.variableBegin);
-    final variableBegin = compile(variableBeginRe);
     final variableEndRe = escape(configuration.variableEnd);
-    final variableEnd = compile(variableEndRe);
+    final variableEnd = compile('-${variableEndRe}\\s*|${variableEndRe}');
 
     final blockBeginRe = escape(configuration.blockBegin);
-    final blockBegin = compile(blockBeginRe);
     final blockEndRe = escape(configuration.blockEnd);
-    final blockEnd = compile(blockEndRe);
+    final blockEnd = compile('(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe})');
 
-    final tagRules = <Rule>[
-      Rule(
-        'comment_begin',
-        configuration.commentBegin,
-        commentBegin,
-        (scanner) sync* {
-          yield Token(scanner.lastMatch!.start, 'comment_begin', configuration.commentBegin);
-
-          if (!scanner.scan(commentEnd)) {
-            throw 'comment end expected.';
-          }
-
-          final comment = scanner.lastMatch![1]!;
-          yield Token(scanner.lastMatch!.start, 'comment', comment.trim());
-          yield Token(scanner.lastMatch!.start + comment.length, 'comment_end', configuration.commentEnd);
-        },
-      ),
-      Rule(
-        'variable_begin',
-        configuration.variableBegin,
-        variableBegin,
-        (scanner) sync* {
-          yield Token(scanner.lastMatch!.start, 'variable_begin', configuration.variableBegin);
-          yield* expression(scanner, variableEnd);
-
-          if (!scanner.scan(variableEnd)) {
-            throw 'expression end expected.';
-          }
-
-          yield Token(scanner.lastMatch!.start, 'variable_end', configuration.variableEnd);
-        },
-      ),
-      Rule(
-        'block_begin',
-        configuration.blockBegin,
-        blockBegin,
-        (scanner) sync* {
-          yield Token(scanner.lastMatch!.start, 'block_begin', configuration.blockBegin);
-          yield* expression(scanner, blockEnd);
-
-          if (!scanner.scan(blockEnd)) {
-            throw 'statement end expected.';
-          }
-
-          yield Token(scanner.lastMatch!.start, 'block_end', configuration.blockEnd);
-        },
-      ),
+    final rootTagRules = <List<String>>[
+      ['comment_begin', configuration.commentBegin, commentBeginRe],
+      ['variable_begin', configuration.variableBegin, variableBeginRe],
+      ['block_begin', configuration.blockBegin, blockBeginRe],
     ];
 
-    tagRules.sort((a, b) => b.pattern.length.compareTo(a.pattern.length));
+    rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
 
     // 0 - full match
     // 1 - data
@@ -157,9 +107,9 @@ class Lexer {
     final rawEnd = compile('(.*?)((?:${blockBeginRe}(-|\\+|))\\s*endraw\\s*'
         '(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe}))');
 
-    final rootParts = [
+    final rootParts = <String>[
       rawBegin.pattern,
-      for (final rule in tagRules) '(?<${rule.name}>${rule.regExp.pattern}(-|\\+|))',
+      for (final rule in rootTagRules) '(?<${rule.first}>${rule.last}(-|\\+|))',
     ];
 
     final rootPartsRe = rootParts.join('|');
@@ -169,8 +119,6 @@ class Lexer {
     rules = <String, List<Rule>>{
       'root': <Rule>[
         Rule(
-          'data',
-          dataRe,
           compile(dataRe),
           (scanner) sync* {
             final match = scanner.lastMatch as RegExpMatch;
@@ -204,18 +152,60 @@ class Lexer {
           },
         ),
         Rule(
-          'data',
-          '.+',
           compile('.+'),
           (scanner) sync* {
             yield Token(scanner.position, 'data', scanner.lastMatch![0]!);
           },
         ),
       ],
+      'comment_begin': [
+        Rule(
+          compile('$commentBeginRe[\\+-]?\\s*'),
+          (scanner) sync* {
+            yield Token.simple(scanner.lastMatch!.start, 'comment_begin');
+
+            if (!scanner.scan(commentEnd)) {
+              throw 'comment end expected.';
+            }
+
+            final comment = scanner.lastMatch![1]!;
+            yield Token(scanner.lastMatch!.start, 'comment', comment.trim());
+            yield Token.simple(scanner.lastMatch!.start + comment.length, 'comment_end');
+          },
+        ),
+      ],
+      'variable_begin': [
+        Rule(
+          compile('$variableBeginRe[\\+-]?\\s*'),
+          (scanner) sync* {
+            yield Token.simple(scanner.lastMatch!.start, 'variable_begin');
+            yield* expression(scanner, variableEnd);
+
+            if (!scanner.scan(variableEnd)) {
+              throw 'expression end expected.';
+            }
+
+            yield Token.simple(scanner.lastMatch!.start, 'variable_end');
+          },
+        ),
+      ],
+      'block_begin': [
+        Rule(
+          compile('$blockBeginRe[\\+-]?\\s*'),
+          (scanner) sync* {
+            yield Token.simple(scanner.lastMatch!.start, 'block_begin');
+            yield* expression(scanner, blockEnd);
+
+            if (!scanner.scan(blockEnd)) {
+              throw 'statement end expected.';
+            }
+
+            yield Token.simple(scanner.lastMatch!.start, 'block_end');
+          },
+        ),
+      ],
       'raw_begin': [
         Rule(
-          'raw_begin',
-          rawBegin.pattern,
           rawBegin,
           (scanner) sync* {
             yield Token.simple(scanner.lastMatch!.start, 'raw_begin');
@@ -233,7 +223,6 @@ class Lexer {
           },
         ),
       ],
-      for (final rule in tagRules) rule.name: <Rule>[rule],
     };
   }
 
