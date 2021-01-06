@@ -1,37 +1,60 @@
 class LoopContext {
-  LoopContext(int index0, int length, dynamic previtem, dynamic nextitem, Function changed)
-      : data = <String, dynamic>{
-          'index0': index0,
-          'length': length,
-          'previtem': previtem,
-          'nextitem': nextitem,
-          'changed': changed,
-          'index': index0 + 1,
-          'first': index0 == 0,
-          'last': index0 + 1 == length,
-          'revindex': length - index0,
-          'revindex0': length - index0 - 1,
-          'cycle': CycleWrapper((args) => args[index0 % args.length])
-        };
+  LoopContext(this.index0, this.length, this.previtem, this.nextitem, this.changed)
+      : index = index0 + 1,
+        first = index0 == 0,
+        last = index0 + 1 == length,
+        revindex = length - index0,
+        revindex0 = length - index0 - 1;
 
-  final Map<String, dynamic> data;
+  final int index0;
+  final int length;
+  final dynamic previtem;
+  final dynamic nextitem;
+  final bool Function(dynamic) changed;
+  final int index;
+  final bool first;
+  final bool last;
+  final int revindex;
+  final int revindex0;
 
   dynamic operator [](String key) {
-    return data[key]!;
+    switch (key) {
+      case 'index0':
+        return index0;
+      case 'length':
+        return length;
+      case 'previtem':
+        return previtem;
+      case 'nextitem':
+        return nextitem;
+      case 'changed':
+        return changed;
+      case 'index':
+        return index;
+      case 'first':
+        return first;
+      case 'last':
+        return last;
+      case 'revindex':
+        return revindex;
+      case 'revindex0':
+        return revindex0;
+      case 'cycle':
+        return cycle;
+      default:
+        return null;
+    }
   }
-}
 
-class CycleWrapper {
-  CycleWrapper(this.function);
-
-  final dynamic Function(List<dynamic> values) function;
-
-  dynamic call();
+  dynamic cycle(List<dynamic> arguments) {
+    return arguments[index0 % arguments.length];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    if (invocation.memberName == #call) {
-      return function(invocation.positionalArguments[0] as List);
+    print('hehehehehheehhe');
+    if (invocation.memberName == #cycle) {
+      return cycle(invocation.positionalArguments);
     }
 
     return super.noSuchMethod(invocation);

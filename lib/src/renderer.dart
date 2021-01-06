@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
-import 'exceptions.dart';
 import 'nodes.dart';
 import 'resolver.dart';
 import 'runtime.dart';
@@ -41,7 +40,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   void visitFor(For forNode, [RenderContext? context]) {
     final targets = forNode.target.accept(this, context) as List<String>;
 
-    if (targets.contains('loop')) {
+    if (forNode.hasLoop && targets.contains('loop')) {
       throw StateError('can\'t assign to special loop variable in for-loop target');
     }
 
@@ -74,7 +73,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
     if (forNode.hasLoop) {
       for (var i = 0, value = list[i]; i < length; i += 1) {
         final data = unpack(targets, value);
-        dynamic previous, next;
+        dynamic previous = Symbol.empty, next = Symbol.empty;
 
         if (i > 0) {
           previous = list[i - 1];

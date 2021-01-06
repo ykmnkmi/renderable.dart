@@ -16,6 +16,11 @@ const bool lStripBlocks = false;
 const String newLine = '\n';
 const bool keepTrailingNewLine = false;
 
+const Map<String, dynamic> globals = <String, dynamic>{
+  'range': range,
+  '#args': callArguments,
+};
+
 dynamic finalize(dynamic value) {
   if (value == null) {
     return '';
@@ -27,10 +32,6 @@ dynamic finalize(dynamic value) {
 
   return value;
 }
-
-const Map<String, dynamic> globals = <String, dynamic>{
-  'range': range,
-};
 
 dynamic getField(dynamic object, String field) {
   throw NoSuchMethodError.withInvocation(object, Invocation.getter(Symbol(field)));

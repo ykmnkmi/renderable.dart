@@ -1,6 +1,8 @@
 import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
+import 'package:renderable/jinja.dart';
+
 import 'configuration.dart';
 import 'context.dart';
 import 'defaults.dart' as defaults;
@@ -312,6 +314,8 @@ class Template implements Renderable {
   Template.parsed(this.environment, this.nodes, [String? path])
       : renderer = Renderer(environment),
         path = path {
+    nodes.forEach(prepare);
+
     if (path != null) {
       environment.templates[path] = this;
     }
@@ -329,4 +333,24 @@ class Template implements Renderable {
   String render([Map<String, dynamic>? data]) {
     return renderer.render(nodes, data);
   }
+}
+
+void prepare(Node node) {
+  if (node is Call) {
+    final callable = node.expression;
+
+    if (callable is Attribute && callable.attribute == 'cycle' && callable.expression is Name && (callable.expression as Name).name == 'loop') {
+      node.expression = Name('#args');
+      node.arguments = <Expression>[callable, ListLiteral(node.arguments)];
+
+      if (node.dArguments != null) {
+        node.arguments.add(node.dArguments!);
+        node.dArguments = null;
+      }
+
+      return;
+    }
+  }
+
+  node.visitChildNodes(prepare);
 }

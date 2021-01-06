@@ -1,5 +1,7 @@
 library utils;
 
+typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
+
 bool boolean(Object? value) {
   if (value == null) {
     return false;
@@ -28,7 +30,13 @@ bool boolean(Object? value) {
   return true;
 }
 
-typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
+dynamic callArguments(Function function, List<dynamic> positional, [Iterable<dynamic>? iterable]) {
+  if (iterable != null) {
+    positional.addAll(iterable);
+  }
+
+  return Function.apply(function, <dynamic>[positional]);
+}
 
 Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
   if (step == 0) {
@@ -102,7 +110,6 @@ String sliceString(String string, Indices indices) {
   return buffer.toString();
 }
 
-// @tryInline
 // @pragma('vm:prefer-inline')
 // T unsafeCast<T>(dynamic object) {
 //   // ignore: return_of_invalid_type

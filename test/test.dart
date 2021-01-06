@@ -10,9 +10,10 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  // final source = '''
-  // {%- for item in seq -%}{{ loop.index }}|{{ loop.index0 }}|{{ loop.revindex }}|{{ loop.revindex0 }}|{{ loop.first }}|{{ loop.last }}|{{ loop.length }}###{% endfor %}''';
-  final source = 'hello {{- name -}}!';
+  final source = '''{% for item in seq %}{{
+            loop.cycle('<1>', '<2>') }}{% endfor %}{%
+            for item in seq %}{{ loop.cycle(*through) }}{% endfor %}''';
+  // final source = 'hello {{- name -}}!';
 
   try {
     final environment = Environment();
@@ -41,7 +42,7 @@ void main(List<String> arguments) {
     print('\nrender:');
     final template = Template.parsed(environment, nodes);
     final render = RenderWrapper.wrap(template.render);
-    print(render(name: ' world'));
+    print(render(seq: [0, 1, 2, 3], through: <String>['<1>', '<2>']));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));
