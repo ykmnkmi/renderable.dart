@@ -4,18 +4,30 @@ class LoopContext {
         first = index0 == 0,
         last = index0 + 1 == length,
         revindex = length - index0,
-        revindex0 = length - index0 - 1;
+        revindex0 = length - index0 - 1,
+        cycle = CycleWrapper(index0);
 
   final int index0;
+
   final int length;
+
   final dynamic previtem;
+
   final dynamic nextitem;
+
   final bool Function(dynamic) changed;
+
   final int index;
+
   final bool first;
+
   final bool last;
+
   final int revindex;
+
   final int revindex0;
+
+  final CycleWrapper cycle;
 
   dynamic operator [](String key) {
     switch (key) {
@@ -46,14 +58,49 @@ class LoopContext {
     }
   }
 
-  dynamic cycle(List<dynamic> arguments) {
-    return arguments[index0 % arguments.length];
-  }
-
   @override
   dynamic noSuchMethod(Invocation invocation) {
     if (invocation.memberName == #cycle) {
       return cycle(invocation.positionalArguments);
+    }
+
+    return super.noSuchMethod(invocation);
+  }
+}
+
+class RecursiveLoopContext extends LoopContext {
+  RecursiveLoopContext(int index0, int length, dynamic previtem, dynamic nextitem, bool Function(dynamic) changed, this.render)
+      : super(index0, length, previtem, nextitem, changed);
+
+  final void Function(dynamic data) render;
+
+  void call(dynamic data) {
+    render(data);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #call) {
+      return Function.apply(render, invocation.positionalArguments);
+    }
+
+    return super.noSuchMethod(invocation);
+  }
+}
+
+class CycleWrapper {
+  CycleWrapper(this.index);
+
+  final int index;
+
+  dynamic call(List<dynamic> arguments) {
+    return arguments[index % arguments.length];
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #call) {
+      return call(invocation.positionalArguments);
     }
 
     return super.noSuchMethod(invocation);

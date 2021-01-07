@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
-import 'package:renderable/src/exceptions.dart';
 
 import 'context.dart';
+import 'exceptions.dart';
 import 'nodes.dart';
 import 'tests.dart' as tests;
 import 'utils.dart';
@@ -88,7 +88,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
           (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
-    return Function.apply(callable as Function, arguments, keywordArguments);
+    if (callable is Function) {
+      return Function.apply(callable, arguments, keywordArguments);
+    } else {
+      return context!.environment.callCallable(callable, arguments, keywordArguments);
+    }
   }
 
   @override
@@ -305,7 +309,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitTest(Test test, [C? context]) {
+  bool visitTest(Test test, [C? context]) {
     final arguments = <dynamic>[];
 
     for (final argument in test.arguments) {

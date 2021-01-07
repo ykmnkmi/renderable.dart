@@ -30,14 +30,6 @@ bool boolean(Object? value) {
   return true;
 }
 
-dynamic callArguments(Function function, List<dynamic> positional, [Iterable<dynamic>? iterable]) {
-  if (iterable != null) {
-    positional.addAll(iterable);
-  }
-
-  return Function.apply(function, <dynamic>[positional]);
-}
-
 Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
   if (step == 0) {
     throw StateError('range() argument 3 must not be zero');

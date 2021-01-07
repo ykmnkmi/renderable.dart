@@ -62,7 +62,7 @@ void main() {
       final template = environment.fromString('''{% for item in seq %}{{
             loop.cycle('<1>', '<2>') }}{% endfor %}{%
             for item in seq %}{{ loop.cycle(*through) }}{% endfor %}''');
-      expect(template.render({'seq': range(4), 'through': <String>['<1>', '<2>']}), equals('<1><2>' * 4));
+      expect(template.render({'seq': range(4), 'through': ['<1>', '<2>']}), equals('<1><2>' * 4));
     });
 
     test('lookaround', () {
@@ -77,9 +77,7 @@ void main() {
       final template = environment.fromString('''{% for item in seq -%}
             {{ loop.changed(item) }},
         {%- endfor %}''');
-      expect(
-          template.render({'seq': <int?>[null, null, 1, 2, 2, 3, 4, 4, 4]}),
-          equals('true,false,true,true,false,true,true,false,false,'));
+      expect(template.render({'seq': [null, null, 1, 2, 2, 3, 4, 4, 4]}), equals('true,false,true,true,false,true,true,false,false,'));
     });
 
     test('scope', () {
@@ -101,7 +99,7 @@ void main() {
 
     test('noniter', () {
       final template = environment.fromString('{% for item in none %}...{% endfor %}');
-      expect(() => template.render(), throwsArgumentError);
+      expect(() => template.render(), throwsA(isA<TypeError>()));
     });
 
     // TODO: add test: recursive

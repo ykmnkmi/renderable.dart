@@ -18,7 +18,6 @@ const bool keepTrailingNewLine = false;
 
 const Map<String, dynamic> globals = <String, dynamic>{
   'range': range,
-  '#args': callArguments,
 };
 
 dynamic finalize(dynamic value) {
@@ -35,4 +34,8 @@ dynamic finalize(dynamic value) {
 
 dynamic getField(dynamic object, String field) {
   throw NoSuchMethodError.withInvocation(object, Invocation.getter(Symbol(field)));
+}
+
+dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const <Symbol, dynamic>{}]) {
+  return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
 }

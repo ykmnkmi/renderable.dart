@@ -150,7 +150,7 @@ class Parser {
     reader.expect('name', 'in');
 
     final iterable = parseTuple(reader, withCondition: false);
-    final body = parseStatements(reader, <String>['name:endfor', 'name:else']);
+
     var hasLoop = false;
 
     void visit(Node node) {
@@ -165,7 +165,20 @@ class Parser {
       }
     }
 
-    body.forEach(visit);
+    Test? test;
+
+    if (reader.skipIf('name', 'if')) {
+      final expression = parseExpression(reader);
+      expression.visitChildNodes(visit);
+      test = expression is Test ? expression : Test('defined', expression);
+    }
+
+    final recursive = reader.skipIf('name', 'recursive');
+    final body = parseStatements(reader, <String>['name:endfor', 'name:else']);
+
+    if (!hasLoop) {
+      body.forEach(visit);
+    }
 
     List<Node>? orElse;
 
@@ -173,7 +186,7 @@ class Parser {
       orElse = parseStatements(reader, <String>['name:endfor'], dropNeedle: true);
     }
 
-    return For(target, iterable, body, hasLoop: hasLoop, orElse: orElse);
+    return For(target, iterable, body, hasLoop: hasLoop, orElse: orElse, test: test, recursive: recursive);
   }
 
   If parseIf(TokenReader reader) {
@@ -181,7 +194,7 @@ class Parser {
 
     final test = parseTuple(reader, withCondition: false);
     final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-    final root = If(test, body);
+    final root = If(test is Test ? test : Test('defined', test), body);
     var node = root;
 
     while (true) {
@@ -190,7 +203,7 @@ class Parser {
       if (tag.test('name', 'elif')) {
         final test = parseTuple(reader, withCondition: false);
         final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-        node.nextIf = If(test, body);
+        node.nextIf = If(test is Test ? test : Test('defined', test), body);
         node = node.nextIf!;
         continue;
       }

@@ -22,7 +22,7 @@ class Output extends Statement {
 }
 
 class For extends Statement {
-  For(this.target, this.iterable, this.body, {this.hasLoop = false, this.orElse});
+  For(this.target, this.iterable, this.body, {this.hasLoop = false, this.orElse, this.test, this.recursive = false});
 
   Expression target;
 
@@ -33,6 +33,10 @@ class For extends Statement {
   bool hasLoop;
 
   List<Node>? orElse;
+
+  Test? test;
+
+  bool recursive;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -59,6 +63,14 @@ class For extends Statement {
       result += ', orElse: $orElse';
     }
 
+    if (test != null) {
+      result += ', test: $test';
+    }
+
+    if (recursive) {
+      result += ', recursive: $recursive';
+    }
+
     return result + ')';
   }
 }
@@ -66,7 +78,7 @@ class For extends Statement {
 class If extends Statement {
   If(this.test, this.body, {this.nextIf, this.orElse});
 
-  Expression test;
+  Test test;
 
   List<Node> body;
 

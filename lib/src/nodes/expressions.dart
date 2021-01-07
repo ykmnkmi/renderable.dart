@@ -244,11 +244,11 @@ class Call extends Expression {
     }
 
     if (dArguments != null) {
-      result += ', $dArguments';
+      result += ', *$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      result += ', $dKeywordArguments';
+      result += ', **$dKeywordArguments';
     }
 
     return result;
@@ -316,11 +316,11 @@ class Filter extends Expression {
     }
 
     if (dArguments != null) {
-      result += ', $dArguments';
+      result += ', *$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      result += ', $dKeywordArguments';
+      result += ', **$dKeywordArguments';
     }
 
     return result;
@@ -388,11 +388,11 @@ class Test extends Expression {
     }
 
     if (dArguments != null) {
-      result += ', $dArguments';
+      result += ', *$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      result += ', $dKeywordArguments';
+      result += ', **$dKeywordArguments';
     }
 
     return result;

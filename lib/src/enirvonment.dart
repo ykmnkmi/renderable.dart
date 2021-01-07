@@ -15,6 +15,8 @@ typedef Finalizer = dynamic Function(dynamic value);
 
 typedef FieldGetter = dynamic Function(dynamic object, String field);
 
+typedef Caller = dynamic Function(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named]);
+
 class Environment extends Configuration {
   Environment({
     String blockBegin = defaults.blockBegin,
@@ -37,6 +39,7 @@ class Environment extends Configuration {
     Map<String, Template>? templates,
     Random? random,
     this.getField = defaults.getField,
+    this.callCallable = defaults.callCallable,
   })  : globals = HashMap<String, dynamic>.of(defaults.globals),
         filters = HashMap<String, Function>.of(defaults.filters),
         contextFilters = HashSet<String>.of(defaults.contextFilters),
@@ -92,6 +95,8 @@ class Environment extends Configuration {
   final Random random;
 
   final FieldGetter getField;
+
+  final Caller callCallable;
 
   final Map<String, Template> templates;
 
@@ -312,7 +317,7 @@ class Template implements Renderable {
   Template.parsed(this.environment, this.nodes, [String? path])
       : renderer = Renderer(environment),
         path = path {
-    nodes.forEach(prepare);
+    // nodes.forEach(prepare);
 
     if (path != null) {
       environment.templates[path] = this;
@@ -333,23 +338,23 @@ class Template implements Renderable {
   }
 }
 
-void prepare(Node node) {
-  if (node is Call) {
-    final callable = node.expression;
+// void prepare(Node node) {
+//   if (node is Call) {
+//     final callable = node.expression;
 
-    if ((callable is Attribute && callable.attribute == 'cycle' && callable.expression is Name && (callable.expression as Name).name == 'loop') ||
-        (callable is Name && callable.name == 'cycle')) {
-      node.expression = Name('#args');
-      node.arguments = <Expression>[callable, ListLiteral(node.arguments)];
+//     if ((callable is Attribute && callable.attribute == 'cycle' && callable.expression is Name && (callable.expression as Name).name == 'loop') ||
+//         (callable is Name && (callable.name == 'cycle' || callable.name == 'loop'))) {
+//       node.expression = Name('#args');
+//       node.arguments = <Expression>[callable, ListLiteral(node.arguments)];
 
-      if (node.dArguments != null) {
-        node.arguments.add(node.dArguments!);
-        node.dArguments = null;
-      }
+//       if (node.dArguments != null) {
+//         node.arguments.add(node.dArguments!);
+//         node.dArguments = null;
+//       }
 
-      return;
-    }
-  }
+//       return;
+//     }
+//   }
 
-  node.visitChildNodes(prepare);
-}
+//   node.visitChildNodes(prepare);
+// }

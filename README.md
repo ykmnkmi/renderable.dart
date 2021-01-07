@@ -17,10 +17,10 @@ Nodes:
   - subscription
   - tests
   - variables
-- Statements (without space control)
+- Statements
   - Raw
   - If
-  - For (single/multi target)
+  - For
 
 API:
 - Environment
