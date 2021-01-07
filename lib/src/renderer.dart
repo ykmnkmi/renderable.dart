@@ -45,24 +45,34 @@ class Renderer extends ExpressionResolver<RenderContext> {
     }
 
     final iterable = forNode.iterable.accept(this, context);
+    final orElse = forNode.orElse;
 
-    List<dynamic>? list;
+    if (iterable == null) {
+      if (orElse == null) {
+        throw ArgumentError.notNull('iterable');
+      } else {
+        visitAll(orElse, context);
+        return;
+      }
+    }
+
+    late List<dynamic> list;
 
     if (iterable is List) {
       list = iterable;
     } else if (iterable is Iterable) {
       list = iterable.toList();
     } else if (iterable is String) {
-      list = iterable.split('s');
+      list = iterable.split('');
     } else if (iterable is Map) {
       list = iterable.entries.map((entry) => [entry.key, entry.value]).toList();
     } else if (iterable != null) {
       throw TypeError();
     }
 
-    if (list == null || list.isEmpty) {
-      if (forNode.orElse != null) {
-        visitAll(forNode.orElse!, context);
+    if (list.isEmpty) {
+      if (orElse != null) {
+        visitAll(orElse, context);
       }
 
       return;
@@ -71,9 +81,9 @@ class Renderer extends ExpressionResolver<RenderContext> {
     final length = list.length;
 
     if (forNode.hasLoop) {
-      for (var i = 0, value = list[i]; i < length; i += 1) {
-        final data = unpack(targets, value);
-        dynamic previous = Symbol.empty, next = Symbol.empty;
+      for (var i = 0; i < length; i += 1) {
+        final data = unpack(targets, list[i]);
+        dynamic previous, next;
 
         if (i > 0) {
           previous = list[i - 1];

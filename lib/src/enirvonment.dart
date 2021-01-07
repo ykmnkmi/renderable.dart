@@ -1,8 +1,6 @@
 import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
-import 'package:renderable/jinja.dart';
-
 import 'configuration.dart';
 import 'context.dart';
 import 'defaults.dart' as defaults;
@@ -339,7 +337,8 @@ void prepare(Node node) {
   if (node is Call) {
     final callable = node.expression;
 
-    if (callable is Attribute && callable.attribute == 'cycle' && callable.expression is Name && (callable.expression as Name).name == 'loop') {
+    if ((callable is Attribute && callable.attribute == 'cycle' && callable.expression is Name && (callable.expression as Name).name == 'loop') ||
+        (callable is Name && callable.name == 'cycle')) {
       node.expression = Name('#args');
       node.arguments = <Expression>[callable, ListLiteral(node.arguments)];
 

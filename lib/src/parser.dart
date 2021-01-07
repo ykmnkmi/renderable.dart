@@ -158,6 +158,8 @@ class Parser {
         if (node.name == 'loop') {
           hasLoop = true;
         }
+      } else if (node is For) {
+        return;
       } else {
         node.visitChildNodes(visit);
       }

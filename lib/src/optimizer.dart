@@ -21,7 +21,7 @@ class Optimizer extends Visitor<Context, Node> {
       final value = resolve(expression, context);
 
       if (value == null) {
-        throw Immutable();
+        throw Impossible();
       }
 
       if (value is bool) {
@@ -48,6 +48,12 @@ class Optimizer extends Visitor<Context, Node> {
 
   @protected
   Expression optimize(Expression expression, [Context? context]) {
+    expression = expression.accept(this, context) as Expression;
+    return constant(expression, context);
+  }
+
+  @protected
+  Expression optimizeSafe(Expression expression, [Context? context]) {
     try {
       expression = expression.accept(this, context) as Expression;
       return constant(expression, context);
@@ -87,8 +93,8 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   Expression visitCall(Call call, [Context? context]) {
     call.expression = optimize(call.expression, context);
-    visitAll(call.arguments);
-    visitAll(call.keywordArguments);
+    visitAll(call.arguments, context);
+    visitAll(call.keywordArguments, context);
 
     if (call.dArguments != null) {
       call.dArguments = optimize(call.dArguments!, context);
@@ -151,19 +157,19 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   DictLiteral visitDictLiteral(DictLiteral dict, [Context? context]) {
-    visitAll(dict.pairs);
+    visitAll(dict.pairs, context);
     return dict;
   }
 
   @override
   Expression visitFilter(Filter filter, [Context? context]) {
-    if (!context!.environment.tests.containsKey(filter.name)) {
+    if (!context!.environment.filters.containsKey(filter.name)) {
       throw Impossible();
     }
 
     filter.expression = optimize(filter.expression, context);
-    visitAll(filter.arguments);
-    visitAll(filter.keywordArguments);
+    visitAll(filter.arguments, context);
+    visitAll(filter.keywordArguments, context);
 
     if (filter.dArguments != null) {
       filter.dArguments = optimize(filter.dArguments!, context);
@@ -178,20 +184,20 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Node visitFor(For forNode, [Context? context]) {
-    forNode.iterable = optimize(forNode.iterable, context);
-    visitAll(forNode.body);
+    forNode.iterable = optimizeSafe(forNode.iterable, context);
+    visitAll(forNode.body, context);
     return forNode;
   }
 
   @override
   Node visitIf(If ifNode, [Context? context]) {
-    ifNode.test = optimize(ifNode.test, context);
-    visitAll(ifNode.body);
+    ifNode.test = optimizeSafe(ifNode.test, context);
+    visitAll(ifNode.body, context);
 
     var next = ifNode.nextIf;
 
     while (next != null) {
-      next.test = optimize(next.test, context);
+      next.test = optimizeSafe(next.test, context);
       visitAll(next.body, context);
       next = next.nextIf;
     }
@@ -218,7 +224,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   ListLiteral visitListLiteral(ListLiteral list, [Context? context]) {
-    visitAll(list.expressions);
+    visitAll(list.expressions, context);
     return list;
   }
 
@@ -270,8 +276,8 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     test.expression = optimize(test.expression, context);
-    visitAll(test.arguments);
-    visitAll(test.keywordArguments);
+    visitAll(test.arguments, context);
+    visitAll(test.keywordArguments, context);
 
     if (test.dArguments != null) {
       test.dArguments = optimize(test.dArguments!, context);
@@ -286,7 +292,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   TupleLiteral visitTupleLiteral(TupleLiteral tuple, [Context? context]) {
-    visitAll(tuple.expressions);
+    visitAll(tuple.expressions, context);
     return tuple;
   }
 

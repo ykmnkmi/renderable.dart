@@ -49,7 +49,11 @@ class For extends Statement {
 
   @override
   String toString() {
-    var result = 'For($target, $iterable, $body';
+    var result = 'For($target, $iterable';
+
+    if (body.isNotEmpty) {
+      result += ', $body';
+    }
 
     if (orElse != null) {
       result += ', orElse: $orElse';

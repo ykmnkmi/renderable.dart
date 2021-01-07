@@ -10,9 +10,7 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '''{% for item in seq %}{{
-            loop.cycle('<1>', '<2>') }}{% endfor %}{%
-            for item in seq %}{{ loop.cycle(*through) }}{% endfor %}''';
+  final source = '{% for x in seq %}{{ loop.first }}{% for y in seq %}{% endfor %}{% endfor %}';
   // final source = 'hello {{- name -}}!';
 
   try {
@@ -42,7 +40,7 @@ void main(List<String> arguments) {
     print('\nrender:');
     final template = Template.parsed(environment, nodes);
     final render = RenderWrapper.wrap(template.render);
-    print(render(seq: [0, 1, 2, 3], through: <String>['<1>', '<2>']));
+    print(render(seq: 'ab'));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

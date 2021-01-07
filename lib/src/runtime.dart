@@ -42,7 +42,7 @@ class LoopContext {
       case 'cycle':
         return cycle;
       default:
-        return null;
+        throw NoSuchMethodError.withInvocation(this, Invocation.getter(Symbol(key)));
     }
   }
 
@@ -52,7 +52,6 @@ class LoopContext {
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    print('hehehehehheehhe');
     if (invocation.memberName == #cycle) {
       return cycle(invocation.positionalArguments);
     }
