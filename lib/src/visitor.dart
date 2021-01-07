@@ -17,6 +17,8 @@ abstract class Visitor<C, R> {
     return visitBinary(and, context);
   }
 
+  R visitAssign(Assign assign, [C? context]);
+
   R visitAttribute(Attribute attribute, [C? context]);
 
   R visitBinary(Binary binary, [C? context]);
@@ -46,7 +48,7 @@ abstract class Visitor<C, R> {
   }
 
   R visitFor(For forNode, [C? context]);
-  
+
   R visitIf(If ifNode, [C? context]);
 
   R visitItem(Item item, [C? context]);

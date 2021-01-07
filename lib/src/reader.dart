@@ -19,7 +19,7 @@ class TokenReader {
   }
 
   Iterable<Token> get values {
-    return _TokenIterable(this);
+    return TokenIterable(this);
   }
 
   void push(Token token) {
@@ -94,8 +94,8 @@ class TokenReader {
   }
 }
 
-class _TokenIterable extends Iterable<Token> {
-  _TokenIterable(this.reader);
+class TokenIterable extends Iterable<Token> {
+  TokenIterable(this.reader);
 
   final TokenReader reader;
 

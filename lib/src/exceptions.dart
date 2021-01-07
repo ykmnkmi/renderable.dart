@@ -1,22 +1,20 @@
 abstract class TemplateError implements Exception {
-  TemplateError([this.error, this.stack]);
+  TemplateError([this.message]);
 
-  final Object? error;
-
-  final StackTrace? stack;
+  final dynamic message;
 
   @override
   String toString() {
-    if (error == null) {
+    if (message == null) {
       return 'TemplateError';
     }
 
-    return 'TemplateError: $error\n$stack';
+    return 'TemplateError: $message';
   }
 }
 
 class TemplateSyntaxError extends TemplateError {
-  TemplateSyntaxError(Object error, {this.offset, this.name, this.fileName}) : super(error, StackTrace.current);
+  TemplateSyntaxError(String message, {this.offset, this.name, this.fileName}) : super(message);
 
   final int? offset;
 
@@ -30,26 +28,34 @@ class TemplateSyntaxError extends TemplateError {
     var name = this.name ?? fileName;
 
     if (name != null) {
-      prefix += ', file: $name';
+      if (prefix.contains(',')) {
+        prefix += ', file: $name';
+      }
+
+      prefix += ' file: $name';
     }
 
     if (offset != null) {
-      prefix += ', offset: $offset';
+      if (prefix.contains(',')) {
+        prefix += ', offset: $offset';
+      }
+
+      prefix += ' offset: $offset';
     }
 
-    return '$prefix: $error\n$stack';
+    return '$prefix: $message';
   }
 }
 
 class TemplateRuntimeError extends TemplateError {
-  TemplateRuntimeError([Object? error, StackTrace? stack]) : super(error, stack ?? StackTrace.current);
+  TemplateRuntimeError([dynamic message]) : super(message);
 
   @override
   String toString() {
-    if (error == null) {
+    if (message == null) {
       return 'TemplateRuntimeError()';
     }
 
-    return 'TemplateRuntimeError($error)';
+    return 'TemplateRuntimeError($message)';
   }
 }

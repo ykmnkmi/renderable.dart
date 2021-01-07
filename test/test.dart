@@ -9,7 +9,7 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '''{% for item in seq %}{{ loop.cycle('<1>', '<2>') }}{% endfor %}{% for item in seq %}{{ loop.cycle(*through) }}{% endfor %}''';
+  final source = '{% set foo = 1 %}{{ foo }}';
 
   try {
     final environment = Environment();
@@ -39,8 +39,8 @@ void main(List<String> arguments) {
     // print('\ntemplate nodes:');
     // nodes.forEach(print);
 
-    print('\nrender:'); // 1122123a
-    print(template.render({'seq': [0, 1, 2, 3], 'through': ['<1>', '<2>']}));
+    print('\nrender:');
+    print(template.render());
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

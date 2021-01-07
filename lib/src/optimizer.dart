@@ -78,6 +78,11 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
+  Assign visitAssign(Assign set, [Context? context]) {
+    return set;
+  }
+
+  @override
   Expression visitAttribute(Attribute attribute, [Context? context]) {
     attribute.expression = optimize(attribute.expression, context);
     return constant(attribute, context);

@@ -1,25 +1,52 @@
 part of '../nodes.dart';
 
-class Output extends Statement {
-  Output(this.nodes);
+class Assign extends Statement {
+  Assign(this.target, this.expression);
 
-  List<Node> nodes;
+  final Expression target;
+
+  final Expression expression;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitOutput(this, context);
+    return visitor.visitAssign(this, context);
   }
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    nodes.forEach(visitor);
+    visitor(target);
+    visitor(expression);
   }
 
   @override
   String toString() {
-    return 'Output(${nodes.join(', ')})';
+    return 'Assign($target, $expression)';
   }
 }
+
+// class AssignBlock extends Statement {
+//   AssignBlock(this.target, this.filter);
+
+//   final Expression target;
+
+//   final FilterBlock filter;
+
+//   @override
+//   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+//     return visitor.visitAssignBlock(this, context);
+//   }
+
+//   @override
+//   void visitChildNodes(NodeVisitor visitor) {
+//     visitor(target);
+//     visitor(filter);
+//   }
+
+//   @override
+//   String toString() {
+//     return 'Assign($target, $filter)';
+//   }
+// }
 
 class For extends Statement {
   For(this.target, this.iterable, this.body, {this.hasLoop = false, this.orElse, this.test, this.recursive = false});
@@ -116,5 +143,26 @@ class If extends Statement {
     }
 
     return result + ')';
+  }
+}
+
+class Output extends Statement {
+  Output(this.nodes);
+
+  List<Node> nodes;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitOutput(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    nodes.forEach(visitor);
+  }
+
+  @override
+  String toString() {
+    return 'Output(${nodes.join(', ')})';
   }
 }

@@ -21,6 +21,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
+  void visitAssign(Assign assign, [C? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   dynamic visitAttribute(Attribute attribute, [C? context]) {
     return context!.environment.getAttribute(attribute.expression.accept(this, context), attribute.attribute);
   }

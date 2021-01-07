@@ -18,9 +18,10 @@ Nodes:
   - tests
   - variables
 - Statements
-  - Raw
-  - If
+  - Set (no namespace, no assign block)
   - For
+  - If
+  - Raw
 
 API:
 - Environment

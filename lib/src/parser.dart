@@ -109,10 +109,12 @@ class Parser {
 
     try {
       switch (token.value) {
-        case 'if':
-          return parseIf(reader);
+        case 'set':
+          return parseSet(reader);
         case 'for':
           return parseFor(reader);
+        case 'if':
+          return parseIf(reader);
         default:
           popTag = false;
           tagStack.removeLast();
@@ -140,6 +142,21 @@ class Parser {
     }
 
     return nodes;
+  }
+
+  Assign parseSet(TokenReader reader) {
+    reader.expect('name', 'set');
+
+    final target = parseAssignTarget(reader, withNameSpace: true);
+
+    reader.expect('assign');
+
+    final expression = parseTuple(reader);
+    return Assign(target, expression);
+
+    // final filter = parseFilter(reader, Constant.empty);
+    // final body = parseStatements(reader, <String>['name:endset'], dropNeedle: true);
+    // return AssignBlock(target, filter, body);
   }
 
   For parseFor(TokenReader reader) {

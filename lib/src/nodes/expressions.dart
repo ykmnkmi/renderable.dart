@@ -461,12 +461,8 @@ abstract class Literal extends Expression {
 }
 
 class Constant<T> extends Literal {
-  static Constant<bool> get False {
-    return Constant<bool>(false);
-  }
-
-  static Constant<bool> get True {
-    return Constant<bool>(true);
+  static Constant<String> get empty {
+    return Constant<String>('');
   }
 
   Constant(this.value);
