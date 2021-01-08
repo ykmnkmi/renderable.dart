@@ -20,8 +20,7 @@ void main() {
     });
 
     test('4 byte', () {
-      expect(escape(r'''\U0001F363\U0001F362&><'"\U0001F37A xyz'''),
-          equals(r'\U0001F363\U0001F362&amp;&gt;&lt;&#39;&#34;\U0001F37A xyz'));
+      expect(escape(r'''\U0001F363\U0001F362&><'"\U0001F37A xyz'''), equals(r'\U0001F363\U0001F362&amp;&gt;&lt;&#39;&#34;\U0001F37A xyz'));
       expect(escape(r'''&><'"\U0001F37A xyz'''), equals(r'&amp;&gt;&lt;&#39;&#34;\U0001F37A xyz'));
       expect(escape(r'''\U0001F363\U0001F362&><'"'''), equals(r'\U0001F363\U0001F362&amp;&gt;&lt;&#39;&#34;'));
     });

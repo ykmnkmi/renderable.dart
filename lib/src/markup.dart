@@ -1,10 +1,5 @@
 String escape(String text) {
-  return text
-      .replaceAll('&', '&amp;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('\'', '&#39;')
-      .replaceAll('"', '&#34;');
+  return text.replaceAll('&', '&amp;').replaceAll('>', '&gt;').replaceAll('<', '&lt;').replaceAll('\'', '&#39;').replaceAll('"', '&#34;');
 }
 
 class Markup {

@@ -3,6 +3,8 @@ import 'enirvonment.dart';
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
+  Context.from(this.environment, this.contexts);
+
   Context(this.environment, [Map<String, dynamic>? data]) : contexts = <Map<String, dynamic>>[environment.globals] {
     if (data != null) {
       contexts.add(data);

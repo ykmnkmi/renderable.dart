@@ -59,7 +59,7 @@ void main() {
     });
 
     test('cycling', () {
-      final template = environment.fromString('''{% for item in seq %}{{
+      final template = environment.fromString('''{% for item in seq %}{{ 
             loop.cycle('<1>', '<2>') }}{% endfor %}{%
             for item in seq %}{{ loop.cycle(*through) }}{% endfor %}''');
       expect(template.render({'seq': range(4), 'through': ['<1>', '<2>']}), equals('<1><2>' * 4));
@@ -114,14 +114,14 @@ void main() {
                 [{{ rowloop.index }}|{{ loop.index }}]
             {%- endfor %}
         {%- endfor %}''');
-      expect(template.render({'table': <String>['ab', 'cd']}), equals('[1|1][1|2][2|1][2|2]'));
+      expect(template.render({'table': ['ab', 'cd']}), equals('[1|1][1|2][2|1][2|2]'));
     });
 
     test('reversed bug', () {
       final template = environment.fromString('{% for i in items %}{{ i }}'
           '{% if not loop.last %}'
           ',{% endif %}{% endfor %}');
-      expect(template.render({'items': <int>[3, 2, 1].reversed}), equals('1,2,3'));
+      expect(template.render({'items': [3, 2, 1].reversed}), equals('1,2,3'));
     });
 
     // TODO: check Error
@@ -171,7 +171,7 @@ void main() {
     });
 
     test('intended scoping with set', () {
-      final data = {'x': 0, 'seq': <int>[1, 2, 3]};
+      final data = {'x': 0, 'seq': [1, 2, 3]};
       var template = environment.fromString('{% for item in seq %}{{ x }}'
           '{% set x = item %}{{ x }}{% endfor %}');
 

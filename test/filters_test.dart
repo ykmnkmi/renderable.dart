@@ -64,8 +64,7 @@ void main() {
           '{{ 1000000 | filesizeformat(true) }}|'
           '{{ 1000000000 | filesizeformat(true) }}|'
           '{{ 1000000000000 | filesizeformat(true) }}');
-      expect(template.render(),
-          equals('100 Bytes|1.0 kB|1.0 MB|1.0 GB|1.0 TB|100 Bytes|1000 Bytes|976.6 KiB|953.7 MiB|931.3 GiB'));
+      expect(template.render(), equals('100 Bytes|1.0 kB|1.0 MB|1.0 GB|1.0 TB|100 Bytes|1000 Bytes|976.6 KiB|953.7 MiB|931.3 GiB'));
     });
 
     test('first', () {

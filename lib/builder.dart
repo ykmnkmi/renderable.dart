@@ -83,6 +83,12 @@ class TemplateBuilder extends Visitor<Frame, String> {
   }
 
   @override
+  String visitAssignBlock(AssignBlock assign, [Frame? context]) {
+    // TODO: implement visitAssignBlock
+    throw UnimplementedError();
+  }
+
+  @override
   String visitBinary(Binary binary, [Frame? context]) {
     // TODO: implement visitBinary
     throw UnimplementedError();

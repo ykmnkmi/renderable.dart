@@ -24,29 +24,29 @@ class Assign extends Statement {
   }
 }
 
-// class AssignBlock extends Statement {
-//   AssignBlock(this.target, this.filter);
+class AssignBlock extends Statement {
+  AssignBlock(this.target, this.body);
 
-//   final Expression target;
+  final Expression target;
 
-//   final FilterBlock filter;
+  final List<Node> body;
 
-//   @override
-//   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-//     return visitor.visitAssignBlock(this, context);
-//   }
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitAssignBlock(this, context);
+  }
 
-//   @override
-//   void visitChildNodes(NodeVisitor visitor) {
-//     visitor(target);
-//     visitor(filter);
-//   }
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(target);
+    body.forEach(visitor);
+  }
 
-//   @override
-//   String toString() {
-//     return 'Assign($target, $filter)';
-//   }
-// }
+  @override
+  String toString() {
+    return 'Assign($target, $body)';
+  }
+}
 
 class For extends Statement {
   For(this.target, this.iterable, this.body, {this.hasLoop = false, this.orElse, this.test, this.recursive = false});

@@ -78,8 +78,13 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Assign visitAssign(Assign set, [Context? context]) {
-    return set;
+  Assign visitAssign(Assign assign, [Context? context]) {
+    return assign;
+  }
+
+  @override
+  AssignBlock visitAssignBlock(AssignBlock assign, [Context? context]) {
+    return assign;
   }
 
   @override
@@ -152,11 +157,6 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Data visitData(Data data, [Context? context]) {
-    if (context!.environment.autoEscape) {
-      // TODO: check
-      return Data(escape(data.data));
-    }
-
     return data;
   }
 

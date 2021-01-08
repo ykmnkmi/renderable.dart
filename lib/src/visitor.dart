@@ -19,6 +19,8 @@ abstract class Visitor<C, R> {
 
   R visitAssign(Assign assign, [C? context]);
 
+  R visitAssignBlock(AssignBlock assign, [C? context]);
+
   R visitAttribute(Attribute attribute, [C? context]);
 
   R visitBinary(Binary binary, [C? context]);

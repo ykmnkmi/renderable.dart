@@ -460,6 +460,22 @@ abstract class Literal extends Expression {
   }
 }
 
+class Data extends Literal {
+  Data([this.data = '']);
+
+  String data;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitData(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Data(\'${data.replaceAll('\'', '\\\'').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}\')';
+  }
+}
+
 class Constant<T> extends Literal {
   static Constant<String> get empty {
     return Constant<String>('');

@@ -15,7 +15,7 @@ void main() {
 
     test('simple', () {
       final reader = TokenReader(testTokens);
-      final tokenTypes = <String>[for (final token in reader.values) token.type];
+      final tokenTypes = [for (final token in reader.values) token.type];
       expect(tokenTypes, equals(['block_begin', 'block_end']));
     });
   });

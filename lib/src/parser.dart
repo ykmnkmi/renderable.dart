@@ -144,19 +144,18 @@ class Parser {
     return nodes;
   }
 
-  Assign parseSet(TokenReader reader) {
+  Statement parseSet(TokenReader reader) {
     reader.expect('name', 'set');
 
     final target = parseAssignTarget(reader, withNameSpace: true);
 
-    reader.expect('assign');
+    if (reader.skipIf('assign')) {
+      final expression = parseTuple(reader);
+      return Assign(target, expression);
+    }
 
-    final expression = parseTuple(reader);
-    return Assign(target, expression);
-
-    // final filter = parseFilter(reader, Constant.empty);
-    // final body = parseStatements(reader, <String>['name:endset'], dropNeedle: true);
-    // return AssignBlock(target, filter, body);
+    final body = parseStatements(reader, <String>['name:endset'], dropNeedle: true);
+    return AssignBlock(target, body);
   }
 
   For parseFor(TokenReader reader) {

@@ -16,22 +16,6 @@ abstract class Node {
   void visitChildNodes(NodeVisitor visitor) {}
 }
 
-class Data extends Node {
-  Data([this.data = '']);
-
-  String data;
-
-  @override
-  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitData(this, context);
-  }
-
-  @override
-  String toString() {
-    return 'Data(\'${data.replaceAll('\'', '\\\'').replaceAll('\r\n', r'\n').replaceAll('\n', r'\n')}\')';
-  }
-}
-
 abstract class Expression extends Node {}
 
 abstract class Statement extends Node {}

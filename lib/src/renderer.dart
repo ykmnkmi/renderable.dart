@@ -2,15 +2,30 @@ import 'package:meta/meta.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
+import 'markup.dart';
 import 'nodes.dart';
 import 'resolver.dart';
 import 'runtime.dart';
 import 'utils.dart';
 
 class RenderContext extends Context {
+  RenderContext.from(Environment environment, List<Map<String, dynamic>> contexts, this.sink) : super.from(environment, contexts);
+
   RenderContext(Environment environment, this.sink, [Map<String, dynamic>? data]) : super(environment, data);
 
   final StringSink sink;
+
+  RenderContext derived({Environment? environment, List<Map<String, dynamic>>? contexts, StringSink? sink}) {
+    return RenderContext.from(environment ?? this.environment, contexts ?? this.contexts, sink ?? this.sink);
+  }
+
+  void write(dynamic object) {
+    sink.write(object);
+  }
+
+  void writeFinalized(dynamic object) {
+    sink.write(environment.finalize(object));
+  }
 }
 
 class Renderer extends ExpressionResolver<RenderContext> {
@@ -21,7 +36,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   String render(List<Node> nodes, [Map<String, dynamic>? data]) {
     final buffer = StringBuffer();
     visitAll(nodes, RenderContext(environment, buffer, data));
-    return buffer.toString();
+    return '$buffer';
   }
 
   @override
@@ -39,28 +54,31 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitData(Data data, [RenderContext? context]) {
-    context!.sink.write(data.data);
+  void visitAssignBlock(AssignBlock assign, [RenderContext? context]) {
+    final targets = assign.target.accept(this, context) as List<String>;
+    final buffer = StringBuffer();
+    visitAll(assign.body, context!.derived(sink: buffer));
+    assignTargetsToData(context.contexts.last, targets, context.environment.autoEscape ? Markup('$buffer') : '$buffer');
   }
 
   @override
   void visitFor(For forNode, [RenderContext? context]) {
-    final kontext = context!;
+    context!;
 
-    final targets = forNode.target.accept(this, kontext) as List<String>;
+    final targets = forNode.target.accept(this, context) as List<String>;
 
     if (forNode.hasLoop && targets.contains('loop')) {
       throw StateError('can\'t assign to special loop variable in for-loop target');
     }
 
-    final iterable = forNode.iterable.accept(this, kontext);
+    final iterable = forNode.iterable.accept(this, context);
     final orElse = forNode.orElse;
 
     if (iterable == null) {
       if (orElse == null) {
         throw TypeError();
       } else {
-        visitAll(orElse, kontext);
+        visitAll(orElse, context);
         return;
       }
     }
@@ -70,7 +88,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
       if (list.isEmpty) {
         if (orElse != null) {
-          visitAll(orElse, kontext);
+          visitAll(orElse, context);
         }
 
         return;
@@ -118,13 +136,13 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
         for (var i = 0; i < list.length; i += 1) {
           final data = unpack(list, i);
-          kontext.push(data);
+          context.push(data);
 
-          if (test.accept(this, kontext) as bool) {
+          if (test.accept(this, context) as bool) {
             filtered.add(list[i]);
           }
 
-          kontext.pop();
+          context.pop();
         }
 
         list = filtered;
@@ -132,9 +150,9 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
       for (var i = 0; i < list.length; i += 1) {
         final data = unpack(list, i);
-        kontext.push(data);
-        visitAll(forNode.body, kontext);
-        kontext.pop();
+        context.push(data);
+        visitAll(forNode.body, context);
+        context.pop();
       }
     }
 
@@ -143,18 +161,18 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitIf(If ifNode, [RenderContext? context]) {
-    final kontext = context!;
+    context!;
 
-    if (boolean(ifNode.test.accept(this, kontext))) {
-      visitAll(ifNode.body, kontext);
+    if (boolean(ifNode.test.accept(this, context))) {
+      visitAll(ifNode.body, context);
       return;
     }
 
     var next = ifNode.nextIf;
 
     while (next != null) {
-      if (boolean(next.test.accept(this, kontext))) {
-        visitAll(next.body, kontext);
+      if (boolean(next.test.accept(this, context))) {
+        visitAll(next.body, context);
         return;
       }
 
@@ -162,19 +180,25 @@ class Renderer extends ExpressionResolver<RenderContext> {
     }
 
     if (ifNode.orElse != null) {
-      visitAll(ifNode.orElse!, kontext);
+      visitAll(ifNode.orElse!, context);
     }
   }
 
   @override
   void visitOutput(Output output, [RenderContext? context]) {
-    final kontext = context!;
+    context!;
 
     for (final node in output.nodes) {
       if (node is Data) {
-        node.accept(this, kontext);
+        context.write(node.accept(this, context));
       } else {
-        kontext.sink.write(kontext.environment.finalize(node.accept(this, kontext)));
+        var value = node.accept(this, context);
+
+        if (context.environment.autoEscape && value is! Markup) {
+          value = Markup.escape('$value');
+        }
+
+        context.writeFinalized(value);
       }
     }
   }
