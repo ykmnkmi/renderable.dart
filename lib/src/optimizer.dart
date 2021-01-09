@@ -1,7 +1,6 @@
 import 'package:meta/meta.dart';
 
 import 'context.dart';
-import 'markup.dart';
 import 'nodes.dart';
 import 'resolver.dart';
 import 'utils.dart';
@@ -236,6 +235,11 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   Name visitName(Name name, [Context? context]) {
     throw Impossible();
+  }
+
+  @override
+  NamespaceReference visitNamespaceReference(NamespaceReference reference, [Context? context]) {
+    return reference;
   }
 
   @override

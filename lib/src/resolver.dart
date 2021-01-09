@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:meta/meta.dart';
 
 import 'context.dart';
-import 'exceptions.dart';
 import 'nodes.dart';
+import 'runtime.dart';
 import 'tests.dart' as tests;
 import 'utils.dart';
 import 'visitor.dart';
@@ -88,7 +88,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
     var expression = call.dArguments;
 
     if (expression != null) {
-      arguments.addAll(expression.accept(this, context) as Iterable);
+      final iterable = expression.accept(this, context);
+
+      if (iterable is Iterable) {
+        arguments.addAll(iterable);
+      }
     }
 
     expression = call.dKeywordArguments;
@@ -265,10 +269,15 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       case AssignContext.load:
         return context!.get(name.name);
       case AssignContext.store:
-        return <String>[name.name];
+        return name.name;
       default:
         throw UnimplementedError();
     }
+  }
+
+  @override
+  dynamic visitNamespaceReference(NamespaceReference reference, [C? context]) {
+    return NSRef(reference.name, reference.attribute);
   }
 
   @override
@@ -363,10 +372,6 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
         final result = <String>[];
 
         for (final node in tuple.expressions.cast<Name>()) {
-          if (node.context != AssignContext.load) {
-            throw TemplateRuntimeError(/* TODO: add error message */);
-          }
-
           result.add(node.name);
         }
 

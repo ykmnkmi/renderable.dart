@@ -7,17 +7,26 @@ enum AssignContext {
 }
 
 mixin CanAssign on Expression {
-  AssignContext? context;
+  bool get canAssign;
+
+  AssignContext get context;
+
+  set context(AssignContext context);
 }
 
 class Name extends Expression with CanAssign {
-  Name(this.name, {AssignContext? context, this.type}) {
-    this.context = context ?? AssignContext.load;
-  }
+  Name(this.name, {this.context = AssignContext.load, this.type});
 
   String name;
 
   String? type;
+
+  AssignContext context;
+
+  @override
+  bool get canAssign {
+    return context == AssignContext.store;
+  }
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -34,19 +43,36 @@ class Name extends Expression with CanAssign {
   }
 }
 
-class NameSpaceReference extends Expression implements CanAssign {
-  NameSpaceReference(this.name, this.attribute) : context = AssignContext.store;
+class NamespaceReference extends Expression implements CanAssign {
+  NamespaceReference(this.name, this.attribute);
 
   String name;
 
   String attribute;
 
   @override
-  AssignContext? context;
+  bool get canAssign {
+    return true;
+  }
+
+  @override
+  AssignContext get context {
+    return AssignContext.store;
+  }
+
+  @override
+  set context(AssignContext context) {
+    throw UnsupportedError('only for store');
+  }
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    throw UnimplementedError();
+    return visitor.visitNamespaceReference(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'NamespaceReference($name, $attribute)';
   }
 }
 
@@ -497,14 +523,44 @@ class Constant<T> extends Literal {
 }
 
 class TupleLiteral extends Literal implements CanAssign {
-  TupleLiteral(this.expressions, [AssignContext? context]) {
-    this.context = context ?? AssignContext.load;
-  }
+  TupleLiteral(this.expressions, [AssignContext? context]);
 
   List<Expression> expressions;
 
   @override
-  AssignContext? context;
+  bool get canAssign {
+    return expressions.every((expression) => expression is CanAssign && expression.canAssign);
+  }
+
+  @override
+  AssignContext get context {
+    AssignContext? context;
+
+    for (final expression in expressions) {
+      if (expression is CanAssign) {
+        if (context == null) {
+          context = expression.context;
+        } else if (expression.context != context) {
+          throw StateError('${expression.runtimeType} context must be $context');
+        }
+      } else {
+        throw TypeError();
+      }
+    }
+
+    return context!;
+  }
+
+  @override
+  set context(AssignContext context) {
+    for (final expression in expressions) {
+      if (expression is CanAssign) {
+        expression.context = context;
+      } else {
+        throw TypeError();
+      }
+    }
+  }
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {

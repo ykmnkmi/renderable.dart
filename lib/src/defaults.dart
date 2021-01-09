@@ -1,3 +1,5 @@
+import 'package:renderable/src/runtime.dart';
+
 import 'utils.dart';
 
 export 'filters.dart' show filters, contextFilters, environmentFilters;
@@ -17,6 +19,7 @@ const String newLine = '\n';
 const bool keepTrailingNewLine = false;
 
 const Map<String, dynamic> globals = <String, dynamic>{
+  'namespace': Namespace.factory,
   'range': range,
 };
 

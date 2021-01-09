@@ -1,21 +1,36 @@
+import 'dart:math' show Random;
+
 import 'package:meta/meta.dart';
+
+import 'defaults.dart' as defaults;
+
+typedef Finalizer = dynamic Function(dynamic value);
 
 @immutable
 class Configuration {
-  const Configuration({
-    this.commentBegin = '{#',
-    this.commentEnd = '#}',
-    this.variableBegin = '{{',
-    this.variableEnd = '}}',
-    this.blockBegin = '{%',
-    this.blockEnd = '%}',
-    this.lineCommentPrefix = '##',
-    this.lineStatementPrefix = '#',
-    this.lStripBlocks = false,
-    this.trimBlocks = false,
-    this.newLine = '\n',
-    this.keepTrailingNewLine = false,
-  });
+  Configuration(
+      {this.commentBegin = '{#',
+      this.commentEnd = '#}',
+      this.variableBegin = '{{',
+      this.variableEnd = '}}',
+      this.blockBegin = '{%',
+      this.blockEnd = '%}',
+      this.lineCommentPrefix = '##',
+      this.lineStatementPrefix = '#',
+      this.lStripBlocks = false,
+      this.trimBlocks = false,
+      this.newLine = '\n',
+      this.keepTrailingNewLine = false,
+      this.optimized = true,
+      this.finalize = defaults.finalize,
+      this.autoEscape = false,
+      Random? random,
+      this.globals = const <String, dynamic>{},
+      this.filters = const <String, Function>{},
+      this.contextFilters = const <String>{},
+      this.environmentFilters = const <String>{},
+      this.tests = const <String, Function>{}})
+      : random = Random();
 
   final String commentBegin;
 
@@ -41,20 +56,46 @@ class Configuration {
 
   final bool keepTrailingNewLine;
 
-  Configuration copy({
-    String? commentBegin,
-    String? commentEnd,
-    String? variableBegin,
-    String? variableEnd,
-    String? blockBegin,
-    String? blockEnd,
-    String? lineCommentPrefix,
-    String? lineStatementPrefix,
-    bool? lStripBlocks,
-    bool? trimBlocks,
-    String? newLine,
-    bool? keepTrailingNewLine,
-  }) {
+  final bool optimized;
+
+  final Finalizer finalize;
+
+  final bool autoEscape;
+
+  final Random random;
+
+  final Map<String, dynamic> globals;
+
+  final Map<String, Function> filters;
+
+  final Set<String> contextFilters;
+
+  final Set<String> environmentFilters;
+
+  final Map<String, Function> tests;
+
+  Configuration copy(
+      {String? commentBegin,
+      String? commentEnd,
+      String? variableBegin,
+      String? variableEnd,
+      String? blockBegin,
+      String? blockEnd,
+      String? lineCommentPrefix,
+      String? lineStatementPrefix,
+      bool? lStripBlocks,
+      bool? trimBlocks,
+      String? newLine,
+      bool? keepTrailingNewLine,
+      bool? optimized,
+      Finalizer? finalize,
+      bool? autoEscape,
+      Random? random,
+      Map<String, dynamic>? globals,
+      Map<String, Function>? filters,
+      Set<String>? contextFilters,
+      Set<String>? environmentFilters,
+      Map<String, Function>? tests}) {
     return Configuration(
       commentBegin: commentBegin ?? this.commentBegin,
       commentEnd: commentEnd ?? this.commentEnd,
@@ -68,6 +109,15 @@ class Configuration {
       trimBlocks: trimBlocks ?? this.trimBlocks,
       newLine: newLine ?? this.newLine,
       keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
+      optimized: optimized ?? this.optimized,
+      finalize: finalize ?? this.finalize,
+      autoEscape: autoEscape ?? this.autoEscape,
+      random: random ?? this.random,
+      globals: globals ?? this.globals,
+      filters: filters ?? this.filters,
+      contextFilters: contextFilters ?? this.contextFilters,
+      environmentFilters: environmentFilters ?? this.environmentFilters,
+      tests: tests ?? this.tests,
     );
   }
 }

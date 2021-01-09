@@ -69,6 +69,8 @@ abstract class Visitor<C, R> {
 
   R visitName(Name name, [C? context]);
 
+  R visitNamespaceReference(NamespaceReference reference, [C? context]);
+
   R visitNeg(Neg neg, [C? context]) {
     return visitUnary(neg, context);
   }

@@ -1,4 +1,5 @@
 import 'package:meta/meta.dart';
+import 'package:renderable/src/exceptions.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
@@ -48,26 +49,26 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitAssign(Assign assign, [RenderContext? context]) {
-    final targets = assign.target.accept(this, context) as List<String>;
+    final target = assign.target.accept(this, context);
     final values = assign.expression.accept(this, context);
-    assignTargetsToData(context!.contexts.last, targets, values);
+    assignTargetsToData(context!, target, values);
   }
 
   @override
   void visitAssignBlock(AssignBlock assign, [RenderContext? context]) {
-    final targets = assign.target.accept(this, context) as List<String>;
+    final target = assign.target.accept(this, context);
     final buffer = StringBuffer();
     visitAll(assign.body, context!.derived(sink: buffer));
-    assignTargetsToData(context.contexts.last, targets, context.environment.autoEscape ? Markup('$buffer') : '$buffer');
+    assignTargetsToData(context, target, context.environment.autoEscape ? Markup('$buffer') : '$buffer');
   }
 
   @override
   void visitFor(For forNode, [RenderContext? context]) {
     context!;
 
-    final targets = forNode.target.accept(this, context) as List<String>;
+    final target = forNode.target.accept(this, context);
 
-    if (forNode.hasLoop && targets.contains('loop')) {
+    if (forNode.hasLoop && (target == 'loop' || (target is List<String> && target.contains('loop')) || (target is NSRef && target.name == 'loop'))) {
       throw StateError('can\'t assign to special loop variable in for-loop target');
     }
 
@@ -98,7 +99,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
       if (forNode.hasLoop) {
         unpack = (List<dynamic> values, int index) {
-          final data = assignTargets(targets, values[index]);
+          final data = assignTargets(target, values[index]);
           dynamic previous, next;
 
           if (index > 0) {
@@ -127,7 +128,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
           return data;
         };
       } else {
-        unpack = (List<dynamic> values, int index) => assignTargets(targets, values[index]);
+        unpack = (List<dynamic> values, int index) => assignTargets(target, values[index]);
       }
 
       if (forNode.test != null) {
@@ -225,68 +226,90 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @protected
-  static Map<String, dynamic> assignTargets(List<String> targets, dynamic current) {
-    if (targets.length == 1) {
-      return {targets[0]: current};
+  static Map<String, dynamic> assignTargets(dynamic target, dynamic current) {
+    if (target is String) {
+      return <String, dynamic>{target: current};
     }
 
-    List<dynamic> list;
+    if (target is List<String>) {
+      List<dynamic> list;
 
-    if (current is List) {
-      list = current;
-    } else if (current is Iterable) {
-      list = current.toList();
-    } else if (current is String) {
-      list = current.split('');
-    } else {
-      throw TypeError();
+      if (current is List) {
+        list = current;
+      } else if (current is Iterable) {
+        list = current.toList();
+      } else if (current is String) {
+        list = current.split('');
+      } else {
+        throw TypeError();
+      }
+
+      if (list.length < target.length) {
+        throw StateError('not enough values to unpack (expected ${target.length}, got ${list.length})');
+      }
+
+      if (list.length > target.length) {
+        throw StateError('too many values to unpack (expected ${target.length})');
+      }
+
+      final data = <String, dynamic>{};
+
+      for (var i = 0; i < target.length; i++) {
+        data[target[i]] = list[i];
+      }
+
+      return data;
     }
 
-    if (list.length < targets.length) {
-      throw StateError('not enough values to unpack (expected ${targets.length}, got ${list.length})');
-    }
-
-    if (list.length > targets.length) {
-      throw StateError('too many values to unpack (expected ${targets.length})');
-    }
-
-    final data = <String, dynamic>{};
-
-    for (var i = 0; i < targets.length; i++) {
-      data[targets[i]] = list[i];
-    }
-    return data;
+    throw ArgumentError.value(target, 'target');
   }
 
   @protected
-  static void assignTargetsToData(Map<String, dynamic> data, List<String> targets, dynamic current) {
-    if (targets.length == 1) {
-      data[targets[0]] = current;
+  static void assignTargetsToData(RenderContext context, dynamic target, dynamic current) {
+    if (target is String) {
+      context[target] = current;
       return;
     }
 
-    List<dynamic> list;
+    if (target is List<String>) {
+      List<dynamic> list;
 
-    if (current is List) {
-      list = current;
-    } else if (current is Iterable) {
-      list = current.toList();
-    } else if (current is String) {
-      list = current.split('');
-    } else {
-      throw TypeError();
+      if (current is List) {
+        list = current;
+      } else if (current is Iterable) {
+        list = current.toList();
+      } else if (current is String) {
+        list = current.split('');
+      } else {
+        throw TypeError();
+      }
+
+      if (list.length < target.length) {
+        throw StateError('not enough values to unpack (expected ${target.length}, got ${list.length})');
+      }
+
+      if (list.length > target.length) {
+        throw StateError('too many values to unpack (expected ${target.length})');
+      }
+
+      for (var i = 0; i < target.length; i++) {
+        context[target[i]] = list[i];
+      }
+
+      return;
     }
 
-    if (list.length < targets.length) {
-      throw StateError('not enough values to unpack (expected ${targets.length}, got ${list.length})');
+    if (target is NSRef) {
+      final namespace = context[target.name];
+
+      if (namespace is! Namespace) {
+        throw TemplateRuntimeError('non-namespace object');
+      }
+
+      namespace[target.attribute] = current;
+      return;
     }
 
-    if (list.length > targets.length) {
-      throw StateError('too many values to unpack (expected ${targets.length})');
-    }
-
-    for (var i = 0; i < targets.length; i++) {
-      data[targets[i]] = list[i];
-    }
+    throw ArgumentError.value(target, 'target');
   }
 }

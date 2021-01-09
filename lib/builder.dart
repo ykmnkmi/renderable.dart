@@ -179,6 +179,12 @@ class TemplateBuilder extends Visitor<Frame, String> {
   }
 
   @override
+  String visitNamespaceReference(NamespaceReference reference, [Frame? context]) {
+    // TODO: implement visitNamespaceReference
+    throw UnimplementedError();
+  }
+
+  @override
   String visitOperand(Operand operand, [Frame? context]) {
     // TODO: implement visitOperand
     throw UnimplementedError();

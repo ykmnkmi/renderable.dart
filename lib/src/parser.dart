@@ -1,4 +1,7 @@
 import 'package:meta/meta.dart';
+import 'package:renderable/src/context.dart';
+import 'package:renderable/src/enirvonment.dart';
+import 'package:renderable/src/optimizer.dart';
 
 import 'lexer.dart';
 import 'nodes.dart';
@@ -34,7 +37,13 @@ class Parser {
   List<Node> parse(String template, {String? path}) {
     final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
-    return scan(reader);
+    final nodes = scan(reader);
+
+    if (configuration.optimized) {
+      optimizer.visitAll(nodes, Context(configuration as Environment));
+    }
+
+    return nodes;
   }
 
   @protected
@@ -147,7 +156,7 @@ class Parser {
   Statement parseSet(TokenReader reader) {
     reader.expect('name', 'set');
 
-    final target = parseAssignTarget(reader, withNameSpace: true);
+    final target = parseAssignTarget(reader, withNamespace: true);
 
     if (reader.skipIf('assign')) {
       final expression = parseTuple(reader);
@@ -234,16 +243,16 @@ class Parser {
     return root;
   }
 
-  Expression parseAssignTarget(TokenReader reader, {List<String>? extraEndRules, bool nameOnly = false, bool withNameSpace = false, bool withTuple = true}) {
+  Expression parseAssignTarget(TokenReader reader, {List<String>? extraEndRules, bool nameOnly = false, bool withNamespace = false, bool withTuple = true}) {
     Expression target;
 
-    if (withNameSpace && reader.look().test('dot')) {
-      final nameSpace = reader.expect('name');
+    if (withNamespace && reader.look().test('dot')) {
+      final namespace = reader.expect('name');
 
       reader.next(); // skip dot
 
       final attribute = reader.expect('name');
-      target = NameSpaceReference(nameSpace.value, attribute.value);
+      target = NamespaceReference(namespace.value, attribute.value);
     } else if (nameOnly) {
       final name = reader.expect('name');
       target = Name(name.value, context: AssignContext.store);

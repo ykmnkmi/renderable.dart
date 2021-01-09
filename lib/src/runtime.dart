@@ -4,8 +4,7 @@ class LoopContext {
         first = index0 == 0,
         last = index0 + 1 == length,
         revindex = length - index0,
-        revindex0 = length - index0 - 1,
-        cycle = CycleWrapper(index0);
+        revindex0 = length - index0 - 1;
 
   final int index0;
 
@@ -26,8 +25,6 @@ class LoopContext {
   final int revindex;
 
   final int revindex0;
-
-  final CycleWrapper cycle;
 
   dynamic operator [](String key) {
     switch (key) {
@@ -58,13 +55,53 @@ class LoopContext {
     }
   }
 
-  @override
-  dynamic noSuchMethod(Invocation invocation) {
-    if (invocation.memberName == #cycle) {
-      return cycle(invocation.positionalArguments);
+  Object cycle([Object? arg01, Object? arg02, Object? arg03, Object? arg04, Object? arg05, Object? arg06, Object? arg07, Object? arg08, Object? arg09]) {
+    final values = <Object>[];
+
+    if (arg01 != null) {
+      values.add(arg01);
+
+      if (arg02 != null) {
+        values.add(arg02);
+
+        if (arg03 != null) {
+          values.add(arg03);
+
+          if (arg04 != null) {
+            values.add(arg04);
+
+            if (arg05 != null) {
+              values.add(arg05);
+
+              if (arg06 != null) {
+                values.add(arg06);
+
+                if (arg07 != null) {
+                  values.add(arg07);
+
+                  if (arg08 != null) {
+                    values.add(arg08);
+
+                    if (arg09 != null) {
+                      values.add(arg09);
+
+                      // wanna more?
+                      // look ath this https://api.flutter.dev/flutter/dart-ui/hashValues.html
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
-    return super.noSuchMethod(invocation);
+    if (values.isEmpty) {
+      throw TypeError(/* no items for cycling given */);
+    }
+
+    return values[index0 % values.length];
   }
 }
 
@@ -77,32 +114,62 @@ class RecursiveLoopContext extends LoopContext {
   void call(dynamic data) {
     render(data);
   }
+}
 
-  @override
-  dynamic noSuchMethod(Invocation invocation) {
-    if (invocation.memberName == #call) {
-      return Function.apply(render, invocation.positionalArguments);
+class Namespace {
+  static Namespace factory([List<dynamic>? datas]) {
+    if (datas == null) {
+      return Namespace();
     }
 
-    return super.noSuchMethod(invocation);
+    final context = <String, dynamic>{};
+
+    for (final data in datas) {
+      if (data is Map) {
+        context.addAll(data.cast<String, dynamic>());
+      } else {
+        throw TypeError();
+      }
+    }
+
+    return Namespace(context);
+  }
+
+  Namespace([Map<String, dynamic>? context]) : context = <String, dynamic>{} {
+    if (context != null) {
+      this.context.addAll(context);
+    }
+  }
+
+  final Map<String, dynamic> context;
+
+  Iterable<MapEntry<String, dynamic>> get entries {
+    return context.entries;
+  }
+
+  dynamic operator [](String key) {
+    return context[key];
+  }
+
+  void operator []=(String key, dynamic value) {
+    context[key] = value;
+  }
+
+  @override
+  String toString() {
+    return 'Namespace($context)';
   }
 }
 
-class CycleWrapper {
-  CycleWrapper(this.index);
+class NSRef {
+  NSRef(this.name, this.attribute);
 
-  final int index;
+  String name;
 
-  dynamic call(List<dynamic> arguments) {
-    return arguments[index % arguments.length];
-  }
+  String attribute;
 
   @override
-  dynamic noSuchMethod(Invocation invocation) {
-    if (invocation.memberName == #call) {
-      return call(invocation.positionalArguments);
-    }
-
-    return super.noSuchMethod(invocation);
+  String toString() {
+    return 'NSRef($name, $attribute)';
   }
 }

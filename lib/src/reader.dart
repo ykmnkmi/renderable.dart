@@ -1,3 +1,4 @@
+import 'exceptions.dart';
 import 'lexer.dart';
 
 class TokenReader {
@@ -36,16 +37,7 @@ class TokenReader {
 
   void skip([int n = 1]) {
     for (var i = 0; i < n; i += 1) {
-      if (_current.type == 'eof') {
-        break;
-      }
-
-      if (_iterator.moveNext()) {
-        _current = _iterator.current;
-      } else {
-        eof();
-        break;
-      }
+      next();
     }
   }
 
@@ -84,10 +76,10 @@ class TokenReader {
   Token expect(String expressionOrType, [String? value]) {
     if (!_current.test(expressionOrType, value)) {
       if (_current.type == 'eof') {
-        throw 'unexpected end of template, expected $expressionOrType';
+        throw TemplateSyntaxError('unexpected end of template, expected $expressionOrType');
       }
 
-      throw 'expected token $expressionOrType, got $_current';
+      throw TemplateSyntaxError('expected token $expressionOrType, got $_current');
     }
 
     return next();

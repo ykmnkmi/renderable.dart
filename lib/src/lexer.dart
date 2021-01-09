@@ -68,7 +68,7 @@ class Lexer {
   Lexer(Configuration configuration, {this.ignoredTokens = defaultIgnoredTokens})
       : newLine = configuration.newLine,
         newLineRe = RegExp(r'(\r\n|\r|\n)'),
-        whiteSpaceRe = RegExp(r'\s+'),
+        whitespaceRe = RegExp(r'\s+'),
         nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
         stringRe = RegExp(r"('([^'\\]*(?:\\.[^'\\]*)*)'" r'|"([^"\\]*(?:\\.[^"\\]*)*)")', dotAll: true),
         integerRe = RegExp(r'(\d+_)*\d+'),
@@ -230,7 +230,7 @@ class Lexer {
 
   final RegExp newLineRe;
 
-  final RegExp whiteSpaceRe;
+  final RegExp whitespaceRe;
 
   final RegExp nameRe;
 
@@ -308,7 +308,7 @@ class Lexer {
     while (!scanner.isDone) {
       if (stack.isEmpty && scanner.matches(end)) {
         return;
-      } else if (scanner.scan(whiteSpaceRe)) {
+      } else if (scanner.scan(whitespaceRe)) {
         yield Token(scanner.lastMatch!.start, 'whitespace', scanner.lastMatch![0]!);
       } else if (scanner.scan(nameRe)) {
         yield Token(scanner.lastMatch!.start, 'name', scanner.lastMatch![0]!);
