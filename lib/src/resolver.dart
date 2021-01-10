@@ -15,6 +15,63 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   @literal
   const ExpressionResolver();
 
+  @protected
+  T call<T>(Callable callable, T Function(List<dynamic> positional, Map<Symbol, dynamic> named) callback, [C? context]) {
+    final positional = <dynamic>[];
+
+    if (callable.arguments != null) {
+      for (final argument in callable.arguments!) {
+        positional.add(argument.accept(this, context));
+      }
+    }
+
+    final named = <Symbol, dynamic>{};
+
+    if (callable.keywordArguments != null) {
+      for (final keywordArgument in callable.keywordArguments!) {
+        named[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
+      }
+    }
+    if (callable.dArguments != null) {
+      positional.addAll(callable.dArguments!.accept(this, context) as Iterable<dynamic>);
+    }
+
+    if (callable.dKeywordArguments != null) {
+      named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<String, dynamic>)
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+    }
+    return callback(positional, named);
+  }
+
+  @protected
+  dynamic callFilter(Filter filter, [dynamic value, C? context]) {
+    final positional = <dynamic>[];
+
+    if (filter.arguments != null) {
+      for (final argument in filter.arguments!) {
+        positional.add(argument.accept(this, context));
+      }
+    }
+
+    final named = <Symbol, dynamic>{};
+
+    if (filter.keywordArguments != null) {
+      for (final keywordArgument in filter.keywordArguments!) {
+        named[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
+      }
+    }
+    if (filter.dArguments != null) {
+      positional.addAll(filter.dArguments!.accept(this, context) as Iterable<dynamic>);
+    }
+
+    if (filter.dKeywordArguments != null) {
+      named.addAll((filter.dKeywordArguments!.accept(this, context) as Map<String, dynamic>)
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+    }
+
+    return context!.environment.callFilter(filter.name, value, positional: positional, named: named);
+  }
+
   @override
   void visitAll(List<Node> nodes, [C? context]) {
     throw UnimplementedError();
@@ -72,41 +129,19 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   dynamic visitCall(Call call, [C? context]) {
-    final callable = call.expression.accept(this, context);
-    final arguments = <dynamic>[];
+    ArgumentError.checkNotNull(call.expression);
 
-    for (final argument in call.arguments) {
-      arguments.add(argument.accept(this, context));
-    }
+    final callable = call.expression!.accept(this, context);
 
-    final keywordArguments = <Symbol, dynamic>{};
-
-    for (final keywordArgument in call.keywordArguments) {
-      keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
-    }
-
-    var expression = call.dArguments;
-
-    if (expression != null) {
-      final iterable = expression.accept(this, context);
-
-      if (iterable is Iterable) {
-        arguments.addAll(iterable);
+    dynamic callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
+      if (callable is Function) {
+        return Function.apply(callable, positional, named);
       }
+
+      return context!.environment.callCallable(callable, positional, named);
     }
 
-    expression = call.dKeywordArguments;
-
-    if (expression != null) {
-      keywordArguments.addAll(
-          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
-    }
-
-    if (callable is Function) {
-      return Function.apply(callable, arguments, keywordArguments);
-    } else {
-      return context!.environment.callCallable(callable, arguments, keywordArguments);
-    }
+    return this.call(call, callback, context);
   }
 
   @override
@@ -203,33 +238,13 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   dynamic visitFilter(Filter filter, [C? context]) {
-    final arguments = <dynamic>[];
+    dynamic value;
 
-    for (final argument in filter.arguments) {
-      arguments.add(argument.accept(this, context));
+    if (filter.expression != null) {
+      value = filter.expression!.accept(this, context);
     }
 
-    final keywordArguments = <Symbol, dynamic>{};
-
-    for (final keywordArgument in filter.keywordArguments) {
-      keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
-    }
-
-    var expression = filter.dArguments;
-
-    if (expression != null) {
-      arguments.addAll(expression.accept(this, context) as Iterable<dynamic>);
-    }
-
-    expression = filter.dKeywordArguments;
-
-    if (expression != null) {
-      keywordArguments.addAll(
-          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
-    }
-
-    return context!.environment
-        .callFilter(filter.name, filter.expression.accept(this, context), arguments: arguments, keywordArguments: keywordArguments, context: context);
+    return call(filter, (positional, named) => context!.environment.callTest(filter.name, value, positional: positional, named: named), context);
   }
 
   @override
@@ -329,32 +344,13 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   bool visitTest(Test test, [C? context]) {
-    final arguments = <dynamic>[];
+    dynamic value;
 
-    for (final argument in test.arguments) {
-      arguments.add(argument.accept(this, context));
+    if (test.expression != null) {
+      value = test.expression!.accept(this, context);
     }
 
-    final keywordArguments = <Symbol, dynamic>{};
-
-    for (final keywordArgument in test.keywordArguments) {
-      keywordArguments[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
-    }
-
-    var expression = test.dArguments;
-
-    if (expression != null) {
-      arguments.addAll(expression.accept(this, context) as Iterable<dynamic>);
-    }
-
-    expression = test.dKeywordArguments;
-
-    if (expression != null) {
-      keywordArguments.addAll(
-          (expression.accept(this, context) as Map<String, dynamic>).map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
-    }
-
-    return context!.environment.callTest(test.name, test.expression.accept(this, context), arguments: arguments, keywordArguments: keywordArguments);
+    return call(test, (positional, named) => context!.environment.callTest(test.name, value, positional: positional, named: named), context);
   }
 
   @override

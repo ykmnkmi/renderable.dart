@@ -101,9 +101,17 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitCall(Call call, [Context? context]) {
-    call.expression = optimize(call.expression, context);
-    visitAll(call.arguments, context);
-    visitAll(call.keywordArguments, context);
+    if (call.expression != null) {
+      call.expression = optimize(call.expression!, context);
+    }
+
+    if (call.arguments != null) {
+      visitAll(call.arguments!, context);
+    }
+
+    if (call.keywordArguments != null) {
+      visitAll(call.keywordArguments!, context);
+    }
 
     if (call.dArguments != null) {
       call.dArguments = optimize(call.dArguments!, context);
@@ -171,9 +179,17 @@ class Optimizer extends Visitor<Context, Node> {
       throw Impossible();
     }
 
-    filter.expression = optimize(filter.expression, context);
-    visitAll(filter.arguments, context);
-    visitAll(filter.keywordArguments, context);
+    if (filter.expression != null) {
+      filter.expression = optimize(filter.expression!, context);
+    }
+
+    if (filter.arguments != null) {
+      visitAll(filter.arguments!, context);
+    }
+
+    if (filter.keywordArguments != null) {
+      visitAll(filter.keywordArguments!, context);
+    }
 
     if (filter.dArguments != null) {
       filter.dArguments = optimize(filter.dArguments!, context);
@@ -195,13 +211,19 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Node visitIf(If ifNode, [Context? context]) {
-    ifNode.test.expression = optimizeSafe(ifNode.test.expression, context);
+    if (ifNode.test.expression != null) {
+      ifNode.test.expression = optimizeSafe(ifNode.test.expression!, context);
+    }
+
     visitAll(ifNode.body, context);
 
     var next = ifNode.nextIf;
 
     while (next != null) {
-      next.test.expression = optimizeSafe(next.test.expression, context);
+      if (next.test.expression != null) {
+        next.test.expression = optimizeSafe(next.test.expression!, context);
+      }
+
       visitAll(next.body, context);
       next = next.nextIf;
     }
@@ -284,9 +306,17 @@ class Optimizer extends Visitor<Context, Node> {
       throw Impossible();
     }
 
-    test.expression = optimize(test.expression, context);
-    visitAll(test.arguments, context);
-    visitAll(test.keywordArguments, context);
+    if (test.expression != null) {
+      test.expression = optimize(test.expression!, context);
+    }
+
+    if (test.arguments != null) {
+      visitAll(test.arguments!, context);
+    }
+
+    if (test.keywordArguments != null) {
+      visitAll(test.keywordArguments!, context);
+    }
 
     if (test.dArguments != null) {
       test.dArguments = optimize(test.dArguments!, context);

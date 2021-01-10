@@ -7,7 +7,7 @@ dynamic getField(dynamic object, String field) {
   return mirror.reflectee;
 }
 
-dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const <Symbol, dynamic>{}]) {
+dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
   return reflect(object).invoke(#call, positional, named).reflectee;
 }
 

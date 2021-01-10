@@ -14,6 +14,18 @@ mixin CanAssign on Expression {
   set context(AssignContext context);
 }
 
+abstract class Callable {
+  Expression? get expression;
+
+  List<Expression>? get arguments;
+
+  List<Keyword>? get keywordArguments;
+
+  Expression? get dArguments;
+
+  Expression? get dKeywordArguments;
+}
+
 class Name extends Expression with CanAssign {
   Name(this.name, {this.context = AssignContext.load, this.type});
 
@@ -21,6 +33,7 @@ class Name extends Expression with CanAssign {
 
   String? type;
 
+  @override
   AssignContext context;
 
   @override
@@ -218,23 +231,22 @@ class Slice extends Expression {
   }
 }
 
-class Call extends Expression {
-  Call(
-    this.expression, {
-    this.arguments = const <Expression>[],
-    this.keywordArguments = const <Keyword>[],
-    this.dArguments,
-    this.dKeywordArguments,
-  });
+class Call extends Expression implements Callable {
+  Call({this.expression, this.arguments, this.keywordArguments, this.dArguments, this.dKeywordArguments});
 
-  Expression expression;
+  @override
+  Expression? expression;
 
-  List<Expression> arguments;
+  @override
+  List<Expression>? arguments;
 
-  List<Keyword> keywordArguments;
+  @override
+  List<Keyword>? keywordArguments;
 
+  @override
   Expression? dArguments;
 
+  @override
   Expression? dKeywordArguments;
 
   @override
@@ -244,9 +256,17 @@ class Call extends Expression {
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    visitor(expression);
-    arguments.forEach(visitor);
-    keywordArguments.forEach(visitor);
+    if (expression != null) {
+      visitor(expression!);
+    }
+
+    if (arguments != null) {
+      arguments!.forEach(visitor);
+    }
+
+    if (keywordArguments != null) {
+      keywordArguments!.forEach(visitor);
+    }
 
     if (dArguments != null) {
       visitor(dArguments!);
@@ -259,54 +279,66 @@ class Call extends Expression {
 
   @override
   String toString() {
-    var result = 'Call($expression';
+    var result = 'Call(';
 
-    if (arguments.isNotEmpty) {
-      result += ', ${arguments.join(', ')}';
+    if (expression != null) {
+      result += ', $expression';
     }
 
-    if (keywordArguments.isNotEmpty) {
-      result += ', ${keywordArguments.join(', ')}';
+    if (arguments != null && arguments!.isNotEmpty) {
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '${arguments!.join(', ')}';
+    }
+
+    if (keywordArguments != null && keywordArguments!.isNotEmpty) {
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '${keywordArguments!.join(', ')}';
     }
 
     if (dArguments != null) {
-      result += ', *$dArguments';
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '*$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      result += ', **$dKeywordArguments';
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '**$dKeywordArguments';
     }
 
-    return result;
+    return result + ')';
   }
 }
 
-class Filter extends Expression {
-  Filter(
-    this.name,
-    this.expression, {
-    this.arguments = const <Expression>[],
-    this.keywordArguments = const <Keyword>[],
-    this.dArguments,
-    this.dKeywordArguments,
-  });
-
-  Filter.fromCall(this.name, this.expression, Call call)
-      : arguments = call.arguments,
-        keywordArguments = call.keywordArguments,
-        dArguments = call.dArguments,
-        dKeywordArguments = call.dKeywordArguments;
+class Filter extends Expression implements Callable {
+  Filter(this.name, {this.expression, this.arguments, this.keywordArguments, this.dArguments, this.dKeywordArguments});
 
   String name;
 
-  Expression expression;
+  @override
+  Expression? expression;
 
-  List<Expression> arguments;
+  @override
+  List<Expression>? arguments;
 
-  List<Keyword> keywordArguments;
+  @override
+  List<Keyword>? keywordArguments;
 
+  @override
   Expression? dArguments;
 
+  @override
   Expression? dKeywordArguments;
 
   @override
@@ -316,9 +348,17 @@ class Filter extends Expression {
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    visitor(expression);
-    arguments.forEach(visitor);
-    keywordArguments.forEach(visitor);
+    if (expression != null) {
+      visitor(expression!);
+    }
+
+    if (arguments != null) {
+      arguments!.forEach(visitor);
+    }
+
+    if (keywordArguments != null) {
+      keywordArguments!.forEach(visitor);
+    }
 
     if (dArguments != null) {
       visitor(dArguments!);
@@ -331,54 +371,66 @@ class Filter extends Expression {
 
   @override
   String toString() {
-    var result = 'Filter(\'$name\', $expression';
+    var result = 'Filter(\'$name\'';
 
-    if (arguments.isNotEmpty) {
-      result += ', ${arguments.join(', ')}';
+    if (expression != null) {
+      result += ', $expression';
     }
 
-    if (keywordArguments.isNotEmpty) {
-      result += ', ${keywordArguments.join(', ')}';
+    if (arguments != null && arguments!.isNotEmpty) {
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '${arguments!.join(', ')}';
+    }
+
+    if (keywordArguments != null && keywordArguments!.isNotEmpty) {
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '${keywordArguments!.join(', ')}';
     }
 
     if (dArguments != null) {
-      result += ', *$dArguments';
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '*$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      result += ', **$dKeywordArguments';
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '**$dKeywordArguments';
     }
 
-    return result;
+    return result + ')';
   }
 }
 
-class Test extends Expression {
-  Test(
-    this.name,
-    this.expression, {
-    this.arguments = const <Expression>[],
-    this.keywordArguments = const <Keyword>[],
-    this.dArguments,
-    this.dKeywordArguments,
-  });
-
-  Test.fromCall(this.name, this.expression, Call call)
-      : arguments = call.arguments,
-        keywordArguments = call.keywordArguments,
-        dArguments = call.dArguments,
-        dKeywordArguments = call.dKeywordArguments;
+class Test extends Expression implements Callable {
+  Test(this.name, {this.expression, this.arguments, this.keywordArguments, this.dArguments, this.dKeywordArguments});
 
   String name;
 
-  Expression expression;
+  @override
+  Expression? expression;
 
-  List<Expression> arguments;
+  @override
+  List<Expression>? arguments;
 
-  List<Keyword> keywordArguments;
+  @override
+  List<Keyword>? keywordArguments;
 
+  @override
   Expression? dArguments;
 
+  @override
   Expression? dKeywordArguments;
 
   @override
@@ -388,9 +440,17 @@ class Test extends Expression {
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    visitor(expression);
-    arguments.forEach(visitor);
-    keywordArguments.forEach(visitor);
+    if (expression != null) {
+      visitor(expression!);
+    }
+
+    if (arguments != null) {
+      arguments!.forEach(visitor);
+    }
+
+    if (keywordArguments != null) {
+      keywordArguments!.forEach(visitor);
+    }
 
     if (dArguments != null) {
       visitor(dArguments!);
@@ -403,25 +463,45 @@ class Test extends Expression {
 
   @override
   String toString() {
-    var result = 'Test(\'$name\', $expression';
+    var result = 'Test(\'$name\'';
 
-    if (arguments.isNotEmpty) {
-      result += ', ${arguments.join(', ')}';
+    if (expression != null) {
+      result += ', $expression';
     }
 
-    if (keywordArguments.isNotEmpty) {
-      result += ', ${keywordArguments.join(', ')}';
+    if (arguments != null && arguments!.isNotEmpty) {
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '${arguments!.join(', ')}';
+    }
+
+    if (keywordArguments != null && keywordArguments!.isNotEmpty) {
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '${keywordArguments!.join(', ')}';
     }
 
     if (dArguments != null) {
-      result += ', *$dArguments';
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '*$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      result += ', **$dKeywordArguments';
+      if (result.contains(',')) {
+        result += ', ';
+      }
+
+      result += '**$dKeywordArguments';
     }
 
-    return result;
+    return result + ')';
   }
 }
 
@@ -503,10 +583,6 @@ class Data extends Literal {
 }
 
 class Constant<T> extends Literal {
-  static Constant<String> get empty {
-    return Constant<String>('');
-  }
-
   Constant(this.value);
 
   T? value;

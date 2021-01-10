@@ -186,8 +186,7 @@ class Environment extends Configuration {
     return template;
   }
 
-  dynamic callFilter(String name, dynamic value,
-      {List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}, Context? context}) {
+  dynamic callFilter(String name, dynamic value, {List<dynamic> positional = const [], Map<Symbol, dynamic> named = const {}, Context? context}) {
     Function filter;
 
     if (filters.containsKey(name)) {
@@ -196,24 +195,24 @@ class Environment extends Configuration {
       throw TemplateRuntimeError('filter not found: $name');
     }
 
-    arguments.insert(0, value);
-
     if (contextFilters.contains(name)) {
       if (context == null) {
         throw TemplateRuntimeError('context is null');
       }
 
-      arguments.insert(0, context);
+      positional.insert(0, context);
+      positional.insert(1, value);
+    } else if (environmentFilters.contains(name)) {
+      positional.insert(0, this);
+      positional.insert(1, value);
+    } else {
+      positional.insert(0, value);
     }
 
-    if (environmentFilters.contains(name)) {
-      arguments.insert(0, this);
-    }
-
-    return Function.apply(filter, arguments, keywordArguments);
+    return Function.apply(filter, positional, named);
   }
 
-  bool callTest(String name, dynamic value, {List<dynamic> arguments = const <dynamic>[], Map<Symbol, dynamic> keywordArguments = const <Symbol, dynamic>{}}) {
+  bool callTest(String name, dynamic value, {List<dynamic> positional = const [], Map<Symbol, dynamic> named = const {}}) {
     Function test;
 
     if (tests.containsKey(name)) {
@@ -222,9 +221,9 @@ class Environment extends Configuration {
       throw TemplateRuntimeError('test not found: $name');
     }
 
-    arguments.insert(0, value);
+    positional.insert(0, value);
 
-    return Function.apply(test, arguments, keywordArguments) as bool;
+    return Function.apply(test, positional, named) as bool;
   }
 }
 
@@ -328,14 +327,15 @@ class Template implements Renderable {
 
 void prepare(Node node) {
   if (node is Call) {
-    Expression? expression = node.expression;
+    var expression = node.expression;
 
     if (expression is Name && expression.name == 'namespace') {
-      final arguments = node.arguments.toList();
+      final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
+      node.arguments = null;
 
-      if (node.keywordArguments.isNotEmpty) {
-        final dict = DictLiteral(node.keywordArguments.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
-        node.keywordArguments.clear();
+      if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
+        final dict = DictLiteral(node.keywordArguments!.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
+        node.keywordArguments = null;
         arguments.add(dict);
       }
 
@@ -353,10 +353,8 @@ void prepare(Node node) {
         node.dKeywordArguments = null;
       }
 
-      node.arguments.clear();
-
       if (arguments.isNotEmpty) {
-        node.arguments.add(ListLiteral(arguments));
+        node.arguments = <Expression>[ListLiteral(arguments)];
       }
 
       return;

@@ -25,11 +25,13 @@ class Assign extends Statement {
 }
 
 class AssignBlock extends Statement {
-  AssignBlock(this.target, this.body);
+  AssignBlock(this.target, this.body, [this.filters]);
 
-  final Expression target;
+  Expression target;
 
-  final List<Node> body;
+  List<Node> body;
+
+  List<Filter>? filters;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -44,7 +46,13 @@ class AssignBlock extends Statement {
 
   @override
   String toString() {
-    return 'Assign($target, $body)';
+    var result = 'AssignBlock($target, $body';
+
+    if (filters != null && filters!.isNotEmpty) {
+      result += ', $filters';
+    }
+
+    return result + ')';
   }
 }
 
@@ -88,10 +96,6 @@ class For extends Statement {
 
     if (orElse != null) {
       result += ', orElse: $orElse';
-    }
-
-    if (test != null) {
-      result += ', test: $test';
     }
 
     if (recursive) {

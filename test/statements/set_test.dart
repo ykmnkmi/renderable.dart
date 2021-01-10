@@ -6,10 +6,10 @@ import 'package:renderable/src/exceptions.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('set', () {
+  group('Set', () {
     final environment = Environment(getField: getField, trimBlocks: true);
 
-    test('simple', () {
+    test('normal', () {
       final template = environment.fromString('{% set foo = 1 %}{{ foo }}');
       expect(template.render(), equals('1'));
     });
@@ -59,7 +59,7 @@ void main() {
       expect(template.render({'v': 4}), equals('false'));
     });
 
-    // TODO: add: namespace macro
+    // TODO: namespace macro
 
     test('block escapeing filtered', () {
       final env = Environment(autoEscape: true);

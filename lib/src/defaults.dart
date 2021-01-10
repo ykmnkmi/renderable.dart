@@ -39,6 +39,6 @@ dynamic getField(dynamic object, String field) {
   throw NoSuchMethodError.withInvocation(object, Invocation.getter(Symbol(field)));
 }
 
-dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const <Symbol, dynamic>{}]) {
+dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
   return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
 }

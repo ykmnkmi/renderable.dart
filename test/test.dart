@@ -7,10 +7,10 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{% set ns = namespace(d, self=37) %}{% set ns.b = 42 %}{{ ns.a }}|{{ ns.self }}|{{ ns.b }}';
+  final source = '{% set foo | trim | length | string %} 42    {% endset %}{{ foo }}';
 
   try {
-    final environment = Environment();
+    final environment = Environment(autoEscape: true);
 
     print('source:');
     print(source);
@@ -33,7 +33,7 @@ void main(List<String> arguments) {
     template.nodes.forEach(print);
 
     print('\nrender:');
-    print(template.render({'d': {'a': 13}}));
+    print(template.render({'test': '<unsafe>'}));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

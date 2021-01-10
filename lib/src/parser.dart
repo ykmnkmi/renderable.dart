@@ -163,7 +163,23 @@ class Parser {
       return Assign(target, expression);
     }
 
+    final filter = parseFilter(reader);
     final body = parseStatements(reader, <String>['name:endset'], dropNeedle: true);
+
+    if (filter is Filter) {
+      final filters = <Filter>[];
+      dynamic expression = filter;
+
+      while (expression is Filter) {
+        final next = expression.expression;
+        expression.expression = null;
+        filters.insert(0, expression);
+        expression = next;
+      }
+
+      return AssignBlock(target, body, filters);
+    }
+
     return AssignBlock(target, body);
   }
 
@@ -195,7 +211,7 @@ class Parser {
     if (reader.skipIf('name', 'if')) {
       final expression = parseExpression(reader);
       expression.visitChildNodes(visit);
-      test = expression is Test ? expression : Test('defined', expression);
+      test = expression is Test ? expression : Test('defined', expression: expression);
     }
 
     final recursive = reader.skipIf('name', 'recursive');
@@ -219,7 +235,7 @@ class Parser {
 
     final test = parseTuple(reader, withCondition: false);
     final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-    final root = If(test is Test ? test : Test('defined', test), body);
+    final root = If(test is Test ? test : Test('defined', expression: test), body);
     var node = root;
 
     while (true) {
@@ -228,7 +244,7 @@ class Parser {
       if (tag.test('name', 'elif')) {
         final test = parseTuple(reader, withCondition: false);
         final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-        node.nextIf = If(test is Test ? test : Test('defined', test), body);
+        node.nextIf = If(test is Test ? test : Test('defined', expression: test), body);
         node = node.nextIf!;
         continue;
       }
@@ -736,7 +752,7 @@ class Parser {
     return Slice.fromList(arguments);
   }
 
-  Call parseCall(TokenReader reader, Expression expression) {
+  Call parseCall(TokenReader reader, [Expression? expression]) {
     reader.expect('lparen');
 
     final arguments = <Expression>[];
@@ -791,10 +807,10 @@ class Parser {
 
     reader.expect('rparen');
 
-    return Call(expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
+    return Call(expression: expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
   }
 
-  Expression parseFilter(TokenReader reader, Expression expression, [bool startInline = false]) {
+  Expression parseFilter(TokenReader reader, [Expression? expression, bool startInline = false]) {
     while (reader.current.test('pipe') || startInline) {
       if (!startInline) {
         reader.next();
@@ -810,19 +826,27 @@ class Parser {
         name = '$name.${token.value}';
       }
 
-      Call call;
+      Call? call;
 
       if (reader.current.test('lparen')) {
-        call = parseCall(reader, Constant<String>(''));
-      } else {
-        call = Call(Constant<String>(''));
+        call = parseCall(reader);
       }
 
-      expression = Filter.fromCall(name, expression, call);
+      if (call != null) {
+        expression = Filter(name,
+            expression: expression,
+            arguments: call.arguments,
+            keywordArguments: call.keywordArguments,
+            dArguments: call.dArguments,
+            dKeywordArguments: call.dKeywordArguments);
+      } else {
+        expression = Filter(name, expression: expression);
+      }
+
       startInline = false;
     }
 
-    return expression;
+    return expression!;
   }
 
   Expression parseTest(TokenReader reader, Expression expression) {
@@ -846,10 +870,10 @@ class Parser {
       name = '$name.${token.value}';
     }
 
-    Call call;
+    Call? call;
 
     if (reader.current.test('lparen')) {
-      call = parseCall(reader, Constant<String>(''));
+      call = parseCall(reader);
     } else if (reader.current.testAny(['name', 'string', 'integer', 'float', 'lparen', 'lbracket', 'lbrace']) &&
         !reader.current.testAny(['name:else', 'name:or', 'name:and'])) {
       if (reader.current.test('name', 'is')) {
@@ -858,12 +882,19 @@ class Parser {
 
       var argument = parsePrimary(reader);
       argument = parsePostfix(reader, argument);
-      call = Call(Constant<String>(''), arguments: <Expression>[argument]);
-    } else {
-      call = Call(Constant<String>(''));
+      call = Call(arguments: <Expression>[argument]);
     }
 
-    expression = Test.fromCall(name, expression, call);
+    if (call != null) {
+      expression = Test(name,
+          expression: expression,
+          arguments: call.arguments,
+          keywordArguments: call.keywordArguments,
+          dArguments: call.dArguments,
+          dKeywordArguments: call.dKeywordArguments);
+    } else {
+      expression = Test(name, expression: expression);
+    }
 
     if (negated) {
       expression = Not(expression);

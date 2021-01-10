@@ -59,7 +59,20 @@ class Renderer extends ExpressionResolver<RenderContext> {
     final target = assign.target.accept(this, context);
     final buffer = StringBuffer();
     visitAll(assign.body, context!.derived(sink: buffer));
-    assignTargetsToData(context, target, context.environment.autoEscape ? Markup('$buffer') : '$buffer');
+    var value = '$buffer' as dynamic;
+
+    if (assign.filters == null || assign.filters!.isEmpty) {
+      assignTargetsToData(context, target, context.environment.autoEscape ? Markup('$value') : value);
+      return;
+    }
+
+    final filters = assign.filters!;
+
+    for (final filter in filters) {
+      value = callFilter(filter, value, context);
+    }
+
+    assignTargetsToData(context, target, context.environment.autoEscape ? Markup('$value') : value);
   }
 
   @override
