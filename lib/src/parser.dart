@@ -659,7 +659,7 @@ class Parser {
   Expression parseFilterExpression(TokenReader reader, Expression expression) {
     while (true) {
       if (reader.current.test('pipe')) {
-        expression = parseFilter(reader, expression);
+        expression = parseFilter(reader, expression)!;
       } else if (reader.current.test('name', 'is')) {
         expression = parseTest(reader, expression);
       } else if (reader.current.test('lparen')) {
@@ -810,7 +810,7 @@ class Parser {
     return Call(expression: expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
   }
 
-  Expression parseFilter(TokenReader reader, [Expression? expression, bool startInline = false]) {
+  Expression? parseFilter(TokenReader reader, [Expression? expression, bool startInline = false]) {
     while (reader.current.test('pipe') || startInline) {
       if (!startInline) {
         reader.next();
@@ -846,7 +846,7 @@ class Parser {
       startInline = false;
     }
 
-    return expression!;
+    return expression;
   }
 
   Expression parseTest(TokenReader reader, Expression expression) {

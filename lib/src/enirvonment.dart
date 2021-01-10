@@ -186,7 +186,7 @@ class Environment extends Configuration {
     return template;
   }
 
-  dynamic callFilter(String name, dynamic value, {List<dynamic> positional = const [], Map<Symbol, dynamic> named = const {}, Context? context}) {
+  dynamic callFilter(String name, dynamic value, {List<dynamic> positional = const [], Map<Symbol, dynamic> named = const {}}) {
     Function filter;
 
     if (filters.containsKey(name)) {
@@ -195,14 +195,7 @@ class Environment extends Configuration {
       throw TemplateRuntimeError('filter not found: $name');
     }
 
-    if (contextFilters.contains(name)) {
-      if (context == null) {
-        throw TemplateRuntimeError('context is null');
-      }
-
-      positional.insert(0, context);
-      positional.insert(1, value);
-    } else if (environmentFilters.contains(name)) {
+    if (environmentFilters.contains(name)) {
       positional.insert(0, this);
       positional.insert(1, value);
     } else {

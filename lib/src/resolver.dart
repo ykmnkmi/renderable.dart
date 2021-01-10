@@ -15,8 +15,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   @literal
   const ExpressionResolver();
 
+  // wtf on
+
   @protected
-  T call<T>(Callable callable, T Function(List<dynamic> positional, Map<Symbol, dynamic> named) callback, [C? context]) {
+  T Function(T Function(List<dynamic>, Map<Symbol, dynamic>)) callable<T>(Callable callable, [C? context]) {
     final positional = <dynamic>[];
 
     if (callable.arguments != null) {
@@ -40,37 +42,29 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<String, dynamic>)
           .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
-    return callback(positional, named);
+
+    return (T Function(List<dynamic> positional, Map<Symbol, dynamic> named) callback) => callback(positional, named);
   }
 
   @protected
   dynamic callFilter(Filter filter, [dynamic value, C? context]) {
-    final positional = <dynamic>[];
-
-    if (filter.arguments != null) {
-      for (final argument in filter.arguments!) {
-        positional.add(argument.accept(this, context));
-      }
+    dynamic callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
+      return context!.environment.callFilter(filter.name, value, positional: positional, named: named);
     }
 
-    final named = <Symbol, dynamic>{};
-
-    if (filter.keywordArguments != null) {
-      for (final keywordArgument in filter.keywordArguments!) {
-        named[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
-      }
-    }
-    if (filter.dArguments != null) {
-      positional.addAll(filter.dArguments!.accept(this, context) as Iterable<dynamic>);
-    }
-
-    if (filter.dKeywordArguments != null) {
-      named.addAll((filter.dKeywordArguments!.accept(this, context) as Map<String, dynamic>)
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
-    }
-
-    return context!.environment.callFilter(filter.name, value, positional: positional, named: named);
+    return callable(filter, context)(callback);
   }
+
+  @protected
+  bool callTest(Test test, [dynamic value, C? context]) {
+    bool callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
+      return context!.environment.callTest(test.name, value, positional: positional, named: named);
+    }
+
+    return callable<bool>(test, context)(callback);
+  }
+
+  // wtf off
 
   @override
   void visitAll(List<Node> nodes, [C? context]) {
@@ -131,17 +125,17 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   dynamic visitCall(Call call, [C? context]) {
     ArgumentError.checkNotNull(call.expression);
 
-    final callable = call.expression!.accept(this, context);
+    final function = call.expression!.accept(this, context);
 
     dynamic callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
-      if (callable is Function) {
-        return Function.apply(callable, positional, named);
+      if (function is Function) {
+        return Function.apply(function, positional, named);
       }
 
-      return context!.environment.callCallable(callable, positional, named);
+      return context!.environment.callCallable(function, positional, named);
     }
 
-    return this.call(call, callback, context);
+    return callable<dynamic>(call, context)(callback);
   }
 
   @override
@@ -244,7 +238,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       value = filter.expression!.accept(this, context);
     }
 
-    return call(filter, (positional, named) => context!.environment.callTest(filter.name, value, positional: positional, named: named), context);
+    return callFilter(filter, value, context);
   }
 
   @override
@@ -350,7 +344,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       value = test.expression!.accept(this, context);
     }
 
-    return call(test, (positional, named) => context!.environment.callTest(test.name, value, positional: positional, named: named), context);
+    return callTest(test, value, context);
   }
 
   @override
@@ -382,8 +376,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
     final value = unaru.expression.accept(this, context);
 
     switch (unaru.operator) {
-      // how i should implement this?
       case '+':
+        // how i should implement this?
         return value;
       case '-':
         return -value;
