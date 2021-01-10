@@ -27,7 +27,6 @@ class Configuration {
       Random? random,
       this.globals = const <String, dynamic>{},
       this.filters = const <String, Function>{},
-      this.contextFilters = const <String>{},
       this.environmentFilters = const <String>{},
       this.tests = const <String, Function>{}})
       : random = Random();
@@ -68,8 +67,6 @@ class Configuration {
 
   final Map<String, Function> filters;
 
-  final Set<String> contextFilters;
-
   final Set<String> environmentFilters;
 
   final Map<String, Function> tests;
@@ -93,7 +90,6 @@ class Configuration {
       Random? random,
       Map<String, dynamic>? globals,
       Map<String, Function>? filters,
-      Set<String>? contextFilters,
       Set<String>? environmentFilters,
       Map<String, Function>? tests}) {
     return Configuration(
@@ -115,7 +111,6 @@ class Configuration {
       random: random ?? this.random,
       globals: globals ?? this.globals,
       filters: filters ?? this.filters,
-      contextFilters: contextFilters ?? this.contextFilters,
       environmentFilters: environmentFilters ?? this.environmentFilters,
       tests: tests ?? this.tests,
     );

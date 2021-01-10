@@ -315,6 +315,4 @@ const Map<String, Function> filters = <String, Function>{
   // 'xmlattr': doXMLAttr,
 };
 
-const Set<String> contextFilters = <String>{};
-
 const Set<String> environmentFilters = <String>{'attr', 'join', 'random'};

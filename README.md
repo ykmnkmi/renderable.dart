@@ -18,7 +18,7 @@ Nodes:
   - tests
   - variables
 - Statements
-  - Set (!filtered block)
+  - Set
   - For
   - If
   - Raw

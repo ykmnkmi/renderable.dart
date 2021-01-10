@@ -2,7 +2,7 @@ import 'package:renderable/src/runtime.dart';
 
 import 'utils.dart';
 
-export 'filters.dart' show filters, contextFilters, environmentFilters;
+export 'filters.dart' show filters, environmentFilters;
 export 'tests.dart' show tests;
 
 const String blockBegin = '{%';

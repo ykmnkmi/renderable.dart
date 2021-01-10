@@ -2,7 +2,6 @@ import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
 import 'configuration.dart';
-import 'context.dart';
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
 import 'nodes.dart';
@@ -34,7 +33,6 @@ class Environment extends Configuration {
       bool autoEscape = false,
       Map<String, dynamic>? globals,
       Map<String, Function>? filters,
-      Set<String>? contextFilters,
       Set<String>? environmentFilters,
       Map<String, Function>? tests,
       Map<String, Template>? templates,
@@ -60,7 +58,6 @@ class Environment extends Configuration {
             autoEscape: autoEscape,
             globals: HashMap<String, dynamic>.of(defaults.globals),
             filters: HashMap<String, Function>.of(defaults.filters),
-            contextFilters: HashSet<String>.of(defaults.contextFilters),
             environmentFilters: HashSet<String>.of(defaults.environmentFilters),
             tests: HashMap<String, Function>.of(defaults.tests)) {
     if (globals != null) {
@@ -69,10 +66,6 @@ class Environment extends Configuration {
 
     if (filters != null) {
       this.filters.addAll(filters);
-    }
-
-    if (contextFilters != null) {
-      this.contextFilters.addAll(contextFilters);
     }
 
     if (environmentFilters != null) {
@@ -114,7 +107,6 @@ class Environment extends Configuration {
       Random? random,
       Map<String, dynamic>? globals,
       Map<String, Function>? filters,
-      Set<String>? contextFilters,
       Set<String>? environmentFilters,
       Map<String, Function>? tests,
       FieldGetter? getField,
@@ -137,7 +129,6 @@ class Environment extends Configuration {
       autoEscape: autoEscape ?? this.autoEscape,
       globals: globals ?? this.globals,
       filters: filters ?? this.filters,
-      contextFilters: contextFilters ?? this.contextFilters,
       environmentFilters: environmentFilters ?? this.environmentFilters,
       tests: tests ?? this.tests,
       random: random ?? this.random,
@@ -240,6 +231,7 @@ class Template implements Renderable {
       bool autoEscape = false,
       Map<String, Object>? globals,
       Map<String, Function>? filters,
+      Set<String>? environmentFilters,
       Map<String, Function>? tests,
       Random? random,
       FieldGetter getField = defaults.getField}) {
@@ -263,6 +255,7 @@ class Template implements Renderable {
           autoEscape: autoEscape,
           globals: globals,
           filters: filters,
+          environmentFilters: environmentFilters,
           tests: tests,
           random: random,
           getField: getField);
@@ -284,6 +277,7 @@ class Template implements Renderable {
           autoEscape: autoEscape,
           globals: globals,
           filters: filters,
+          environmentFilters: environmentFilters,
           tests: tests,
           random: random,
           getField: getField);
