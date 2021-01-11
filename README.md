@@ -21,6 +21,7 @@ Nodes:
   - Set
   - For
   - If
+  - With
   - Raw
 
 API:

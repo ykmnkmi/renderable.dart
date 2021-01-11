@@ -213,22 +213,6 @@ dynamic last(Iterable<dynamic> values) {
   return values.last;
 }
 
-List<dynamic> list(dynamic value) {
-  if (value is String) {
-    return value.split('');
-  }
-
-  if (value is Iterable) {
-    return value.toList();
-  }
-
-  if (value is Map) {
-    return value.keys.toList();
-  }
-
-  return value.toList() as List<double>;
-}
-
 String lower(String string) {
   return string.toLowerCase();
 }
@@ -277,7 +261,7 @@ const Map<String, Function> filters = <String, Function>{
   'join': join,
   'last': last,
   'length': count,
-  'list': list,
+  'list': utils.list,
   'lower': lower,
   'random': random,
   'string': string,

@@ -124,6 +124,8 @@ class Parser {
           return parseFor(reader);
         case 'if':
           return parseIf(reader);
+        case 'with':
+          return parseWith(reader);
         default:
           popTag = false;
           tagStack.removeLast();
@@ -257,6 +259,28 @@ class Parser {
     }
 
     return root;
+  }
+
+  With parseWith(TokenReader reader) {
+    reader.expect('name', 'with');
+
+    final targets = <Expression>[];
+    final values = <Expression>[];
+
+    while (!reader.current.test('block_end')) {
+      if (targets.isNotEmpty) {
+        reader.expect('comma');
+      }
+
+      final target = parseAssignTarget(reader);
+      (target as CanAssign).context = AssignContext.parameter;
+      targets.add(target);
+      reader.expect('assign');
+      values.add(parseExpression(reader));
+    }
+
+    final body = parseStatements(reader, <String>['name:endwith'], dropNeedle: true);
+    return With(targets, values, body);
   }
 
   Expression parseAssignTarget(TokenReader reader, {List<String>? extraEndRules, bool nameOnly = false, bool withNamespace = false, bool withTuple = true}) {

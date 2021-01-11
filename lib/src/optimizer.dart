@@ -341,6 +341,14 @@ class Optimizer extends Visitor<Context, Node> {
     return constant(unary, context);
   }
 
+  @override
+  With visitWith(With wiz, [Context? context]) {
+    // visitAll(wiz.targets, context);
+    visitAll(wiz.values, context);
+    visitAll(wiz.body, context);
+    return wiz;
+  }
+
   @protected
   static dynamic resolve(Expression expression, [Context? context]) {
     return expression.accept(resolver, context);

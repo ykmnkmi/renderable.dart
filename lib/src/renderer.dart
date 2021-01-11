@@ -1,8 +1,8 @@
 import 'package:meta/meta.dart';
-import 'package:renderable/src/exceptions.dart';
 
 import 'context.dart';
 import 'enirvonment.dart';
+import 'exceptions.dart';
 import 'markup.dart';
 import 'nodes.dart';
 import 'resolver.dart';
@@ -51,18 +51,20 @@ class Renderer extends ExpressionResolver<RenderContext> {
   void visitAssign(Assign assign, [RenderContext? context]) {
     final target = assign.target.accept(this, context);
     final values = assign.expression.accept(this, context);
-    assignTargetsToData(context!, target, values);
+    assignTargetsToContext(context!, target, values);
   }
 
   @override
   void visitAssignBlock(AssignBlock assign, [RenderContext? context]) {
+    context!;
+
     final target = assign.target.accept(this, context);
     final buffer = StringBuffer();
-    visitAll(assign.body, context!.derived(sink: buffer));
+    visitAll(assign.body, context.derived(sink: buffer));
     var value = '$buffer' as dynamic;
 
     if (assign.filters == null || assign.filters!.isEmpty) {
-      assignTargetsToData(context, target, context.environment.autoEscape ? Markup('$value') : value);
+      assignTargetsToContext(context, target, context.environment.autoEscape ? Markup('$value') : value);
       return;
     }
 
@@ -72,7 +74,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
       value = callFilter(filter, value, context);
     }
 
-    assignTargetsToData(context, target, context.environment.autoEscape ? Markup('$value') : value);
+    assignTargetsToContext(context, target, context.environment.autoEscape ? Markup('$value') : value);
   }
 
   @override
@@ -98,9 +100,9 @@ class Renderer extends ExpressionResolver<RenderContext> {
     }
 
     void loop(dynamic iterable) {
-      var list = getAssignValues(iterable);
+      var values = list(iterable);
 
-      if (list.isEmpty) {
+      if (values.isEmpty) {
         if (orElse != null) {
           visitAll(orElse, context);
         }
@@ -112,7 +114,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
       if (forNode.hasLoop) {
         unpack = (List<dynamic> values, int index) {
-          final data = assignTargets(target, values[index]);
+          final data = getDataForTargets(target, values[index]);
           dynamic previous, next;
 
           if (index > 0) {
@@ -141,29 +143,29 @@ class Renderer extends ExpressionResolver<RenderContext> {
           return data;
         };
       } else {
-        unpack = (List<dynamic> values, int index) => assignTargets(target, values[index]);
+        unpack = (List<dynamic> values, int index) => getDataForTargets(target, values[index]);
       }
 
       if (forNode.test != null) {
         final test = forNode.test!;
         final filtered = <dynamic>[];
 
-        for (var i = 0; i < list.length; i += 1) {
-          final data = unpack(list, i);
+        for (var i = 0; i < values.length; i += 1) {
+          final data = unpack(values, i);
           context.push(data);
 
           if (test.accept(this, context) as bool) {
-            filtered.add(list[i]);
+            filtered.add(values[i]);
           }
 
           context.pop();
         }
 
-        list = filtered;
+        values = filtered;
       }
 
-      for (var i = 0; i < list.length; i += 1) {
-        final data = unpack(list, i);
+      for (var i = 0; i < values.length; i += 1) {
+        final data = unpack(values, i);
         context.push(data);
         visitAll(forNode.body, context);
         context.pop();
@@ -217,68 +219,20 @@ class Renderer extends ExpressionResolver<RenderContext> {
     }
   }
 
-  @protected
-  static List<dynamic> getAssignValues(dynamic iterable) {
-    if (iterable is List) {
-      return iterable;
-    }
+  @override
+  void visitWith(With wiz, [RenderContext? context]) {
+    context!;
 
-    if (iterable is Iterable) {
-      return iterable.toList();
-    }
+    final targets = wiz.targets.map((target) => target.accept(this, context)).toList();
+    final values = wiz.values.map((value) => value.accept(this, context)).toList();
 
-    if (iterable is String) {
-      return iterable.split('');
-    }
-
-    if (iterable is Map) {
-      return iterable.entries.map((entry) => [entry.key, entry.value]).toList();
-    }
-
-    throw TypeError();
+    context.push(getDataForTargets(targets, values));
+    visitAll(wiz.body, context);
+    context.pop();
   }
 
   @protected
-  static Map<String, dynamic> assignTargets(dynamic target, dynamic current) {
-    if (target is String) {
-      return <String, dynamic>{target: current};
-    }
-
-    if (target is List<String>) {
-      List<dynamic> list;
-
-      if (current is List) {
-        list = current;
-      } else if (current is Iterable) {
-        list = current.toList();
-      } else if (current is String) {
-        list = current.split('');
-      } else {
-        throw TypeError();
-      }
-
-      if (list.length < target.length) {
-        throw StateError('not enough values to unpack (expected ${target.length}, got ${list.length})');
-      }
-
-      if (list.length > target.length) {
-        throw StateError('too many values to unpack (expected ${target.length})');
-      }
-
-      final data = <String, dynamic>{};
-
-      for (var i = 0; i < target.length; i++) {
-        data[target[i]] = list[i];
-      }
-
-      return data;
-    }
-
-    throw ArgumentError.value(target, 'target');
-  }
-
-  @protected
-  static void assignTargetsToData(RenderContext context, dynamic target, dynamic current) {
+  static void assignTargetsToContext(RenderContext context, dynamic target, dynamic current) {
     if (target is String) {
       context[target] = current;
       return;
@@ -321,6 +275,46 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
       namespace[target.attribute] = current;
       return;
+    }
+
+    throw ArgumentError.value(target, 'target');
+  }
+
+  @protected
+  static Map<String, dynamic> getDataForTargets(dynamic target, dynamic current) {
+    if (target is String) {
+      return <String, dynamic>{target: current};
+    }
+
+    if (target is List) {
+      final names = target.cast<String>();
+      List<dynamic> list;
+
+      if (current is List) {
+        list = current;
+      } else if (current is Iterable) {
+        list = current.toList();
+      } else if (current is String) {
+        list = current.split('');
+      } else {
+        throw TypeError();
+      }
+
+      if (list.length < names.length) {
+        throw StateError('not enough values to unpack (expected ${names.length}, got ${list.length})');
+      }
+
+      if (list.length > names.length) {
+        throw StateError('too many values to unpack (expected ${names.length})');
+      }
+
+      final data = <String, dynamic>{};
+
+      for (var i = 0; i < names.length; i++) {
+        data[names[i]] = list[i];
+      }
+
+      return data;
     }
 
     throw ArgumentError.value(target, 'target');

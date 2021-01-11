@@ -225,4 +225,10 @@ class TemplateBuilder extends Visitor<Frame, String> {
     // TODO: implement visitUnary
     throw UnimplementedError();
   }
+
+  @override
+  String visitWith(With wiz, [Frame? context]) {
+    // TODO: implement visitWith
+    throw UnimplementedError();
+  }
 }

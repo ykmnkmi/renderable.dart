@@ -30,6 +30,26 @@ bool boolean(Object? value) {
   return true;
 }
 
+List<dynamic> list(dynamic iterable) {
+  if (iterable is List) {
+    return iterable;
+  }
+
+  if (iterable is Iterable) {
+    return iterable.toList();
+  }
+
+  if (iterable is String) {
+    return iterable.split('');
+  }
+
+  if (iterable is Map) {
+    return iterable.entries.map((entry) => [entry.key, entry.value]).toList();
+  }
+
+  return iterable.toList() as List<dynamic>;
+}
+
 Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
   if (step == 0) {
     throw StateError('range() argument 3 must not be zero');

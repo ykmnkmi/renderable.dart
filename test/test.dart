@@ -7,7 +7,10 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{% set foo | trim | length | string %} 42    {% endset %}{{ foo }}';
+  final source = '''{% with a=42, b=23 -%}
+            {{ a }} = {{ b }}
+        {% endwith -%}
+            {{ a }} = {{ b }}''';
 
   try {
     final environment = Environment(autoEscape: true);
@@ -33,7 +36,7 @@ void main(List<String> arguments) {
     template.nodes.forEach(print);
 
     print('\nrender:');
-    print(template.render({'test': '<unsafe>'}));
+    print(template.render({'a': 1, 'b': 2}));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

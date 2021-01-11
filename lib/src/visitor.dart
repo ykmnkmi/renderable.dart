@@ -108,4 +108,6 @@ abstract class Visitor<C, R> {
   R visitTupleLiteral(TupleLiteral tuple, [C? context]);
 
   R visitUnary(Unary unary, [C? context]);
+
+  R visitWith(With wiz, [C? context]);
 }

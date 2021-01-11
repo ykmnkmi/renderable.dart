@@ -170,3 +170,30 @@ class Output extends Statement {
     return 'Output(${nodes.join(', ')})';
   }
 }
+
+class With extends Statement {
+  With(this.targets, this.values, this.body);
+
+  List<Expression> targets;
+
+  List<Expression> values;
+
+  List<Node> body;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitWith(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    targets.forEach(visitor);
+    values.forEach(visitor);
+    body.forEach(visitor);
+  }
+
+  @override
+  String toString() {
+    return 'With($targets, $values, $body)';
+  }
+}

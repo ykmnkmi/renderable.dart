@@ -278,6 +278,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       case AssignContext.load:
         return context!.get(name.name);
       case AssignContext.store:
+      case AssignContext.parameter:
         return name.name;
       default:
         throw UnimplementedError();
@@ -384,5 +385,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       case 'not':
         return !boolean(value);
     }
+  }
+
+  @override
+  void visitWith(With wiz, [C? context]) {
+    throw UnimplementedError();
   }
 }
