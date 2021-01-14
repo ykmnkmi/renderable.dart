@@ -28,6 +28,7 @@ API:
 - Environment
 - Template
 - Lexer
+  - Whitespace Control (more tests)
 - Parser
 - Optimizer
 - Filters

@@ -1,7 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:renderable/src/context.dart';
-import 'package:renderable/src/enirvonment.dart';
-import 'package:renderable/src/optimizer.dart';
 
 import 'lexer.dart';
 import 'nodes.dart';
@@ -38,11 +35,6 @@ class Parser {
     final tokens = Lexer(configuration).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     final nodes = scan(reader);
-
-    if (configuration.optimized) {
-      optimizer.visitAll(nodes, Context(configuration as Environment));
-    }
-
     return nodes;
   }
 

@@ -95,7 +95,7 @@ String represent(Object? object) {
       ..write('}');
     return buffer.toString();
   } else if (object is String) {
-    final string = object.replaceAll('\'', '\\\'');
+    final string = object.replaceAll('\'', r"\'");
     return "'$string'";
   } else {
     return object.toString();

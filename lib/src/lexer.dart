@@ -1,5 +1,7 @@
 library tokenizer;
 
+import 'dart:convert';
+
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
@@ -66,14 +68,16 @@ class Rule {
 
 class Lexer {
   Lexer(Configuration configuration, {this.ignoredTokens = defaultIgnoredTokens})
-      : newLine = configuration.newLine,
-        newLineRe = RegExp(r'(\r\n|\r|\n)'),
+      : newLineRe = RegExp(r'(\r\n|\r|\n)'),
         whitespaceRe = RegExp(r'\s+'),
         nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
         stringRe = RegExp(r"('([^'\\]*(?:\\.[^'\\]*)*)'" r'|"([^"\\]*(?:\\.[^"\\]*)*)")', dotAll: true),
         integerRe = RegExp(r'(\d+_)*\d+'),
         floatRe = RegExp(r'\.(\d+_)*\d+[eE][+\-]?(\d+_)*\d+|\.(\d+_)*\d+'),
-        operatorsRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;') {
+        operatorsRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;'),
+        lStripUnlessRe = configuration.lStripBlocks ? compile('[^ \t]') : null,
+        newLine = configuration.newLine,
+        keepTrailingNewLine = configuration.keepTrailingNewLine {
     final blockSuffixRe = configuration.trimBlocks ? r'\n?' : '';
 
     final commentBeginRe = escape(configuration.commentBegin);
@@ -139,10 +143,27 @@ class Lexer {
               break;
             }
 
-            final stripped = strip(data, sign);
+            var stripped = data;
+
+            if (sign == '-') {
+              stripped = data.trimRight();
+            } else if (sign != '+' && lStripUnlessRe != null && match.namedGroup('variable_begin') == null) {
+              final position = data.lastIndexOf('\n') + 1;
+
+              if (position > 0) {
+                if (data.startsWith(' ', position) || data.startsWith('\t', position)) {
+                  stripped = data.substring(0, position);
+                }
+              } else {
+                stripped = data.trimRight();
+              }
+            }
+
+            if (stripped.isNotEmpty) {
+              yield Token(match.start, 'data', stripped);
+            }
 
             if (data.isNotEmpty) {
-              yield Token(match.start, 'data', stripped);
               scanner.position = match.start + data.length;
             } else {
               scanner.position = match.start;
@@ -162,15 +183,17 @@ class Lexer {
         Rule(
           compile('$commentBeginRe[\\+-]?\\s*'),
           (scanner) sync* {
-            yield Token.simple(scanner.lastMatch!.start, 'comment_begin');
+            var match = scanner.lastMatch as RegExpMatch;
+            yield Token.simple(match.start, 'comment_begin');
 
             if (!scanner.scan(commentEnd)) {
               throw 'comment end expected.';
             }
 
-            final comment = scanner.lastMatch![1]!;
-            yield Token(scanner.lastMatch!.start, 'comment', comment.trim());
-            yield Token.simple(scanner.lastMatch!.start + comment.length, 'comment_end');
+            match = scanner.lastMatch as RegExpMatch;
+            final comment = match[1]!;
+            yield Token(match.start, 'comment', comment.trim());
+            yield Token.simple(match.start + comment.length, 'comment_end');
           },
         ),
       ],
@@ -178,14 +201,15 @@ class Lexer {
         Rule(
           compile('$variableBeginRe[\\+-]?\\s*'),
           (scanner) sync* {
-            yield Token.simple(scanner.lastMatch!.start, 'variable_begin');
+            final match = scanner.lastMatch as RegExpMatch;
+            yield Token.simple(match.start, 'variable_begin');
             yield* expression(scanner, variableEnd);
 
             if (!scanner.scan(variableEnd)) {
               throw 'expression end expected.';
             }
 
-            yield Token.simple(scanner.lastMatch!.start, 'variable_end');
+            yield Token.simple(match.start, 'variable_end');
           },
         ),
       ],
@@ -193,14 +217,16 @@ class Lexer {
         Rule(
           compile('$blockBeginRe[\\+-]?\\s*'),
           (scanner) sync* {
-            yield Token.simple(scanner.lastMatch!.start, 'block_begin');
+            var match = scanner.lastMatch as RegExpMatch;
+            yield Token.simple(match.start, 'block_begin');
             yield* expression(scanner, blockEnd);
 
             if (!scanner.scan(blockEnd)) {
               throw 'statement end expected.';
             }
 
-            yield Token.simple(scanner.lastMatch!.start, 'block_end');
+            match = scanner.lastMatch as RegExpMatch;
+            yield Token.simple(match.start, 'block_end');
           },
         ),
       ],
@@ -208,25 +234,25 @@ class Lexer {
         Rule(
           rawBegin,
           (scanner) sync* {
-            yield Token.simple(scanner.lastMatch!.start, 'raw_begin');
+            var match = scanner.lastMatch as RegExpMatch;
+            yield Token.simple(match.start, 'raw_begin');
 
             if (!scanner.scan(rawEnd)) {
               throw 'missing end of raw directive';
             }
 
-            final data = scanner.lastMatch![1]!;
-            final sign = scanner.lastMatch![3]!;
-            final stripped = strip(data, sign);
+            match = scanner.lastMatch as RegExpMatch;
 
-            yield Token(scanner.lastMatch!.start, 'data', stripped);
-            yield Token.simple(scanner.lastMatch!.start + data.length, 'raw_end');
+            final data = match[1]!;
+            final sign = match[3]!;
+            final stripped = sign == '-' ? data.trimRight() : data;
+            yield Token(match.start, 'data', stripped);
+            yield Token.simple(match.start + data.length, 'raw_end');
           },
         ),
       ],
     };
   }
-
-  final String newLine;
 
   final RegExp newLineRe;
 
@@ -242,12 +268,28 @@ class Lexer {
 
   final RegExp operatorsRe;
 
+  final RegExp? lStripUnlessRe;
+
+  final String newLine;
+
+  final bool keepTrailingNewLine;
+
   final List<String> ignoredTokens;
 
   late Map<String, List<Rule>> rules;
 
-  Iterable<Token> tokenize(String template, {String? path}) sync* {
-    final scanner = StringScanner(template, sourceUrl: path);
+  Iterable<Token> tokenize(String source, {String? path}) sync* {
+    final lines = const LineSplitter().convert(source);
+
+    if (keepTrailingNewLine && source.isNotEmpty) {
+      if (source.endsWith('\r\n') || source.endsWith('\r') || source.endsWith('\n')) {
+        lines.add('');
+      }
+    }
+
+    source = lines.join('\n');
+
+    final scanner = StringScanner(source, sourceUrl: path);
     var notFound = true; // is needed?
 
     while (!scanner.isDone) {
@@ -274,7 +316,7 @@ class Lexer {
       }
     }
 
-    yield Token.simple(template.length, 'eof');
+    yield Token.simple(source.length, 'eof');
   }
 
   @protected
@@ -290,15 +332,6 @@ class Lexer {
         break;
       }
     }
-  }
-
-  @protected
-  String strip(String data, String sign) {
-    if (sign == '-') {
-      return data.trimRight();
-    }
-
-    return data;
   }
 
   @protected

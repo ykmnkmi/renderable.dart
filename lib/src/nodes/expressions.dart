@@ -594,7 +594,7 @@ class Constant<T> extends Literal {
 
   @override
   String toString() {
-    return 'Constant<$T>(${represent(value)})';
+    return 'Constant<$T>(${represent(value).replaceAll('\n', r'\n')})';
   }
 }
 

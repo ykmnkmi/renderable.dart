@@ -76,6 +76,12 @@ class Optimizer extends Visitor<Context, Node> {
     }
   }
 
+  void visitAllNotSafe(List<Node> nodes, [Context? context]) {
+    for (var i = 0; i < nodes.length; i += 1) {
+      nodes[i] = nodes[i].accept(this, context);
+    }
+  }
+
   @override
   Assign visitAssign(Assign assign, [Context? context]) {
     return assign;
@@ -168,9 +174,9 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  DictLiteral visitDictLiteral(DictLiteral dict, [Context? context]) {
-    visitAll(dict.pairs, context);
-    return dict;
+  Expression visitDictLiteral(DictLiteral dict, [Context? context]) {
+    visitAllNotSafe(dict.pairs, context);
+    return constant(dict, context);
   }
 
   @override
@@ -249,9 +255,9 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  ListLiteral visitListLiteral(ListLiteral list, [Context? context]) {
-    visitAll(list.expressions, context);
-    return list;
+  Expression visitListLiteral(ListLiteral list, [Context? context]) {
+    visitAllNotSafe(list.expressions, context);
+    return constant(list, context);
   }
 
   @override
@@ -330,9 +336,9 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  TupleLiteral visitTupleLiteral(TupleLiteral tuple, [Context? context]) {
-    visitAll(tuple.expressions, context);
-    return tuple;
+  Expression visitTupleLiteral(TupleLiteral tuple, [Context? context]) {
+    visitAllNotSafe(tuple.expressions, context);
+    return constant(tuple, context);
   }
 
   @override

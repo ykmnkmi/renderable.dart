@@ -2,9 +2,11 @@ import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
 import 'configuration.dart';
+import 'context.dart';
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
 import 'nodes.dart';
+import 'optimizer.dart';
 import 'parser.dart';
 import 'renderable.dart';
 import 'renderer.dart';
@@ -168,7 +170,13 @@ class Environment extends Configuration {
   }
 
   Template fromString(String source, {String? path}) {
-    final template = Template.parsed(this, Parser(this).parse(source, path: path), path);
+    final nodes = Parser(this).parse(source, path: path);
+
+    if (optimized) {
+      optimizer.visitAll(nodes, Context(this));
+    }
+
+    final template = Template.parsed(this, nodes, path);
 
     if (path != null) {
       templates[path] = template;
@@ -228,6 +236,7 @@ class Template implements Renderable {
       String newLine = defaults.newLine,
       bool keepTrailingNewLine = defaults.keepTrailingNewLine,
       Finalizer finalize = defaults.finalize,
+      bool optimized = true,
       bool autoEscape = false,
       Map<String, Object>? globals,
       Map<String, Function>? filters,
@@ -252,6 +261,7 @@ class Template implements Renderable {
           newLine: newLine,
           keepTrailingNewLine: keepTrailingNewLine,
           finalize: finalize,
+          optimized: optimized,
           autoEscape: autoEscape,
           globals: globals,
           filters: filters,
@@ -274,6 +284,7 @@ class Template implements Renderable {
           newLine: newLine,
           keepTrailingNewLine: keepTrailingNewLine,
           finalize: finalize,
+          optimized: optimized,
           autoEscape: autoEscape,
           globals: globals,
           filters: filters,
@@ -314,9 +325,7 @@ class Template implements Renderable {
 
 void prepare(Node node) {
   if (node is Call) {
-    var expression = node.expression;
-
-    if (expression is Name && expression.name == 'namespace') {
+    if (node.expression is Name && (node.expression as Name).name == 'namespace') {
       final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
       node.arguments = null;
 
@@ -326,17 +335,13 @@ void prepare(Node node) {
         arguments.add(dict);
       }
 
-      expression = node.dArguments;
-
-      if (expression != null) {
-        arguments.add(expression);
+      if (node.dArguments != null) {
+        arguments.add(node.dArguments!);
         node.dArguments = null;
       }
 
-      expression = node.dKeywordArguments;
-
-      if (expression != null) {
-        arguments.add(expression);
+      if (node.dKeywordArguments != null) {
+        arguments.add(node.dKeywordArguments!);
         node.dKeywordArguments = null;
       }
 
