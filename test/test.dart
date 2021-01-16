@@ -11,26 +11,25 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
   final source = r'''
-    <%#regular comment%>
-    <%for item in seq%>
+    <%# regular comment %>
+    <% for item in seq %>
 ${item} ## the rest of the stuff
-   <%endfor%>''';
+   <% endfor %>''';
 
   try {
-    final environment = Environment(
-        blockBegin: '<%',
-        blockEnd: '%>',
-        variableBegin: r'${',
-        variableEnd: '}',
-        commentBegin: '<%#',
-        commentEnd: '%>',
-        lineCommentPrefix: '##',
-        lineStatementPrefix: '%',
-        lStripBlocks: true,
-        trimBlocks: true);
+    final environment = Environment(blockBegin: '<%',
+          blockEnd: '%>',
+          variableBegin: r'${',
+          variableEnd: '}',
+          commentBegin: '<%#',
+          commentEnd: '%>',
+          lineCommentPrefix: '##',
+          lineStatementPrefix: '%',
+          lStripBlocks: true,
+          trimBlocks: true);
 
     print('source:');
-    print(source);
+    print(source.replaceAll(' ', '•'));
 
     final lexer = Lexer(environment);
     final tokens = lexer.tokenize(source);
@@ -42,17 +41,17 @@ ${item} ## the rest of the stuff
     final parser = Parser(environment);
     final nodes = parser.scan(reader);
 
-    print('\nnodes:');
-    nodes.forEach(print);
+    // print('\nnodes:');
+    // nodes.forEach(print);
 
     optimizer.visitAll(nodes, Context(environment));
 
     final template = Template.parsed(environment, nodes);
-    print('\ntemplate nodes:');
-    template.nodes.forEach(print);
+    // print('\ntemplate nodes:');
+    // template.nodes.forEach(print);
 
     print('\nrender:');
-    print(template.render({'seq': range(5)}));
+    print('"' + template.render({'seq': range(5)}).replaceAll(' ', '•') + '"');
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

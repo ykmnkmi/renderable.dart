@@ -11,14 +11,14 @@ const String variableBegin = '{{';
 const String variableEnd = '}}';
 const String commentBegin = '{#';
 const String commentEnd = '#}';
-const String lineCommentPrefix = '##';
-const String lineStatementPrefix = '#';
+const String? lineCommentPrefix = null;
+const String? lineStatementPrefix = null;
 const bool trimBlocks = false;
 const bool lStripBlocks = false;
 const String newLine = '\n';
 const bool keepTrailingNewLine = false;
 
-const Map<String, dynamic> globals = <String, dynamic>{
+const Map<String, dynamic> globals = {
   'namespace': Namespace.factory,
   'range': range,
 };

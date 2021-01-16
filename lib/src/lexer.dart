@@ -6,6 +6,7 @@ import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
 import 'configuration.dart';
+import 'exceptions.dart';
 
 part 'token.dart';
 
@@ -38,7 +39,7 @@ const Map<String, String> operators = <String, String>{
   '~': 'tilde',
 };
 
-const List<String> defaultIgnoredTokens = <String>[
+const List<String> ignoredTokens = <String>[
   'whitespace',
   'comment_begin',
   'comment',
@@ -50,6 +51,13 @@ const List<String> defaultIgnoredTokens = <String>[
   'linecomment',
 ];
 
+const List<String> ignoreIfEmpty = <String>[
+  'whitespace',
+  'data',
+  'comment',
+  'linecomment',
+];
+
 String escape(String pattern) {
   return RegExp.escape(pattern);
 }
@@ -58,24 +66,82 @@ RegExp compile(String pattern) {
   return RegExp(pattern, dotAll: true, multiLine: true);
 }
 
-class Rule {
-  Rule(this.regExp, this.parse);
+abstract class Rule {
+  Rule(this.regExp, [this.newState]);
 
   final RegExp regExp;
 
-  final Iterable<Token> Function(StringScanner scanner) parse;
+  final String? newState;
+
+  @override
+  String toString() {
+    return 'Rule($newState)';
+  }
 }
 
+class SingleTokenRule extends Rule {
+  SingleTokenRule(RegExp regExp, this.token, [String? newState]) : super(regExp, newState);
+
+  final String token;
+
+  @override
+  String toString() {
+    return 'SingleTokenRule($token, $newState)';
+  }
+}
+
+class MultiTokenRule extends Rule {
+  MultiTokenRule(RegExp regExp, this.tokens, [String? newState])
+      : optionalLStrip = false,
+        super(regExp, newState);
+
+  MultiTokenRule.optionalLStrip(RegExp regExp, this.tokens, [String? newState])
+      : optionalLStrip = true,
+        super(regExp, newState);
+
+  final List<String> tokens;
+
+  final bool optionalLStrip;
+
+  @override
+  String toString() {
+    return 'MultiTokenRule($tokens, $optionalLStrip, $newState)';
+  }
+}
+
+@doNotStore
 class Lexer {
-  Lexer(Configuration configuration, {this.ignoredTokens = defaultIgnoredTokens})
+  final RegExp newLineRe;
+
+  final RegExp whitespaceRe;
+
+  final RegExp nameRe;
+
+  final RegExp stringRe;
+
+  final RegExp integerRe;
+
+  final RegExp floatRe;
+
+  final RegExp operatorRe;
+
+  final RegExp? lStripUnlessRe;
+
+  final String newLine;
+
+  final bool keepTrailingNewLine;
+
+  late Map<String, List<Rule>> rules;
+
+  Lexer(Configuration configuration)
       : newLineRe = RegExp(r'(\r\n|\r|\n)'),
         whitespaceRe = RegExp(r'\s+'),
         nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
         stringRe = RegExp(r"('([^'\\]*(?:\\.[^'\\]*)*)'" r'|"([^"\\]*(?:\\.[^"\\]*)*)")', dotAll: true),
         integerRe = RegExp(r'(\d+_)*\d+'),
-        floatRe = RegExp(r'\.(\d+_)*\d+[eE][+\-]?(\d+_)*\d+|\.(\d+_)*\d+'),
-        operatorsRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;'),
-        lStripUnlessRe = configuration.lStripBlocks ? compile('[^ \t]') : null,
+        floatRe = RegExp(r'(?<!\.)(\d+_)*\d+((\.(\d+_)*\d+)?e[+\-]?(\d+_)*\d+|\.(\d+_)*\d+)'),
+        operatorRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;'),
+        lStripUnlessRe = configuration.lStripBlocks ? compile('[^ \\t]') : null,
         newLine = configuration.newLine,
         keepTrailingNewLine = configuration.keepTrailingNewLine {
     final blockSuffixRe = configuration.trimBlocks ? r'\n?' : '';
@@ -92,20 +158,26 @@ class Lexer {
     final blockEndRe = escape(configuration.blockEnd);
     final blockEnd = compile('(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe})');
 
+    final lineCommentPrefixRe = r'(?:^|(?<=\S))[^\S\r\n]*' '${configuration.lineCommentPrefix}';
+    final lineCommentEnd = compile('(.*?)()(?=\n|\$)');
+
+    final tagRules = <Rule>[
+      SingleTokenRule(whitespaceRe, 'whitespace'),
+      SingleTokenRule(floatRe, 'float'),
+      SingleTokenRule(integerRe, 'integer'),
+      SingleTokenRule(nameRe, 'name'),
+      SingleTokenRule(stringRe, 'string'),
+      SingleTokenRule(operatorRe, 'operator'),
+    ];
+
     final rootTagRules = <List<String>>[
       ['comment_begin', configuration.commentBegin, commentBeginRe],
       ['variable_begin', configuration.variableBegin, variableBeginRe],
       ['block_begin', configuration.blockBegin, blockBeginRe],
+      if (configuration.lineCommentPrefix != null) ['linecomment_begin', configuration.lineCommentPrefix!, lineCommentPrefixRe],
     ];
 
     rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
-
-    // 0 - full match
-    // 1 - data
-    // 2 - raw_being group
-    // 3 - raw_being sign
-    // n - *_begin group
-    // n + 1 - *_begin sign
 
     final rawBegin = compile('(?<raw_begin>${blockBeginRe}(-|\\+|)\\s*raw\\s*(?:-${blockEndRe}\\s*|${blockEndRe}))');
     final rawEnd = compile('(.*?)((?:${blockBeginRe}(-|\\+|))\\s*endraw\\s*'
@@ -117,168 +189,224 @@ class Lexer {
     ];
 
     final rootPartsRe = rootParts.join('|');
-
-    final dataRe = '(.*?)(?:${rootPartsRe})';
+    final data = compile('(.*?)(?:${rootPartsRe})');
 
     rules = <String, List<Rule>>{
       'root': <Rule>[
-        Rule(
-          compile(dataRe),
-          (scanner) sync* {
-            final match = scanner.lastMatch as RegExpMatch;
-            final names = match.groupNames.toList();
-            final data = match[1]!;
-            var state = '';
-            var sign = '';
-
-            final groups = match.groups([3, 5, 7, 9]);
-
-            for (var i = 0; i < names.length; i += 1) {
-              if (match.namedGroup(names[i]) == null) {
-                continue;
-              }
-
-              state = names[i];
-              sign = groups[i]!;
-              break;
-            }
-
-            var stripped = data;
-
-            if (sign == '-') {
-              stripped = data.trimRight();
-            } else if (sign != '+' && lStripUnlessRe != null && match.namedGroup('variable_begin') == null) {
-              final position = data.lastIndexOf('\n') + 1;
-
-              if (position > 0) {
-                if (data.startsWith(' ', position) || data.startsWith('\t', position)) {
-                  stripped = data.substring(0, position);
-                }
-              } else {
-                stripped = data.trimRight();
-              }
-            }
-
-            if (stripped.isNotEmpty) {
-              yield Token(match.start, 'data', stripped);
-            }
-
-            if (data.isNotEmpty) {
-              scanner.position = match.start + data.length;
-            } else {
-              scanner.position = match.start;
-            }
-
-            yield* scan(scanner, state);
-          },
-        ),
-        Rule(
-          compile('.+'),
-          (scanner) sync* {
-            yield Token(scanner.position, 'data', scanner.lastMatch![0]!);
-          },
-        ),
+        MultiTokenRule.optionalLStrip(data, <String>['data', '#group'], '#group'),
+        SingleTokenRule(compile('.+'), 'data'),
       ],
-      'comment_begin': [
-        Rule(
-          compile('$commentBeginRe[\\+-]?\\s*'),
-          (scanner) sync* {
-            var match = scanner.lastMatch as RegExpMatch;
-            yield Token.simple(match.start, 'comment_begin');
-
-            if (!scanner.scan(commentEnd)) {
-              throw 'comment end expected.';
-            }
-
-            match = scanner.lastMatch as RegExpMatch;
-            final comment = match[1]!;
-            yield Token(match.start, 'comment', comment.trim());
-            yield Token.simple(match.start + comment.length, 'comment_end');
-          },
-        ),
+      'comment_begin': <Rule>[
+        MultiTokenRule(commentEnd, <String>['comment', 'comment_end'], '#pop'),
+        MultiTokenRule(compile('(.)'), <String>['@missing end of comment tag']),
       ],
-      'variable_begin': [
-        Rule(
-          compile('$variableBeginRe[\\+-]?\\s*'),
-          (scanner) sync* {
-            final match = scanner.lastMatch as RegExpMatch;
-            yield Token.simple(match.start, 'variable_begin');
-            yield* expression(scanner, variableEnd);
-
-            if (!scanner.scan(variableEnd)) {
-              throw 'expression end expected.';
-            }
-
-            yield Token.simple(match.start, 'variable_end');
-          },
-        ),
+      'variable_begin': <Rule>[
+        SingleTokenRule(variableEnd, 'variable_end', '#pop'),
+        ...tagRules,
       ],
-      'block_begin': [
-        Rule(
-          compile('$blockBeginRe[\\+-]?\\s*'),
-          (scanner) sync* {
-            var match = scanner.lastMatch as RegExpMatch;
-            yield Token.simple(match.start, 'block_begin');
-            yield* expression(scanner, blockEnd);
-
-            if (!scanner.scan(blockEnd)) {
-              throw 'statement end expected.';
-            }
-
-            match = scanner.lastMatch as RegExpMatch;
-            yield Token.simple(match.start, 'block_end');
-          },
-        ),
+      'block_begin': <Rule>[
+        SingleTokenRule(blockEnd, 'block_end', '#pop'),
+        ...tagRules,
       ],
-      'raw_begin': [
-        Rule(
-          rawBegin,
-          (scanner) sync* {
-            var match = scanner.lastMatch as RegExpMatch;
-            yield Token.simple(match.start, 'raw_begin');
-
-            if (!scanner.scan(rawEnd)) {
-              throw 'missing end of raw directive';
-            }
-
-            match = scanner.lastMatch as RegExpMatch;
-
-            final data = match[1]!;
-            final sign = match[3]!;
-            final stripped = sign == '-' ? data.trimRight() : data;
-            yield Token(match.start, 'data', stripped);
-            yield Token.simple(match.start + data.length, 'raw_end');
-          },
-        ),
+      'raw_begin': <Rule>[
+        MultiTokenRule.optionalLStrip(rawEnd, <String>['data', 'raw_end'], '#pop'),
+        MultiTokenRule(compile('(.)'), <String>['@missing end of raw directive']),
+      ],
+      'linecomment_begin': <Rule>[
+        MultiTokenRule(lineCommentEnd, <String>['linecomment', 'linecomment_end'], '#pop'),
       ],
     };
   }
 
-  final RegExp newLineRe;
+  @protected
+  String normalizeNewLines(String value) {
+    return value.replaceAll(newLineRe, newLine);
+  }
 
-  final RegExp whitespaceRe;
+  @protected
+  List<Token> scan(StringScanner scanner, [String? state]) {
+    const endTokens = <String>['variable_end', 'block_end', 'linestatement_end'];
 
-  final RegExp nameRe;
+    final stack = <String>['root'];
+    final balancingStack = <String>[];
 
-  final RegExp stringRe;
+    if (state != null && state != 'root') {
+      assert(state == 'variable' || state == 'block');
+      stack.add(state + '_begin');
+    }
 
-  final RegExp integerRe;
+    var stateRules = rules[stack.last]!;
+    var position = 0;
+    var line = 1;
+    var newLinesStripped = 0;
+    var lineStarting = true;
 
-  final RegExp floatRe;
+    final tokens = <Token>[];
 
-  final RegExp operatorsRe;
+    while (true) {
+      var notBreak = true;
 
-  final RegExp? lStripUnlessRe;
+      for (final rule in stateRules) {
+        if (!scanner.scan(rule.regExp)) continue;
 
-  final String newLine;
+        final match = scanner.lastMatch as RegExpMatch;
 
-  final bool keepTrailingNewLine;
+        if (rule is MultiTokenRule) {
+          final groups = match.groups(List<int>.generate(match.groupCount, (index) => index + 1));
 
-  final List<String> ignoredTokens;
+          if (rule.optionalLStrip) {
+            final text = groups[0]!;
 
-  late Map<String, List<Rule>> rules;
+            late String stripSign;
 
-  Iterable<Token> tokenize(String source, {String? path}) sync* {
+            for (var i = 2; i < groups.length; i += 2) {
+              if (groups[i] != null) {
+                stripSign = groups[i]!;
+              }
+            }
+
+            if (stripSign == '-') {
+              final stripped = text.trimRight();
+              newLinesStripped = text.substring(stripped.length).split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+              groups[0] = stripped;
+            } else if (stripSign != '+' &&
+                lStripUnlessRe != null &&
+                (!match.groupNames.contains('variable_begin') || match.namedGroup('variable_begin') == null)) {
+              final lastPosition = text.lastIndexOf('\n') + 1;
+
+              if (lastPosition > 0 || lineStarting) {
+                if (lStripUnlessRe!.firstMatch(text.substring(lastPosition)) == null) {
+                  groups[0] = groups[0]!.substring(0, lastPosition);
+                }
+              }
+            }
+          }
+
+          for (var i = 0; i < rule.tokens.length; i += 1) {
+            final token = rule.tokens[i];
+
+            if (token.startsWith('@')) {
+              throw token.substring(1);
+            } else if (token == '#group') {
+              var notFound = true;
+
+              for (final name in match.groupNames) {
+                final group = match.namedGroup(name);
+
+                if (group != null) {
+                  tokens.add(Token(line, name, group));
+                  line += group.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+                  notFound = false;
+                }
+              }
+
+              if (notFound) {
+                throw Exception('${rule.regExp} wanted to resolve the token dynamically but no group matched');
+              }
+            } else {
+              final data = groups[i];
+
+              if (data == null) {
+                tokens.add(Token.simple(line, token));
+              } else {
+                if (data.isNotEmpty || !ignoreIfEmpty.contains(token)) {
+                  tokens.add(Token(line, token, data));
+                }
+
+                line += data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count) + newLinesStripped;
+                newLinesStripped = 0;
+              }
+            }
+          }
+        } else if (rule is SingleTokenRule) {
+          if (balancingStack.isNotEmpty && endTokens.contains(rule.token)) {
+            scanner.position = match.start;
+            continue;
+          }
+
+          final data = match[0];
+          final token = rule.token;
+
+          if (token == 'operator') {
+            if (data == '(') {
+              balancingStack.add(')');
+            } else if (data == '[') {
+              balancingStack.add(']');
+            } else if (data == '{') {
+              balancingStack.add('}');
+            } else if (data == ')' || data == ']' || data == '}') {
+              if (balancingStack.isEmpty) {
+                throw TemplateSyntaxError('unexpected \'$data\'');
+              }
+
+              final expected = balancingStack.removeLast();
+
+              if (data != expected) {
+                throw TemplateSyntaxError('unexpected \'$data\', expected \'$expected\'');
+              }
+            }
+          }
+
+          if (data == null) {
+            tokens.add(Token.simple(line, token));
+          } else {
+            if (data.isNotEmpty || !ignoreIfEmpty.contains(token)) {
+              tokens.add(Token(line, token, data));
+            }
+
+            line += data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+          }
+        } else {
+          throw UnsupportedError('${rule.runtimeType}');
+        }
+
+        lineStarting = match[0]!.endsWith('\n');
+
+        final position2 = match.end;
+
+        if (rule.newState != null) {
+          if (rule.newState == '#pop') {
+            stack.removeLast();
+          } else if (rule.newState == '#group') {
+            var notFound = true;
+
+            for (final name in match.groupNames) {
+              final group = match.namedGroup(name);
+
+              if (group != null) {
+                stack.add(name);
+                notFound = false;
+              }
+            }
+
+            if (notFound) {
+              throw Exception('${rule.regExp} wanted to resolve the token dynamically but no group matched');
+            }
+          } else {
+            stack.add(rule.newState!);
+          }
+
+          stateRules = rules[stack.last]!;
+        } else if (position == position2) {
+          throw '${rule.regExp} yielded empty string without stack change';
+        }
+
+        position = position2;
+        notBreak = false;
+        break;
+      }
+
+      if (notBreak) {
+        if (scanner.isDone) {
+          return tokens;
+        } else {
+          throw TemplateSyntaxError('unexpected char ${scanner.rest[0]} at ${scanner.position}.');
+        }
+      }
+    }
+  }
+
+  List<Token> tokenize(String source, {String? path}) {
     final lines = const LineSplitter().convert(source);
 
     if (keepTrailingNewLine && source.isNotEmpty) {
@@ -290,99 +418,31 @@ class Lexer {
     source = lines.join('\n');
 
     final scanner = StringScanner(source, sourceUrl: path);
-    var notFound = true; // is needed?
 
-    while (!scanner.isDone) {
-      for (final token in scan(scanner)) {
-        notFound = false;
+    final tokens = <Token>[];
 
-        if (ignoredTokens.any(token.test)) {
-          continue;
-        } else if (token.test('linestatement_begin')) {
-          yield token.change(type: 'block_begin');
-        } else if (token.test('linestatement_end')) {
-          yield token.change(type: 'block_end');
-        } else if (token.test('data') || token.test('string')) {
-          yield token.change(value: normalizeNewLines(token.value));
-        } else if (token.test('integer') || token.test('float')) {
-          yield token.change(value: token.value.replaceAll('_', ''));
-        } else {
-          yield token;
-        }
-      }
-
-      if (notFound) {
-        throw 'unexpected char ${scanner.rest[0]} at ${scanner.position}.';
-      }
-    }
-
-    yield Token.simple(source.length, 'eof');
-  }
-
-  @protected
-  String normalizeNewLines(String value) {
-    return value.replaceAll(newLineRe, newLine);
-  }
-
-  @protected
-  Iterable<Token> scan(StringScanner scanner, [String state = 'root']) sync* {
-    for (final rule in rules[state]!) {
-      if (scanner.scan(rule.regExp)) {
-        yield* rule.parse(scanner);
-        break;
-      }
-    }
-  }
-
-  @protected
-  Iterable<Token> expression(StringScanner scanner, RegExp end) sync* {
-    final stack = <String>[];
-
-    while (!scanner.isDone) {
-      if (stack.isEmpty && scanner.matches(end)) {
-        return;
-      } else if (scanner.scan(whitespaceRe)) {
-        yield Token(scanner.lastMatch!.start, 'whitespace', scanner.lastMatch![0]!);
-      } else if (scanner.scan(nameRe)) {
-        yield Token(scanner.lastMatch!.start, 'name', scanner.lastMatch![0]!);
-      } else if (scanner.scan(stringRe)) {
-        yield Token(scanner.lastMatch!.start, 'string', scanner.lastMatch![2] ?? scanner.lastMatch![3] ?? '');
-      } else if (scanner.scan(integerRe)) {
-        final start = scanner.lastMatch!.start;
-        final integer = scanner.lastMatch![0]!;
-
-        if (scanner.scan(floatRe)) {
-          yield Token(start, 'float', integer + scanner.lastMatch![0]!);
-        } else {
-          yield Token(start, 'integer', integer);
-        }
-      } else if (scanner.scan(operatorsRe)) {
-        final operator = scanner.lastMatch![0]!;
-
-        if (operator == '(') {
-          stack.add(')');
-        } else if (operator == '[') {
-          stack.add(']');
-        } else if (operator == '{') {
-          stack.add('}');
-        } else if (operator == ')' || operator == ']' || operator == '}') {
-          if (stack.isEmpty) {
-            scanner.position -= 1;
-            return;
-          }
-
-          final expected = stack.removeLast();
-
-          if (operator != expected) {
-            throw 'unexpected char ${scanner.rest[0]} at ${scanner.position}\'$operator\', expected \'$expected\'.';
-          }
-        }
-
-        yield Token.simple(scanner.lastMatch!.start, operators[operator]!);
+    for (final token in scan(scanner)) {
+      if (ignoredTokens.any(token.test)) {
+        continue;
+      } else if (token.test('linestatement_begin')) {
+        tokens.add(token.change(type: 'block_begin'));
+      } else if (token.test('linestatement_end')) {
+        tokens.add(token.change(type: 'block_end'));
+      } else if (token.test('data')) {
+        tokens.add(token.change(value: normalizeNewLines(token.value)));
+      } else if (token.test('string')) {
+        tokens.add(token.change(value: normalizeNewLines(token.value.substring(1, token.value.length - 1))));
+      } else if (token.test('integer') || token.test('float')) {
+        tokens.add(token.change(value: token.value.replaceAll('_', '')));
+      } else if (token.test('operator')) {
+        tokens.add(Token.simple(token.line, operators[token.value]!));
       } else {
-        break;
+        tokens.add(token);
       }
     }
+
+    tokens.add(Token.simple(source.length, 'eof'));
+    return tokens;
   }
 
   @override

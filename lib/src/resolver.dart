@@ -148,28 +148,28 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
       switch (operand.operator) {
         case 'eq':
-          result = result && tests.equal(left, right);
+          result = result && tests.isEqual(left, right);
           break;
         case 'ne':
-          result = result && tests.notEqual(left, right);
+          result = result && tests.isNotEqual(left, right);
           break;
         case 'lt':
-          result = result && tests.lessThan(left, right);
+          result = result && tests.isLessThan(left, right);
           break;
         case 'le':
-          result = result && tests.lessThanOrEqual(left, right);
+          result = result && tests.isLessThanOrEqual(left, right);
           break;
         case 'gt':
-          result = result && tests.greaterThan(left, right);
+          result = result && tests.isGreaterThan(left, right);
           break;
         case 'ge':
-          result = result && tests.greaterThanOrEqual(left, right);
+          result = result && tests.isGreaterThanOrEqual(left, right);
           break;
         case 'in':
-          result = result && tests.contains(left, right);
+          result = result && tests.isIn(left, right);
           break;
         case 'notin':
-          result = result && !tests.contains(left, right);
+          result = result && !tests.isIn(left, right);
           break;
       }
 

@@ -32,18 +32,16 @@ abstract class Token {
     'tilde': '~',
   };
 
-  const factory Token(int start, String type, String value) = _ValueToken;
+  const factory Token(int line, String type, String value) = _ValueToken;
 
-  const factory Token.simple(int start, String type) = _SimpleToken;
+  const factory Token.simple(int line, String type) = _SimpleToken;
 
   @override
   int get hashCode {
-    return type.hashCode & start & value.hashCode;
+    return type.hashCode & line & value.hashCode;
   }
 
-  int get start;
-
-  int get end;
+  int get line;
 
   int get length;
 
@@ -57,10 +55,10 @@ abstract class Token {
       return true;
     }
 
-    return other is Token && type == other.type && start == other.start && value == other.value;
+    return other is Token && type == other.type && line == other.line && value == other.value;
   }
 
-  Token change({int start, String type, String value});
+  Token change({int line, String type, String value});
 
   bool test(String expressionOrType, [String? value]);
 
@@ -69,10 +67,10 @@ abstract class Token {
   @override
   String toString() {
     if (value.isEmpty) {
-      return '#$type:$start';
+      return '#$type:$line';
     }
 
-    return '#$type:$start $value';
+    return '#$type:$line $value';
   }
 }
 
@@ -81,18 +79,13 @@ abstract class _BaseToken implements Token {
   const _BaseToken();
 
   @override
-  int get end {
-    return start + length;
-  }
-
-  @override
   int get length {
     return value.length;
   }
 
   @override
-  Token change({int? start, String? type, String? value}) {
-    start ??= this.start;
+  Token change({int? line, String? type, String? value}) {
+    line ??= this.line;
     value ??= this.value;
 
     if (type != null && Token.common.containsKey(type)) {
@@ -105,7 +98,7 @@ abstract class _BaseToken implements Token {
       type = this.type;
     }
 
-    return value == null ? Token.simple(start, type) : Token(start, type, value);
+    return value == null ? Token.simple(line, type) : Token(line, type, value);
   }
 
   @override
@@ -140,18 +133,18 @@ abstract class _BaseToken implements Token {
   @override
   String toString() {
     if (value.isEmpty) {
-      return '$type:$start';
+      return '$type:$line';
     }
 
-    return '$type:$start:$length $value';
+    return '$type:$line:$length \'${value.replaceAll('\'', '\\\'').replaceAll('\n', r'\n')}\'';
   }
 }
 
 class _SimpleToken extends _BaseToken {
-  const _SimpleToken(this.start, this.type);
+  const _SimpleToken(this.line, this.type);
 
   @override
-  final int start;
+  final int line;
 
   @override
   final String type;
@@ -163,10 +156,10 @@ class _SimpleToken extends _BaseToken {
 }
 
 class _ValueToken extends _BaseToken {
-  const _ValueToken(this.start, this.type, this.value);
+  const _ValueToken(this.line, this.type, this.value);
 
   @override
-  final int start;
+  final int line;
 
   @override
   final String type;

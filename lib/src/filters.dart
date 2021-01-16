@@ -25,7 +25,7 @@ dynamic Function(dynamic) makeAttributeGetter(Environment environment, String at
 
   dynamic attributeGetter(dynamic item) {
     for (final part in attributes) {
-      item = attribute(environment, item, part);
+      item = doAttribute(environment, item, part);
 
       if (item == null) {
         if (defaultValue != null) {
@@ -46,15 +46,15 @@ dynamic Function(dynamic) makeAttributeGetter(Environment environment, String at
   return attributeGetter;
 }
 
-num abs(num number) {
+num doAbs(num number) {
   return number.abs();
 }
 
-dynamic attribute(Environment environment, dynamic object, String attribute) {
+dynamic doAttribute(Environment environment, dynamic object, String attribute) {
   return environment.getAttribute(object, attribute);
 }
 
-Iterable<List<dynamic>> batch(Iterable<dynamic> items, int lineCount, [dynamic fillWith]) sync* {
+Iterable<List<dynamic>> doBatch(Iterable<dynamic> items, int lineCount, [dynamic fillWith]) sync* {
   var temp = <dynamic>[];
 
   for (final item in items) {
@@ -75,7 +75,7 @@ Iterable<List<dynamic>> batch(Iterable<dynamic> items, int lineCount, [dynamic f
   }
 }
 
-String capitalize(String string) {
+String doCapitalize(String string) {
   if (string.length == 1) {
     return string.toUpperCase();
   }
@@ -83,7 +83,7 @@ String capitalize(String string) {
   return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
 }
 
-String center(String string, int width) {
+String doCenter(String string, int width) {
   if (string.length >= width) {
     return string;
   }
@@ -93,11 +93,11 @@ String center(String string, int width) {
   return pad + string + pad;
 }
 
-int count(dynamic items) {
+int doLength(dynamic items) {
   return items.length as int;
 }
 
-dynamic defaultValue(dynamic value, [dynamic defaultValue = '', bool boolean = false]) {
+dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool boolean = false]) {
   if (boolean) {
     return utils.boolean(value) ? value : defaultValue;
   }
@@ -105,7 +105,7 @@ dynamic defaultValue(dynamic value, [dynamic defaultValue = '', bool boolean = f
   return value ?? defaultValue;
 }
 
-Markup escape(dynamic value) {
+Markup doEscape(dynamic value) {
   if (value is Markup) {
     return value;
   }
@@ -113,7 +113,7 @@ Markup escape(dynamic value) {
   return Markup.escape(value.toString());
 }
 
-String fileSizeFormat(dynamic value, [bool binary = false]) {
+String doFileSizeFormat(dynamic value, [bool binary = false]) {
   final base = binary ? 1024 : 1000;
 
   double bytes;
@@ -153,11 +153,11 @@ String fileSizeFormat(dynamic value, [bool binary = false]) {
   }
 }
 
-dynamic first(Iterable<dynamic> values) {
+dynamic doFirst(Iterable<dynamic> values) {
   return values.first;
 }
 
-double float(dynamic value, [double defaultValue = 0.0]) {
+double doFloat(dynamic value, [double defaultValue = 0.0]) {
   if (value == null) {
     return defaultValue;
   }
@@ -177,11 +177,11 @@ double float(dynamic value, [double defaultValue = 0.0]) {
   return defaultValue;
 }
 
-Markup forceEscape(dynamic value) {
+Markup doForceEscape(dynamic value) {
   return Markup.escape(value.toString());
 }
 
-int integer(dynamic value, [int defaultValue = 0, int radix = 10]) {
+int doInteger(dynamic value, [int defaultValue = 0, int radix = 10]) {
   if (value == null) {
     return defaultValue;
   }
@@ -201,7 +201,7 @@ int integer(dynamic value, [int defaultValue = 0, int radix = 10]) {
   return defaultValue;
 }
 
-String join(Environment environment, Iterable<dynamic> items, [String delimiter = '', String? attribute]) {
+String doJoin(Environment environment, Iterable<dynamic> items, [String delimiter = '', String? attribute]) {
   if (attribute != null) {
     return items.map<dynamic>(makeAttributeGetter(environment, attribute)).join(delimiter);
   }
@@ -209,24 +209,24 @@ String join(Environment environment, Iterable<dynamic> items, [String delimiter 
   return items.join(delimiter);
 }
 
-dynamic last(Iterable<dynamic> values) {
+dynamic doLast(Iterable<dynamic> values) {
   return values.last;
 }
 
-String lower(String string) {
+String doLower(String string) {
   return string.toLowerCase();
 }
 
-dynamic random(Environment environment, List<dynamic> values) {
+dynamic doRandom(Environment environment, List<dynamic> values) {
   final length = values.length;
   return values[environment.random.nextInt(length)];
 }
 
-String string(dynamic value) {
+String doString(dynamic value) {
   return value.toString();
 }
 
-num sum(Environment environment, Iterable<dynamic> values, {String? attribute, num start = 0}) {
+num doSum(Environment environment, Iterable<dynamic> values, {String? attribute, num start = 0}) {
   if (attribute != null) {
     values = values.map<dynamic>(makeAttributeGetter(environment, attribute));
   }
@@ -234,40 +234,40 @@ num sum(Environment environment, Iterable<dynamic> values, {String? attribute, n
   return values.cast<num>().fold(start, (s, n) => s + n);
 }
 
-String trim(String value) {
+String doTrim(String value) {
   return value.trim();
 }
 
-String upper(String string) {
+String doUpper(String string) {
   return string.toUpperCase();
 }
 
-const Map<String, Function> filters = <String, Function>{
-  'abs': abs,
-  'attr': attribute,
-  'batch': batch,
-  'capitalize': capitalize,
-  'center': center,
-  'count': count,
-  'd': defaultValue,
-  'default': defaultValue,
-  'e': escape,
-  'escape': escape,
-  'filesizeformat': fileSizeFormat,
-  'first': first,
-  'float': float,
-  'forceescape': forceEscape,
-  'int': integer,
-  'join': join,
-  'last': last,
-  'length': count,
+const Map<String, Function> filters = {
+  'abs': doAbs,
+  'attr': doAttribute,
+  'batch': doBatch,
+  'capitalize': doCapitalize,
+  'center': doCenter,
+  'count': doLength,
+  'd': doDefault,
+  'default': doDefault,
+  'e': doEscape,
+  'escape': doEscape,
+  'filesizeformat': doFileSizeFormat,
+  'first': doFirst,
+  'float': doFloat,
+  'forceescape': doForceEscape,
+  'int': doInteger,
+  'join': doJoin,
+  'last': doLast,
+  'length': doLength,
   'list': utils.list,
-  'lower': lower,
-  'random': random,
-  'string': string,
-  'sum': sum,
-  'trim': trim,
-  'upper': upper,
+  'lower': doLower,
+  'random': doRandom,
+  'string': doString,
+  'sum': doSum,
+  'trim': doTrim,
+  'upper': doUpper,
 
   // 'dictsort': doDictSort,
   // 'format': doFormat,
@@ -299,4 +299,4 @@ const Map<String, Function> filters = <String, Function>{
   // 'xmlattr': doXMLAttr,
 };
 
-const Set<String> environmentFilters = <String>{'attr', 'join', 'random'};
+const Set<String> environmentFilters = {'attr', 'join', 'random'};

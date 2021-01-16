@@ -533,7 +533,7 @@ class Parser {
           reader.next();
         }
 
-        expression = Constant<String>(buffer.toString());
+        expression = Constant<String>(buffer.toString().replaceAll(r'\\r', '\r').replaceAll(r'\\n', '\n'));
         break;
       case 'integer':
         expression = Constant<int>(int.parse(reader.current.value));

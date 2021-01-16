@@ -70,7 +70,7 @@ class TokenReader {
   }
 
   void eof() {
-    _current = Token.simple(current.start + current.length, 'eof');
+    _current = Token.simple(current.line + current.length, 'eof');
   }
 
   Token expect(String expressionOrType, [String? value]) {

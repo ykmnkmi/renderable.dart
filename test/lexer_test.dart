@@ -51,7 +51,7 @@ void main() {
       final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: r'${', variableEnd: '}');
       final template = environment.fromString(r'''{% for item in seq
             %}${{'foo': item} | string | upper}{% endfor %}''');
-      expect(template.render({'seq': [0, 1, 2]}), equals('{FOO: 0}{FOO: 1}{FOO: 2}'), reason: template.nodes.toString());
+      expect(template.render({'seq': [0, 1, 2]}), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
     });
 
     test('comments', () {
@@ -165,7 +165,8 @@ hello
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
-          /* '%', '##', */
+          lineCommentPrefix: '##',
+          lineStatementPrefix: '%',
           lStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('    <% if true %>hello    <% endif %>');
@@ -180,7 +181,8 @@ hello
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
-          /* '%', '##', */
+          lineCommentPrefix: '##',
+          lineStatementPrefix: '%',
           lStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('    <%# if true %>hello    <%# endif %>');
@@ -189,16 +191,16 @@ hello
 
     test('lstrip angle bracket', () {
       final environment = Environment(
-        blockBegin: '<%',
-        blockEnd: '%>',
-        variableBegin: r'${',
-        variableEnd: '}',
-        commentBegin: '<%#',
-        commentEnd: '%>',
-        /* '%', '##', */
-        lStripBlocks: true,
-        trimBlocks: true,
-      );
+          blockBegin: '<%',
+          blockEnd: '%>',
+          variableBegin: r'${',
+          variableEnd: '}',
+          commentBegin: '<%#',
+          commentEnd: '%>',
+          lineCommentPrefix: '##',
+          lineStatementPrefix: '%',
+          lStripBlocks: true,
+          trimBlocks: true);
       final template = environment.fromString(r'''
     <%# regular comment %>
     <% for item in seq %>

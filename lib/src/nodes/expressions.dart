@@ -619,12 +619,10 @@ class TupleLiteral extends Literal implements CanAssign {
         } else if (expression.context != context) {
           throw StateError('${expression.runtimeType} context must be $context');
         }
-      } else {
-        throw TypeError();
       }
     }
 
-    return context!;
+    return context ?? AssignContext.load;
   }
 
   @override

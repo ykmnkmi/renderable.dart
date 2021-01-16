@@ -1,11 +1,55 @@
 import 'markup.dart';
-import 'utils.dart';
+import 'utils.dart' as utils;
 
-bool callable(dynamic object) {
+bool isBoolean(dynamic object) {
+  return object is bool;
+}
+
+bool isCallable(dynamic object) {
   return object is Function;
 }
 
-bool contains(dynamic value, dynamic values) {
+bool isDefined(dynamic value) {
+  return utils.boolean(value);
+}
+
+bool isDivisibleBy(num value, num divider) {
+  return divider == 0 ? false : value % divider == 0;
+}
+
+bool isEqual(dynamic value, dynamic other) {
+  return value == other;
+}
+
+bool isEscaped(dynamic value) {
+  if (value is Markup) {
+    return true;
+  }
+
+  return false;
+}
+
+bool isEven(int value) {
+  return value.isEven;
+}
+
+bool isFalse(dynamic value) {
+  return value == false;
+}
+
+bool isFloat(dynamic value) {
+  return value is double;
+}
+
+bool isGreaterThanOrEqual(dynamic value, dynamic other) {
+  return (value >= other) as bool;
+}
+
+bool isGreaterThan(dynamic value, dynamic other) {
+  return (value > other) as bool;
+}
+
+bool isIn(dynamic value, dynamic values) {
   if (values is String) {
     if (value is Pattern) {
       return values.contains(value);
@@ -25,36 +69,8 @@ bool contains(dynamic value, dynamic values) {
   return values.contains(value) as bool;
 }
 
-bool defined(dynamic value) {
-  return boolean(value);
-}
-
-bool divisibleBy(num value, num divider) {
-  return divider == 0 ? false : value % divider == 0;
-}
-
-bool equal(dynamic value, dynamic other) {
-  return value == other;
-}
-
-bool escaped(dynamic value) {
-  if (value is Markup) {
-    return true;
-  }
-
-  return false;
-}
-
-bool even(int value) {
-  return value.isEven;
-}
-
-bool greaterThanOrEqual(dynamic value, dynamic other) {
-  return (value >= other) as bool;
-}
-
-bool greaterThan(dynamic value, dynamic other) {
-  return (value > other) as bool;
+bool isInteger(dynamic value) {
+  return value is int;
 }
 
 bool iterable(dynamic value) {
@@ -65,19 +81,19 @@ bool iterable(dynamic value) {
   return false;
 }
 
-bool lessThanOrEqual(dynamic value, dynamic other) {
+bool isLessThanOrEqual(dynamic value, dynamic other) {
   return (value <= other) as bool;
 }
 
-bool lessThan(dynamic value, dynamic other) {
+bool isLessThan(dynamic value, dynamic other) {
   return (value < other) as bool;
 }
 
-bool lower(String value) {
+bool isLower(String value) {
   return value == value.toLowerCase();
 }
 
-bool mapping(dynamic value) {
+bool isMapping(dynamic value) {
   if (value is Map) {
     return true;
   }
@@ -85,7 +101,7 @@ bool mapping(dynamic value) {
   return false;
 }
 
-bool none(dynamic value) {
+bool isNone(dynamic value) {
   if (value == null) {
     return true;
   }
@@ -93,23 +109,23 @@ bool none(dynamic value) {
   return false;
 }
 
-bool notEqual(dynamic value, dynamic other) {
+bool isNotEqual(dynamic value, dynamic other) {
   return value != other;
 }
 
-bool number(dynamic object) {
+bool isNumber(dynamic object) {
   return object is num;
 }
 
-bool odd(int value) {
+bool isOdd(int value) {
   return value.isOdd;
 }
 
-bool sameAs(dynamic value, dynamic other) {
+bool isSameAs(dynamic value, dynamic other) {
   return identical(value, other);
 }
 
-bool sequence(dynamic value) {
+bool isSequence(dynamic value) {
   try {
     return value.length != null;
   } catch (e) {
@@ -117,45 +133,54 @@ bool sequence(dynamic value) {
   }
 }
 
-bool string(dynamic object) {
+bool isString(dynamic object) {
   return object is String;
 }
 
-bool upper(String value) {
+bool isTrue(dynamic value) {
+  return value == true;
+}
+
+bool isUpper(String value) {
   return value == value.toUpperCase();
 }
 
-const Map<String, Function> tests = <String, Function>{
-  '!=': notEqual,
-  '<': lessThan,
-  '<=': lessThanOrEqual,
-  '==': equal,
-  '>': greaterThan,
-  '>=': greaterThanOrEqual,
-  'callable': callable,
-  'defined': defined,
-  'divisibleby': divisibleBy,
-  'eq': equal,
-  'equalto': equal,
-  'escaped': escaped,
-  'even': even,
-  'ge': greaterThanOrEqual,
-  'in': contains,
+const Map<String, Function> tests = {
+  '!=': isNotEqual,
+  '<': isLessThan,
+  '<=': isLessThanOrEqual,
+  '==': isEqual,
+  '>': isGreaterThan,
+  '>=': isGreaterThanOrEqual,
+  'boolean': isBoolean,
+  'callable': isCallable,
+  'defined': isDefined,
+  'divisibleby': isDivisibleBy,
+  'eq': isEqual,
+  'equalto': isEqual,
+  'escaped': isEscaped,
+  'even': isEven,
+  'false': isFalse,
+  'float': isFloat,
+  'ge': isGreaterThanOrEqual,
+  'greaterthan': isGreaterThan,
+  'gt': isGreaterThan,
+  'in': isIn,
+  'integer': isInteger,
   'iterable': iterable,
-  'le': lessThanOrEqual,
-  'lessthan': lessThan,
-  'lt': lessThan,
-  'gt': greaterThan,
-  'greaterthan': greaterThan,
-  'lower': lower,
-  'mapping': mapping,
-  'none': none,
-  'ne': notEqual,
-  'number': number,
-  'odd': odd,
-  'sameas': sameAs,
-  'sequence': sequence,
-  'string': string,
-  'undefined': none,
-  'upper': upper,
+  'le': isLessThanOrEqual,
+  'lessthan': isLessThan,
+  'lower': isLower,
+  'lt': isLessThan,
+  'mapping': isMapping,
+  'ne': isNotEqual,
+  'none': isNone,
+  'number': isNumber,
+  'odd': isOdd,
+  'sameas': isSameAs,
+  'sequence': isSequence,
+  'string': isString,
+  'true': isTrue,
+  'undefined': isNone,
+  'upper': isUpper,
 };

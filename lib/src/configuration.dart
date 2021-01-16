@@ -9,26 +9,26 @@ typedef Finalizer = dynamic Function(dynamic value);
 @immutable
 class Configuration {
   Configuration(
-      {this.commentBegin = '{#',
-      this.commentEnd = '#}',
-      this.variableBegin = '{{',
-      this.variableEnd = '}}',
-      this.blockBegin = '{%',
-      this.blockEnd = '%}',
-      this.lineCommentPrefix = '##',
-      this.lineStatementPrefix = '#',
-      this.lStripBlocks = false,
-      this.trimBlocks = false,
-      this.newLine = '\n',
-      this.keepTrailingNewLine = false,
+      {this.commentBegin = defaults.commentBegin,
+      this.commentEnd = defaults.commentEnd,
+      this.variableBegin = defaults.variableBegin,
+      this.variableEnd = defaults.variableEnd,
+      this.blockBegin = defaults.blockBegin,
+      this.blockEnd = defaults.blockEnd,
+      this.lineCommentPrefix = defaults.lineCommentPrefix,
+      this.lineStatementPrefix = defaults.lineStatementPrefix,
+      this.lStripBlocks = defaults.lStripBlocks,
+      this.trimBlocks = defaults.trimBlocks,
+      this.newLine = defaults.newLine,
+      this.keepTrailingNewLine = defaults.keepTrailingNewLine,
       this.optimized = true,
       this.finalize = defaults.finalize,
       this.autoEscape = false,
       Random? random,
-      this.globals = const <String, dynamic>{},
-      this.filters = const <String, Function>{},
-      this.environmentFilters = const <String>{},
-      this.tests = const <String, Function>{}})
+      this.globals = const {},
+      this.filters = const {},
+      this.environmentFilters = const {},
+      this.tests = const {}})
       : random = Random();
 
   final String commentBegin;
@@ -43,9 +43,9 @@ class Configuration {
 
   final String blockEnd;
 
-  final String lineCommentPrefix;
+  final String? lineCommentPrefix;
 
-  final String lineStatementPrefix;
+  final String? lineStatementPrefix;
 
   final bool lStripBlocks;
 
