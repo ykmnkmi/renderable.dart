@@ -1,4 +1,4 @@
-import 'dart:mirrors';
+import 'dart:mirrors' show MirrorSystem, reflect;
 
 import 'jinja.dart';
 

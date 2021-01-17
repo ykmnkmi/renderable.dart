@@ -1,4 +1,5 @@
 import 'package:renderable/jinja.dart';
+import 'package:renderable/reflection.dart';
 import 'package:renderable/src/reader.dart';
 import 'package:renderable/src/lexer.dart';
 import 'package:renderable/src/utils.dart';
@@ -38,7 +39,7 @@ void main() {
     test('raw3', () {
       final environment = Environment(lStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('bar\n{% raw %}\n  {{baz}}2 spaces\n{% endraw %}\nfoo');
-      expect(template.render({'baz': 'test'}), equals('bar\n\n  {{baz}}2 spaces\nfoo'));
+      expect(render(template, baz: 'test'), equals('bar\n\n  {{baz}}2 spaces\nfoo'));
     });
 
     test('raw4', () {
@@ -51,7 +52,7 @@ void main() {
       final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: r'${', variableEnd: '}');
       final template = environment.fromString(r'''{% for item in seq
             %}${{'foo': item} | string | upper}{% endfor %}''');
-      expect(template.render({'seq': [0, 1, 2]}), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
+      expect(render(template, seq: [0, 1, 2]), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
     });
 
     test('comments', () {
@@ -62,7 +63,7 @@ void main() {
   <li>{item}</li>
 <!--- endfor -->
 </ul>''');
-      expect(template.render({'seq': [0, 1, 2]}), equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
+      expect(render(template, seq: [0, 1, 2]), equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
     });
 
     test('string escapes', () {
@@ -206,7 +207,7 @@ hello
     <% for item in seq %>
 ${item} ## the rest of the stuff
    <% endfor %>''');
-      expect(template.render({'seq': range(5)}), equals(range(5).map((int n) => '$n\n').join()));
+      expect(render(template, seq: range(5)), equals(range(5).map((int n) => '$n\n').join()));
     });
 
     test('lstrip angle bracket compact', () {
@@ -225,7 +226,7 @@ ${item} ## the rest of the stuff
     <%for item in seq%>
 ${item} ## the rest of the stuff
    <%endfor%>''');
-      expect(template.render({'seq': range(5)}), equals(range(5).map((int n) => '$n\n').join()));
+      expect(render(template, seq: range(5)), equals(range(5).map((int n) => '$n\n').join()));
     });
 
     test('php syntax with manual', () {
@@ -242,7 +243,7 @@ ${item} ## the rest of the stuff
     <? for item in seq -?>
         <?= item ?>
     <?- endfor ?>''');
-      expect(template.render({'seq': range(5)}), equals('01234'));
+      expect(render(template, seq: range(5)), equals('01234'));
     });
 
     test('php syntax', () {
@@ -259,7 +260,7 @@ ${item} ## the rest of the stuff
     <? for item in seq ?>
         <?= item ?>
     <? endfor ?>''');
-      expect(template.render({'seq': range(5)}), equals(range(5).map<String>((int n) => '        $n\n').join()));
+      expect(render(template, seq: range(5)), equals(range(5).map<String>((int n) => '        $n\n').join()));
     });
 
     test('php syntax compact', () {
@@ -276,7 +277,7 @@ ${item} ## the rest of the stuff
     <?for item in seq?>
         <?=item?>
     <?endfor?>''');
-      expect(template.render({'seq': range(5)}), equals(range(5).map<String>((int n) => '        $n\n').join()));
+      expect(render(template, seq: range(5)), equals(range(5).map<String>((int n) => '        $n\n').join()));
     });
 
     test('erb syntax', () {
@@ -294,7 +295,7 @@ ${item} ## the rest of the stuff
     <%= item %>
     <% endfor %>
 ''');
-      expect(template.render({'seq': range(5)}), equals(range(5).map<String>((int n) => '    $n\n').join()));
+      expect(render(template, seq: range(5)), equals(range(5).map<String>((int n) => '    $n\n').join()));
     });
 
     test('erb syntax with manual', () {
@@ -311,7 +312,7 @@ ${item} ## the rest of the stuff
     <% for item in seq -%>
         <%= item %>
     <%- endfor %>''');
-      expect(template.render({'seq': range(5)}), equals('01234'));
+      expect(render(template, seq: range(5)), equals('01234'));
     });
 
     test('erb syntax no lstrip', () {
@@ -328,7 +329,7 @@ ${item} ## the rest of the stuff
     <%+ for item in seq -%>
         <%= item %>
     <%- endfor %>''');
-      expect(template.render({'seq': range(5)}), equals('    01234'));
+      expect(render(template, seq: range(5)), equals('    01234'));
     });
 
     test('comment syntax', () {
@@ -345,7 +346,124 @@ ${item} ## the rest of the stuff
 <!-- for item in seq --->
     ${item}
 <!--- endfor -->''');
-      expect(template.render({'seq': range(5)}), equals('01234'));
+      expect(render(template, seq: range(5)), equals('01234'));
+    });
+  });
+
+  group('TrimBlocks', () {
+    test('trim', () {
+      final environment = Environment(trimBlocks: true);
+      final template = environment.fromString('    {% if True %}\n    {% endif %}');
+      expect(template.render(), equals('        '));
+    });
+
+    test('no trim', () {
+      final environment = Environment(trimBlocks: true);
+      final template = environment.fromString('    {% if True +%}\n    {% endif %}');
+      expect(template.render(), equals('    \n    '));
+    });
+
+    test('no trim outer', () {
+      final environment = Environment(trimBlocks: true);
+      final template = environment.fromString('{% if True %}X{% endif +%}\nmore things');
+      expect(template.render(), equals('X\nmore things'));
+    });
+
+    test('lstrip no trim', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('    {% if True +%}\n    {% endif %}');
+      expect(template.render(), equals('\n'));
+    });
+
+    test('trim blocks false with no trim', () {
+      final environment = Environment();
+      var template = environment.fromString('    {% if True %}\n    {% endif %}');
+      expect(template.render(), equals('    \n    '));
+      template = environment.fromString('    {% if True +%}\n    {% endif %}');
+      expect(template.render(), equals('    \n    '));
+
+      template = environment.fromString('    {# comment #}\n    ');
+      expect(template.render(), equals('    \n    '));
+      template = environment.fromString('    {# comment +#}\n    ');
+      expect(template.render(), equals('    \n    '));
+
+      template = environment.fromString('    {% raw %}{% endraw %}\n    ');
+      expect(template.render(), equals('    \n    '));
+      template = environment.fromString('    {% raw %}{% endraw +%}\n    ');
+      expect(template.render(), equals('    \n    '));
+    });
+
+    test('trim nested', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('    {% if True %}\na {% if True %}\nb {% endif %}\nc {% endif %}');
+      expect(template.render(), equals('a b c '));
+    });
+
+    test('no trim nested', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('    {% if True +%}\na {% if True +%}\nb {% endif +%}\nc {% endif %}');
+      expect(template.render(), equals('\na \nb \nc '));
+    });
+
+    test('comment trim', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('    {# comment #}\n\n  ');
+      expect(template.render(), equals('\n  '));
+    });
+
+    test('comment no trim', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('    {# comment +#}\n\n  ');
+      expect(template.render(), equals('\n\n  '));
+    });
+
+    test('multiple comment trim lstrip', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('   {# comment #}\n\n{# comment2 #}\n   \n{# comment3 #}\n\n ');
+      expect(template.render(), equals('\n   \n\n '));
+    });
+
+    test('multiple comment no trim lstrip', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('   {# comment +#}\n\n{# comment2 +#}\n   \n{# comment3 +#}\n\n ');
+      expect(template.render(), equals('\n\n\n   \n\n\n '));
+    });
+
+    test('raw trim lstrip', () {
+      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final template = environment.fromString('{{x}}{% raw %}\n\n    {% endraw %}\n\n{{ y }}');
+      expect(render(template, x: 1, y: 2), equals('1\n\n\n2'));
+    });
+
+    test('raw no trim lstrip', () {
+      final environment = Environment(lStripBlocks: true);
+      final template = environment.fromString('{{x}}{% raw %}\n\n      {% endraw +%}\n\n{{ y }}');
+      expect(render(template, x: 1, y: 2), equals('1\n\n\n\n2'));
+    });
+
+    test('no trim angle bracket', () {
+      final environment = Environment(
+          blockBegin: '<%',
+          blockEnd: '%>',
+          variableBegin: r'${',
+          variableEnd: '}',
+          commentBegin: '<%#',
+          commentEnd: '%>',
+          lStripBlocks: true,
+          trimBlocks: true);
+      var template = environment.fromString('    <% if True +%>\n\n    <% endif %>');
+      expect(template.render(), equals('\n\n'));
+      template = environment.fromString('    <%# comment +%>\n\n   ');
+      expect(template.render(), equals('\n\n   '));
+    });
+
+    test('no trim php syntax', () {
+      final environment =
+          Environment(blockBegin: '<?', blockEnd: '?>', variableBegin: r'<?=', variableEnd: '?>', commentBegin: '<!--', commentEnd: '-->', trimBlocks: true);
+      var template = environment.fromString('    <? if True +?>\n\n    <? endif ?>');
+      expect(template.render(), equals('    \n\n    '));
+      template = environment.fromString('    <!-- comment +-->\n\n    ');
+      expect(template.render(), equals('    \n\n    '));
     });
   });
 }
