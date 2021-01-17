@@ -11,17 +11,19 @@ dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dyna
   return reflect(object).invoke(#call, positional, named).reflectee;
 }
 
-/// Shorthand for call `Template.render` with given named arguments.
+/// Shorthand for call [Template.render] with given named arguments.
+///
+/// **Note: uses _dart:mirrors_.**
 ///
 ///     String render(Template, name: 'jhon', ...)
 ///
 /// similar to
 ///
 ///     String Template.render({name: 'jhon', ...})
-const dynamic render = RenderWrapper();
+const dynamic render = _RenderWrapper();
 
-class RenderWrapper {
-  const RenderWrapper();
+class _RenderWrapper {
+  const _RenderWrapper();
 
   String call(Template template) {
     return template.render();

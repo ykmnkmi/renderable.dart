@@ -135,7 +135,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       return context!.environment.callCallable(function, positional, named);
     }
 
-    return callable<dynamic>(call, context)(callback);
+    return callable(call, context)(callback);
   }
 
   @override

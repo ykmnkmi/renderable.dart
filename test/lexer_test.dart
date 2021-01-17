@@ -7,7 +7,8 @@ import 'package:test/test.dart';
 
 void main() {
   group('TokenReader', () {
-    const testTokens = <Token>[Token(1, 'block_begin', ''), Token(2, 'block_end', '')];
+    final testTokens = [Token(1, 'block_begin', ''), Token(2, 'block_end', '')];
+
     test('simple', () {
       final reader = TokenReader(testTokens);
       expect(reader.current.test('block_begin'), isTrue);
@@ -15,7 +16,7 @@ void main() {
       expect(reader.current.test('block_end'), isTrue);
     });
 
-    test('simple', () {
+    test('iter', () {
       final reader = TokenReader(testTokens);
       final tokenTypes = [for (final token in reader.values) token.type];
       expect(tokenTypes, equals(['block_begin', 'block_end']));
@@ -23,15 +24,14 @@ void main() {
   });
 
   group('Lexer', () {
-    final environment = Environment();
-
     test('raw', () {
-      final template = environment.fromString('{% raw %}foo{% endraw %}|'
-          '{%raw%}{{ bar }}|{% baz %}{%       endraw    %}');
+      final environment = Environment();
+      final template = environment.fromString('{% raw %}foo{% endraw %}|{%raw%}{{ bar }}|{% baz %}{%       endraw    %}');
       expect(template.render(), equals('foo|{{ bar }}|{% baz %}'));
     });
 
     test('raw2', () {
+      final environment = Environment();
       final template = environment.fromString('1  {%- raw -%}   2   {%- endraw -%}   3');
       expect(template.render(), equals('123'));
     });
@@ -51,13 +51,13 @@ void main() {
     test('balancing', () {
       final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: r'${', variableEnd: '}');
       final template = environment.fromString(r'''{% for item in seq
-            %}${{'foo': item} | string | upper}{% endfor %}''');
+            %}${{'foo': item}|upper}{% endfor %}''');
       expect(render(template, seq: [0, 1, 2]), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
     });
 
     test('comments', () {
       final environment = Environment(blockBegin: '<!--', blockEnd: '-->', variableBegin: '{', variableEnd: '}');
-      final template = environment.fromString('''\
+      final template = environment.fromString('''
 <ul>
 <!--- for item in seq -->
   <li>{item}</li>
@@ -67,20 +67,62 @@ void main() {
     });
 
     test('string escapes', () {
+      final environment = Environment();
+      Template template;
+
       for (final char in ['\0', '\u2668', '\xe4', '\t', '\r', '\n']) {
-        final template = environment.fromString('{{ ${represent(char)} }}');
+        template = environment.fromString('{{ ${represent(char)} }}');
         expect(template.render(), equals(char));
       }
 
-      // TODO: waiting for a realization in the dart sdk
-      // expect(environment.fromString('{{ "\N{HOT SPRINGS}" }}').render(), equals('\u2668'));
+      // not supported
+      // template = environment.fromString('{{ "\N{HOT SPRINGS}" }}');
+      // expect(template.render(), equals('\u2668'));
+    });
+
+    // not supported
+    // test('bytefallback', () {
+    //   final environment = Environment();
+    //   final template = environment.fromString('{{ \'foo\'|pprint }}|{{ \'bär\'|pprint }}');
+    //   expect(template.render(), equals(pformat('foo') + '|' + pformat('bär')));
+    // });
+
+    test('operators', () {
+      final environment = Environment();
+      operators.forEach((test, expekt) {
+        if ('([{}])'.contains(test)) {
+          return;
+        }
+
+        final tokens = Lexer(environment).tokenize('{{ $test }}');
+        expect(tokens[1], equals(predicate<Token>((token) => token.test(expekt))));
+      });
     });
 
     test('normalizing', () {
-      for (final seq in ['\r', '\r\n', '\n']) {
-        final environment = Environment(newLine: seq);
+      for (final newLine in ['\r', '\r\n', '\n']) {
+        final environment = Environment(newLine: newLine);
         final template = environment.fromString('1\n2\r\n3\n4\n');
-        expect(template.render().replaceAll(seq, 'X'), equals('1X2X3X4'));
+        expect(template.render().replaceAll(newLine, 'X'), equals('1X2X3X4'));
+      }
+    });
+
+    test('trailing newline', () {
+      final matches = <String, Map<bool, String>>{
+        '': {},
+        'no\nnewline': {},
+        'with\nnewline\n': {false: 'with\nnewline'},
+        'with\nseveral\n\n\n': {false: 'with\nseveral\n\n'},
+      };
+
+      for (final keep in [true, false]) {
+        final environment = Environment(keepTrailingNewLine: keep);
+        matches.forEach((source, expekted) {
+          final template = environment.fromString(source);
+          final expekt = expekted[keep] ?? source;
+          final result = template.render();
+          expect(result, equals(expekt));
+        });
       }
     });
   });

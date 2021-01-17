@@ -5,34 +5,39 @@ Renderable.dart
 
 Status:
 ------
+- Variables `[a-zA-Z][a-zA-Z0-9]*`
+- Filters
+- Tests
 - Comments
 - Whitespace Control
 - Escaping
 - Line Statements
-- Template Inheritance
-  - Base Template
-  - Child Template
-  - Super Blocks
-  - Nesting extends
-  - Named Block End-Tags
-  - Block Nesting and Scope
-  - Template Objects
+  - Comments
+  - ~~Blocks~~
+- ~~Template Inheritance~~
+  - ~~Base Template~~
+  - ~~Child Template~~
+  - ~~Super Blocks~~
+  - ~~Nesting extends~~
+  - ~~Named Block End-Tags~~
+  - ~~Block Nesting and Scope~~
+  - ~~Template Objects~~
 - HTML Escaping (working)
-  <!-- - Working with Manual Escaping -->
-  <!-- - Working with Automatic Escaping -->
+  - ~~Working with Manual Escaping~~
+  - ~~Working with Automatic Escaping~~
 - List of Control Structures
   - For
   - If
+  - ~~Macros~~
+  - ~~Call~~
+  - ~~Filters~~
   - Assignments
   - Block Assignments
-  <!-- - Macros -->
-  <!-- - Call -->
-  <!-- - Filters -->
-  <!-- - Extends -->
-  <!-- - Blocks -->
-  <!-- - Include -->
-  <!-- - Import -->
-<!-- - Import Context Behavior -->
+  - ~~Extends~~
+  - ~~Blocks~~
+  - ~~Include~~
+  - ~~Import~~
+- ~~Import Context Behavior~~
 - Expressions
   - Literals
   - Math
@@ -98,8 +103,8 @@ Status:
   - namespace
 - Extensions
   - With Statement
-  <!-- - i18n -->
-  <!-- - Expression Statement -->
-  <!-- - Loop Controls -->
-  <!-- - Debug Statement -->
-<!-- - Autoescape Overrides -->
+  - ~~i18n~~
+  - ~~Expression Statement~~
+  - ~~Loop Controls~~
+  - ~~Debug Statement~~
+- ~~Autoescape Overrides~~
