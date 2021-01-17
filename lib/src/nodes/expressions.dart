@@ -280,37 +280,45 @@ class Call extends Expression implements Callable {
   @override
   String toString() {
     var result = 'Call(';
+    var comma = false;
 
     if (expression != null) {
-      result += ', $expression';
+      result += '$expression';
+      comma = true;
     }
 
     if (arguments != null && arguments!.isNotEmpty) {
-      if (result.contains(',')) {
+      if (comma) {
         result += ', ';
+      } else {
+        comma = true;
       }
 
       result += '${arguments!.join(', ')}';
     }
 
     if (keywordArguments != null && keywordArguments!.isNotEmpty) {
-      if (result.contains(',')) {
+      if (comma) {
         result += ', ';
+      } else {
+        comma = true;
       }
 
       result += '${keywordArguments!.join(', ')}';
     }
 
     if (dArguments != null) {
-      if (result.contains(',')) {
+      if (comma) {
         result += ', ';
+      } else {
+        comma = true;
       }
 
       result += '*$dArguments';
     }
 
     if (dKeywordArguments != null) {
-      if (result.contains(',')) {
+      if (comma) {
         result += ', ';
       }
 

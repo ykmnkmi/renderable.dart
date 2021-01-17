@@ -111,36 +111,14 @@ class MultiTokenRule extends Rule {
 
 @doNotStore
 class Lexer {
-  final RegExp newLineRe;
-
-  final RegExp whitespaceRe;
-
-  final RegExp nameRe;
-
-  final RegExp stringRe;
-
-  final RegExp integerRe;
-
-  final RegExp floatRe;
-
-  final RegExp operatorRe;
-
-  final RegExp? lStripUnlessRe;
-
-  final String newLine;
-
-  final bool keepTrailingNewLine;
-
-  late Map<String, List<Rule>> rules;
-
   Lexer(Configuration configuration)
-      : newLineRe = RegExp(r'(\r\n|\r|\n)'),
-        whitespaceRe = RegExp(r'\s+'),
-        nameRe = RegExp(r'[a-zA-Z][a-zA-Z0-9]*'),
-        stringRe = RegExp(r"('([^'\\]*(?:\\.[^'\\]*)*)'" r'|"([^"\\]*(?:\\.[^"\\]*)*)")', dotAll: true),
-        integerRe = RegExp(r'(\d+_)*\d+'),
-        floatRe = RegExp(r'(?<!\.)(\d+_)*\d+((\.(\d+_)*\d+)?e[+\-]?(\d+_)*\d+|\.(\d+_)*\d+)'),
-        operatorRe = RegExp(r'\+|-|\/\/|\/|\*\*|\*|%|~|\[|\]|\(|\)|{|}|==|!=|<=|>=|=|<|>|\.|:|\||,|;'),
+      : newLineRe = RegExp('(\r\n|\r|\n)'),
+        whitespaceRe = RegExp('\\s+'),
+        nameRe = RegExp('[a-zA-Z\$_][a-zA-Z0-9\$_]*', unicode: true),
+        stringRe = RegExp('(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")', dotAll: true),
+        integerRe = RegExp('(\\d+_)*\\d+'),
+        floatRe = RegExp('(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?e[+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)'),
+        operatorRe = RegExp('\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;'),
         lStripUnlessRe = configuration.lStripBlocks ? compile('[^ \\t]') : null,
         newLine = configuration.newLine,
         keepTrailingNewLine = configuration.keepTrailingNewLine {
@@ -158,9 +136,6 @@ class Lexer {
     final blockEndRe = escape(configuration.blockEnd);
     final blockEnd = compile('(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe})');
 
-    final lineCommentPrefixRe = r'(?:^|(?<=\S))[^\S\r\n]*' '${configuration.lineCommentPrefix}';
-    final lineCommentEnd = compile('(.*?)()(?=\n|\$)');
-
     final tagRules = <Rule>[
       SingleTokenRule(whitespaceRe, 'whitespace'),
       SingleTokenRule(floatRe, 'float'),
@@ -174,7 +149,10 @@ class Lexer {
       ['comment_begin', configuration.commentBegin, commentBeginRe],
       ['variable_begin', configuration.variableBegin, variableBeginRe],
       ['block_begin', configuration.blockBegin, blockBeginRe],
-      if (configuration.lineCommentPrefix != null) ['linecomment_begin', configuration.lineCommentPrefix!, lineCommentPrefixRe],
+      if (configuration.lineCommentPrefix != null)
+        ['linecomment_begin', configuration.lineCommentPrefix!, '(?:^|(?<=\\S))[^\\S\r\n]*' + configuration.lineCommentPrefix!],
+      if (configuration.lineStatementPrefix != null)
+        ['linestatement_begin', configuration.lineStatementPrefix!, '^[ \t\v]*' + configuration.lineStatementPrefix!],
     ];
 
     rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
@@ -212,11 +190,40 @@ class Lexer {
         MultiTokenRule.optionalLStrip(rawEnd, <String>['data', 'raw_end'], '#pop'),
         MultiTokenRule(compile('(.)'), <String>['@missing end of raw directive']),
       ],
-      'linecomment_begin': <Rule>[
-        MultiTokenRule(lineCommentEnd, <String>['linecomment', 'linecomment_end'], '#pop'),
-      ],
+      if (configuration.lineCommentPrefix != null)
+        'linecomment_begin': <Rule>[
+          MultiTokenRule(compile('(.*?)()(?=\n|\$)'), <String>['linecomment', 'linecomment_end'], '#pop'),
+        ],
+      if (configuration.lineStatementPrefix != null)
+        'linestatement_begin': <Rule>[
+          SingleTokenRule(compile('\\s*(\n|\$)'), 'linestatement_end', '#pop'),
+          ...tagRules,
+        ],
     };
   }
+
+  final RegExp newLineRe;
+
+  final RegExp whitespaceRe;
+
+  final RegExp nameRe;
+
+  final RegExp stringRe;
+
+  final RegExp integerRe;
+
+  final RegExp floatRe;
+
+  final RegExp operatorRe;
+
+  final RegExp? lStripUnlessRe;
+
+  final String newLine;
+
+  final bool keepTrailingNewLine;
+
+  @protected
+  late Map<String, List<Rule>> rules;
 
   @protected
   String normalizeNewLines(String value) {

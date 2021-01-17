@@ -294,8 +294,7 @@ class Template implements Renderable {
           getField: getField);
     }
 
-    final nodes = Parser(environment).parse(source, path: path);
-    return Template.parsed(environment, nodes, path);
+    return environment.fromString(source, path: path);
   }
 
   Template.parsed(this.environment, List<Node> nodes, [String? path])

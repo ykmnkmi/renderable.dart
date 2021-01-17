@@ -1,5 +1,6 @@
 import 'package:renderable/jinja.dart';
 import 'package:renderable/reflection.dart';
+import 'package:renderable/src/exceptions.dart';
 import 'package:renderable/src/reader.dart';
 import 'package:renderable/src/lexer.dart';
 import 'package:renderable/src/utils.dart';
@@ -49,7 +50,7 @@ void main() {
     });
 
     test('balancing', () {
-      final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: r'${', variableEnd: '}');
+      final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: '\${', variableEnd: '}');
       final template = environment.fromString(r'''{% for item in seq
             %}${{'foo': item}|upper}{% endfor %}''');
       expect(render(template, seq: [0, 1, 2]), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
@@ -125,14 +126,181 @@ void main() {
         });
       }
     });
+
+    test('name', () {
+      final matches = <String, bool>{
+        'foo': true,
+        '_': true,
+        '1a': false, // invalid ascii start
+        'a-': false, // invalid ascii continue
+      };
+
+      final environment = Environment();
+      matches.forEach((name, valid) {
+        if (valid) {
+          expect(environment.fromString('{{ $name }}'), isA<Template>());
+        } else {
+          expect(() => environment.fromString('{{ $name }}'), throwsA(isA<TemplateSyntaxError>()));
+        }
+      });
+    });
+
+    test('lineno with strip', () {
+      final environment = Environment();
+      final tokens = Lexer(environment).tokenize('''<html>
+    <body>
+    {%- block content -%}
+        <hr>
+        {{ item }}
+    {% endblock %}
+    </body>
+</html>''');
+      for (final token in tokens) {
+        if (token.test('name', 'item')) {
+          expect(token.line, equals(5));
+        }
+      }
+    });
   });
 
-  group('Environment.lStripBlocks', () {
-    final environment = Environment();
+  group('Parser', () {
+    test('php syntax', () {
+      final environment = Environment(blockBegin: '<?', blockEnd: '?>', variableBegin: '<?=', variableEnd: '?>', commentBegin: '<!--', commentEnd: '-->');
+      final template = environment.fromString('''<!-- I'm a comment, I'm not interesting --><? for item in seq -?>
+    <?= item ?>
+<?- endfor ?>''');
+      expect(render(template, seq: range(5)), equals('01234'));
+    });
 
+    test('erb syntax', () {
+      final environment = Environment(blockBegin: '<%', blockEnd: '%>', variableBegin: '<%=', variableEnd: '%>', commentBegin: '<%#', commentEnd: '%>');
+      final template = environment.fromString('''<%# I'm a comment, I'm not interesting %><% for item in seq -%>
+    <%= item %>
+<%- endfor %>''');
+      expect(render(template, seq: range(5)), equals('01234'));
+    });
+
+    test('comment syntax', () {
+      final environment = Environment(blockBegin: '<!--', blockEnd: '-->', variableBegin: '\${', variableEnd: '}', commentBegin: '<!--#', commentEnd: '-->');
+      final template = environment.fromString(r'''<!--# I'm a comment, I'm not interesting --><!-- for item in seq --->
+    ${item}
+<!--- endfor -->''');
+      expect(render(template, seq: range(5)), equals('01234'));
+    });
+
+    test('balancing', () {
+      final environment = Environment();
+      final template = environment.fromString('''{{{'foo':'bar'}.foo}}''');
+      expect(template.render(), equals('bar'));
+    });
+
+    test('start comment', () {
+      final environment = Environment();
+      final template = environment.fromString('''{# foo comment
+and bar comment #}
+{% macro blub() %}foo{% endmacro %}
+{{ blub() }}''');
+      expect(template.render().trim(), equals('foor'));
+    });
+
+    test('line syntax', () {
+      final environment = Environment(
+          blockBegin: '<%',
+          blockEnd: '%>',
+          variableBegin: '\${',
+          variableEnd: '}',
+          commentBegin: '<%#',
+          commentEnd: '%>',
+          lineCommentPrefix: '##',
+          lineStatementPrefix: '%');
+      final template = environment.fromString(r'''<%# regular comment %>
+% for item in seq:
+    ${item} ## the rest of the stuff
+% endfor''');
+      final sequence = range(5).toList();
+      final numbers = (render(template, seq: sequence) as String)
+          .split(RegExp('\\s+'))
+          .map((String string) => string.trim())
+          .where((String string) => string.isNotEmpty)
+          .map((String string) => int.parse(string.trim()))
+          .toList();
+      expect(numbers, equals(sequence));
+    });
+
+    test('line syntax priority', () {
+      var environment =
+          Environment(variableBegin: '\${', variableEnd: '}', commentBegin: '/*', commentEnd: '*/', lineCommentPrefix: '#', lineStatementPrefix: '##');
+      var template = environment.fromString(r'''/* ignore me.
+   I'm a multiline comment */
+## for item in seq:
+* ${item}          # this is just extra stuff
+## endfor''');
+      expect((render(template, seq: [1, 2]) as String).trim(), equals('* 1\n* 2'));
+
+      environment =
+          Environment(variableBegin: '\${', variableEnd: '}', commentBegin: '/*', commentEnd: '*/', lineCommentPrefix: '##', lineStatementPrefix: '#');
+      template = environment.fromString(r'''/* ignore me.
+   I'm a multiline comment */
+# for item in seq:
+* ${item}          ## this is just extra stuff
+    ## extra stuff i just want to ignore
+# endfor''');
+      expect((render(template, seq: [1, 2]) as String).trim(), equals('* 1\n\n* 2'));
+    });
+
+    test('error messages', () {
+      void assertError(String source, String expekted) {
+        expect(() => Template(source), throwsA(predicate((error) => error is TemplateSyntaxError && error.message == expekted)));
+      }
+
+      assertError(
+        '{% for item in seq %}...{% endif %}',
+        'Encountered unknown tag \'endif\'. Jinja was looking '
+            'for the following tags: \'endfor\' or \'else\'. The '
+            'innermost block that needs to be closed is \'for\'.',
+      );
+      assertError(
+        '{% if foo %}{% for item in seq %}...{% endfor %}{% endfor %}',
+        'Encountered unknown tag \'endfor\'. Jinja was looking for '
+            'the following tags: \'elif\' or \'else\' or \'endif\'. The '
+            'innermost block that needs to be closed is \'if\'.',
+      );
+      assertError(
+        '{% if foo %}',
+        'Unexpected end of template. Jinja was looking for the '
+            'following tags: \'elif\' or \'else\' or \'endif\'. The '
+            'innermost block that needs to be closed is \'if\'.',
+      );
+      assertError(
+        '{% for item in seq %}',
+        'Unexpected end of template. Jinja was looking for the '
+            'following tags: \'endfor\' or \'else\'. The innermost block '
+            'that needs to be closed is \'for\'.',
+      );
+      assertError(
+        '{% block foo-bar-baz %}',
+        'Block names in Jinja have to be valid Python identifiers '
+            'and may not contain hyphens, use an underscore instead.',
+      );
+      assertError('{% unknown_tag %}', 'Encountered unknown tag \'unknown_tag\'.');
+    });
+  });
+
+  group('Syntax', () {
+    test('call', () {
+      final environment = Environment();
+      environment.globals['foo'] = (dynamic a, dynamic b, {dynamic c, dynamic e, dynamic g}) => a + b + c + e + g;
+      final template = environment.fromString('{{ foo(\'a\', c=\'d\', e=\'f\', *[\'b\'], **{\'g\': \'h\'}) }}');
+      expect(template.render(), equals('abdfh'));
+    });
+
+    // TODO: add https://github.com/pallets/jinja/blob/81911fdb3065f1156d84ca52ee3a257c229ebc59/tests/test_lexnparse.py#L325
+  });
+
+  group('LStripBlocks', () {
     test('lstrip', () {
       final environment = Environment(lStripBlocks: true);
-      final template = environment.fromString('    {% if true %}\n    {% endif %}');
+      final template = environment.fromString('    {% if True %}\n    {% endif %}');
       expect(template.render(), equals('\n'));
     });
 
@@ -149,6 +317,7 @@ void main() {
     });
 
     test('lstrip blocks false with no lstrip', () {
+      final environment = Environment();
       var template = environment.fromString('    {% if true %}\n    {% endif %}');
       expect(template.render(), equals('    \n    '));
       template = environment.fromString('    {%+ if true %}\n    {%+ endif %}');
@@ -204,7 +373,7 @@ hello
       final environment = Environment(
           blockBegin: '<%',
           blockEnd: '%>',
-          variableBegin: r'${',
+          variableBegin: '\${',
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
@@ -220,7 +389,7 @@ hello
       final environment = Environment(
           blockBegin: '<%',
           blockEnd: '%>',
-          variableBegin: r'${',
+          variableBegin: '\${',
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
@@ -236,7 +405,7 @@ hello
       final environment = Environment(
           blockBegin: '<%',
           blockEnd: '%>',
-          variableBegin: r'${',
+          variableBegin: '\${',
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
@@ -256,7 +425,7 @@ ${item} ## the rest of the stuff
       final environment = Environment(
           blockBegin: '<%',
           blockEnd: '%>',
-          variableBegin: r'${',
+          variableBegin: '\${',
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
@@ -270,6 +439,8 @@ ${item} ## the rest of the stuff
    <%endfor%>''');
       expect(render(template, seq: range(5)), equals(range(5).map((int n) => '$n\n').join()));
     });
+
+    // TODO: add https://github.com/pallets/jinja/blob/81911fdb3065f1156d84ca52ee3a257c229ebc59/tests/test_lexnparse.py#L716
 
     test('php syntax with manual', () {
       final environment = Environment(
@@ -378,7 +549,7 @@ ${item} ## the rest of the stuff
       final environment = Environment(
           blockBegin: '<!--',
           blockEnd: '-->',
-          variableBegin: r'${',
+          variableBegin: '\${',
           variableEnd: '}',
           commentBegin: '<!--#',
           commentEnd: '-->',
@@ -487,7 +658,7 @@ ${item} ## the rest of the stuff
       final environment = Environment(
           blockBegin: '<%',
           blockEnd: '%>',
-          variableBegin: r'${',
+          variableBegin: '\${',
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',

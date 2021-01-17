@@ -1,11 +1,11 @@
 Renderable.dart
 ===============
 
-[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) next version (0.9.9).
+[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) first stable version (1.0.0).
 
 Status:
 ------
-- Variables `[a-zA-Z][a-zA-Z0-9]*`
+- Variables `[a-zA-Z$_][a-zA-Z0-9$_]*`
 - Filters
 - Tests
 - Comments

@@ -14,9 +14,9 @@ abstract class TemplateError implements Exception {
 }
 
 class TemplateSyntaxError extends TemplateError {
-  TemplateSyntaxError(String message, {this.offset, this.name, this.fileName}) : super(message);
+  TemplateSyntaxError(String message, {this.line, this.name, this.fileName}) : super(message);
 
-  final int? offset;
+  final int? line;
 
   final String? name;
 
@@ -35,12 +35,12 @@ class TemplateSyntaxError extends TemplateError {
       prefix += ' file: $name';
     }
 
-    if (offset != null) {
+    if (line != null) {
       if (prefix.contains(',')) {
-        prefix += ', offset: $offset';
+        prefix += ', line: $line';
+      } else {
+        prefix += ' line: $line';
       }
-
-      prefix += ' offset: $offset';
     }
 
     return '$prefix: $message';

@@ -94,7 +94,7 @@ abstract class _BaseToken implements Token {
       }
 
       value = null;
-    } else {
+    } else if (type == null) {
       type = this.type;
     }
 
@@ -166,4 +166,109 @@ class _ValueToken extends _BaseToken {
 
   @override
   final String value;
+}
+
+String describeExpression(String expression) {
+  if (expression.contains(':')) {
+    final parts = expression.split(':');
+
+    assert(parts.length == 2);
+
+    if (parts.first == 'name') {
+      return parts.last;
+    }
+  }
+
+  return describeTokenType(expression);
+}
+
+String describeToken(Token token) {
+  if (token.type == 'name') {
+    return token.value;
+  }
+
+  return describeTokenType(token.type);
+}
+
+String describeTokenType(String type) {
+  switch (type) {
+    case 'add':
+      return '+';
+    case 'sub':
+      return '-';
+    case 'div':
+      return '/';
+    case 'floordiv':
+      return '//';
+    case 'mul':
+      return '*';
+    case 'mod':
+      return '%';
+    case 'pow':
+      return '**';
+    case 'tilde':
+      return '~';
+    case 'lbracket':
+      return '[';
+    case 'rbracket':
+      return ']';
+    case 'lparen':
+      return '(';
+    case 'rparen':
+      return ')';
+    case 'lbrace':
+      return '{';
+    case 'rbrace':
+      return '}';
+    case 'eq':
+      return '==';
+    case 'ne':
+      return '!=';
+    case 'gt':
+      return '>';
+    case 'gteq':
+      return '>=';
+    case 'lt':
+      return '<';
+    case 'lteq':
+      return '<=';
+    case 'assign':
+      return '=';
+    case 'dot':
+      return '.';
+    case 'colon':
+      return ':';
+    case 'pipe':
+      return '|';
+    case 'comma':
+      return ',';
+    case 'semicolon':
+      return ';';
+    case 'comment_begin':
+      return 'begin of comment';
+    case 'comment_end':
+      return 'end of comment';
+    case 'comment':
+      return 'comment';
+    case 'linecomment':
+      return 'comment';
+    case 'block_begin':
+      return 'begin of statement block';
+    case 'block_end':
+      return 'end of statement block';
+    case 'variable_begin':
+      return 'begin of print statement';
+    case 'variable_end':
+      return 'end of print statement';
+    case 'linestatement_begin':
+      return 'begin of line statement';
+    case 'linestatement_end':
+      return 'end of line statement';
+    case 'data':
+      return 'template data / text';
+    case 'eof':
+      return 'end of template';
+    default:
+      return type;
+  }
 }

@@ -39,7 +39,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
     }
 
     if (callable.dKeywordArguments != null) {
-      named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<String, dynamic>)
+      named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<dynamic, dynamic>)
+          .cast<String, dynamic>()
           .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
     }
 
