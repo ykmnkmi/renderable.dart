@@ -1,4 +1,4 @@
-import 'package:renderable/src/markup.dart';
+import 'package:renderable/markup.dart';
 import 'package:test/test.dart' hide escape;
 
 void main() {

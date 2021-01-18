@@ -1,49 +1,55 @@
 import 'package:renderable/jinja.dart';
+import 'package:renderable/reflection.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('If', () {
-    final env = Environment();
-
     test('simple', () {
-      final template = env.fromString('{% if true %}...{% endif %}');
+      final environment = Environment();
+      final template = environment.fromString('{% if true %}...{% endif %}');
       expect(template.render(), equals('...'));
     });
 
     test('elif', () {
-      final template = env.fromString('''{% if false %}XXX{% elif true
+      final environment = Environment();
+      final template = environment.fromString('''{% if false %}XXX{% elif true
             %}...{% else %}XXX{% endif %}''');
       expect(template.render(), equals('...'));
     });
 
     test('elif deep', () {
       final source = '{% if a == 0 %}0' + List<String>.generate(999, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() + '{% else %}x{% endif %}';
-      final template = env.fromString(source);
-      expect(template.render({'a': 0}), equals('0'));
-      expect(template.render({'a': 10}), equals('10'));
-      expect(template.render({'a': 999}), equals('999'));
-      expect(template.render({'a': 1000}), equals('x'));
+      final environment = Environment();
+      final template = environment.fromString(source);
+      expect(render(template, a: 0), equals('0'));
+      expect(render(template, a: 10), equals('10'));
+      expect(render(template, a: 999), equals('999'));
+      expect(render(template, a: 1000), equals('x'));
     });
 
     test('else', () {
-      final template = env.fromString('{% if false %}XXX{% else %}...{% endif %}');
+      final environment = Environment();
+      final template = environment.fromString('{% if false %}XXX{% else %}...{% endif %}');
       expect(template.render(), equals('...'));
     });
 
     test('empty', () {
-      final template = env.fromString('[{% if true %}{% else %}{% endif %}]');
+      final environment = Environment();
+      final template = environment.fromString('[{% if true %}{% else %}{% endif %}]');
       expect(template.render(), equals('[]'));
     });
 
     test('complete', () {
-      final template = env.fromString('{% if a %}A{% elif b %}B{% elif c == d %}C{% else %}D{% endif %}');
-      expect(template.render({'a': 0, 'b': false, 'c': 42, 'd': 42.0}), equals('C'));
+      final environment = Environment();
+      final template = environment.fromString('{% if a %}A{% elif b %}B{% elif c == d %}C{% else %}D{% endif %}');
+      expect(render(template, a: 0, b: false, c: 42, d: 42.0), equals('C'));
     });
 
     test('no scope', () {
-      var template = env.fromString('{% if a %}{% set foo = 1 %}{% endif %}{{ foo }}');
+      final environment = Environment();
+      var template = environment.fromString('{% if a %}{% set foo = 1 %}{% endif %}{{ foo }}');
       expect(template.render({'a': true}), equals('1'));
-      template = env.fromString('{% if true %}{% set foo = 1 %}{% endif %}{{ foo }}');
+      template = environment.fromString('{% if true %}{% set foo = 1 %}{% endif %}{{ foo }}');
       expect(template.render(), equals('1'));
     });
   });

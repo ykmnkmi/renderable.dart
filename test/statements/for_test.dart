@@ -1,34 +1,39 @@
 import 'package:renderable/jinja.dart';
-import 'package:renderable/src/utils.dart';
+import 'package:renderable/reflection.dart';
+import 'package:renderable/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('For', () {
-    final environment = Environment();
-
     test('simple', () {
+      final environment = Environment();
       final template = environment.fromString('{% for item in seq %}{{ item }}{% endfor %}');
-      expect(template.render({'seq': range(10)}), equals('0123456789'));
+      expect(render(template, seq: range(10)), equals('0123456789'));
     });
 
     test('else', () {
+      final environment = Environment();
       final template = environment.fromString('{% for item in seq %}XXX{% else %}...{% endfor %}');
       expect(template.render(), equals('...'));
     });
 
     test('else scoping item', () {
+      final environment = Environment();
       final template = environment.fromString('{% for item in [] %}{% else %}{{ item }}{% endfor %}');
-      expect(template.render({'item': 42}), equals('42'));
+      expect(render(template, item: 42), equals('42'));
     });
 
     test('empty blocks', () {
+      final environment = Environment();
       final template = environment.fromString('<{% for item in seq %}{% else %}{% endfor %}>');
       expect(template.render(), equals('<>'));
     });
 
     test('context vars', () {
-      final slist = <int>[42, 24];
+      final environment = Environment();
       Template template;
+
+      final slist = <int>[42, 24];
 
       for (final seq in <Iterable<int>>[slist, slist.reversed]) {
         template = environment.fromString('''{% for item in seq -%}
@@ -36,7 +41,7 @@ void main() {
                 loop.revindex0 }}|{{ loop.first }}|{{ loop.last }}|{{
                loop.length }}###{% endfor %}''');
 
-        final parts = template.render({'seq': seq}).split('###');
+        final parts = (render(template, seq: seq) as String).split('###');
         final one = parts[0].split('|');
         final two = parts[1].split('|');
 
@@ -59,33 +64,38 @@ void main() {
     });
 
     test('cycling', () {
+      final environment = Environment();
       final template = environment.fromString('''{% for item in seq %}{{ 
             loop.cycle('<1>', '<2>') }}{% endfor %}{%
             for item in seq %}{{ loop.cycle(*through) }}{% endfor %}''');
-      expect(template.render({'seq': range(4), 'through': ['<1>', '<2>']}), equals('<1><2>' * 4));
+      expect(render(template, seq: range(4), through: ['<1>', '<2>']), equals('<1><2>' * 4));
     });
 
     test('lookaround', () {
+      final environment = Environment();
       final template = environment.fromString('''{% for item in seq -%}
             {{ loop.previtem | default('x') }}-{{ item }}-{{
             loop.nextitem | default('x') }}|
         {%- endfor %}''');
-      expect(template.render({'seq': range(4)}), equals('x-0-1|0-1-2|1-2-3|2-3-x|'));
+      expect(render(template, seq: range(4)), equals('x-0-1|0-1-2|1-2-3|2-3-x|'));
     });
 
     test('changed', () {
+      final environment = Environment();
       final template = environment.fromString('''{% for item in seq -%}
             {{ loop.changed(item) }},
         {%- endfor %}''');
-      expect(template.render({'seq': [null, null, 1, 2, 2, 3, 4, 4, 4]}), equals('true,false,true,true,false,true,true,false,false,'));
+      expect(render(template, seq: [null, null, 1, 2, 2, 3, 4, 4, 4]), equals('true,false,true,true,false,true,true,false,false,'));
     });
 
     test('scope', () {
+      final environment = Environment();
       final template = environment.fromString('{% for item in seq %}{% endfor %}{{ item }}');
-      expect(template.render({'seq': range(10)}), equals(''));
+      expect(render(template, seq: range(10)), equals(''));
     });
 
     test('varlen', () {
+      final environment = Environment();
       final template = environment.fromString('{% for item in iter %}{{ item }}{% endfor %}');
 
       Iterable<int> inner() sync* {
@@ -94,10 +104,11 @@ void main() {
         }
       }
 
-      expect(template.render({'iter': inner()}), equals('01234'));
+      expect(render(template, iter: inner()), equals('01234'));
     });
 
     test('noniter', () {
+      final environment = Environment();
       final template = environment.fromString('{% for item in none %}...{% endfor %}');
       expect(() => template.render(), throwsA(isA<TypeError>()));
     });
@@ -108,20 +119,22 @@ void main() {
     // TODO: add test: recursive depth
 
     test('looploop', () {
+      final environment = Environment();
       final template = environment.fromString('''{% for row in table %}
             {%- set rowloop = loop -%}
             {% for cell in row -%}
                 [{{ rowloop.index }}|{{ loop.index }}]
             {%- endfor %}
         {%- endfor %}''');
-      expect(template.render({'table': ['ab', 'cd']}), equals('[1|1][1|2][2|1][2|2]'));
+      expect(render(template, table: ['ab', 'cd']), equals('[1|1][1|2][2|1][2|2]'));
     });
 
     test('reversed bug', () {
+      final environment = Environment();
       final template = environment.fromString('{% for i in items %}{{ i }}'
           '{% if not loop.last %}'
           ',{% endif %}{% endfor %}');
-      expect(template.render({'items': [3, 2, 1].reversed}), equals('1,2,3'));
+      expect(render(template, items: [3, 2, 1].reversed), equals('1,2,3'));
     });
 
     // TODO: check Error
@@ -132,6 +145,7 @@ void main() {
     // });
 
     test('loop filter', () {
+      final environment = Environment();
       var template = environment.fromString('{% for item in range(10) if item '
           'is even %}[{{ item }}]{% endfor %}');
       expect(template.render(), equals('[0][2][4][6][8]'));
@@ -144,20 +158,20 @@ void main() {
     // TODO: add test: loop unassignable
 
     test('scoped special var', () {
+      final environment = Environment();
       final template = environment.fromString('{% for s in seq %}[{{ loop.first }}{% for c in s %}'
           '|{{ loop.first }}{% endfor %}]{% endfor %}');
-      expect(template.render({'seq': ['ab', 'cd']}), equals('[true|true|false][false|true|false]'));
+      expect(render(template, seq: ['ab', 'cd']), equals('[true|true|false][false|true|false]'));
     });
 
     test('scoped loop var', () {
+      final environment = Environment();
       var template = environment.fromString('{% for x in seq %}{{ loop.first }}'
           '{% for y in seq %}{% endfor %}{% endfor %}');
-      final data = {'seq': 'ab'};
-
-      expect(template.render(data), 'truefalse');
+      expect(render(template, seq: 'ab'), 'truefalse');
       template = environment.fromString('{% for x in seq %}{% for y in seq %}'
           '{{ loop.first }}{% endfor %}{% endfor %}');
-      expect(template.render(data), equals('truefalsetruefalse'));
+      expect(render(template, seq: 'ab'), equals('truefalsetruefalse'));
     });
 
     // TODO: add test: recursive empty loop iter
@@ -165,20 +179,21 @@ void main() {
     // TODO: add test: scoping bug
 
     test('unpacking', () {
+      final environment = Environment();
       final template = environment.fromString('{% for a, b, c in [[1, 2, 3]] %}'
           '{{ a }}|{{ b }}|{{ c }}{% endfor %}');
       expect(template.render(), equals('1|2|3'));
     });
 
     test('intended scoping with set', () {
-      final data = {'x': 0, 'seq': [1, 2, 3]};
+      final environment = Environment();
       var template = environment.fromString('{% for item in seq %}{{ x }}'
           '{% set x = item %}{{ x }}{% endfor %}');
 
-      expect(template.render(data), equals('010203'));
+      expect(render(template, x: 0, seq: [1, 2, 3]), equals('010203'));
       template = environment.fromString('{% set x = 9 %}{% for item in seq %}{{ x }}'
           '{% set x = item %}{{ x }}{% endfor %}');
-      expect(template.render(data), equals('919293'));
+      expect(render(template, x: 0, seq: [1, 2, 3]), equals('919293'));
     });
   });
 }

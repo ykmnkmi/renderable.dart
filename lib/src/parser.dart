@@ -586,11 +586,11 @@ class Parser {
       parse = (reader) => parseExpression(reader, false);
     }
 
-    final values = <Expression>[];
+    final arguments = <Expression>[];
     var isTuple = false;
 
     while (true) {
-      if (values.isNotEmpty) {
+      if (arguments.isNotEmpty) {
         reader.expect('comma');
       }
 
@@ -598,7 +598,7 @@ class Parser {
         break;
       }
 
-      values.add(parse(reader));
+      arguments.add(parse(reader));
 
       if (reader.current.test('comma')) {
         isTuple = true;
@@ -608,16 +608,16 @@ class Parser {
     }
 
     if (!isTuple) {
-      if (values.isNotEmpty) {
-        return values.first;
+      if (arguments.isNotEmpty) {
+        return arguments.first;
       }
 
-      if (explicitParentheses) {
+      if (!explicitParentheses) {
         fail('Expected an expression, got ${describeToken(reader.current)}');
       }
     }
 
-    return TupleLiteral(values);
+    return TupleLiteral(arguments);
   }
 
   @protected
@@ -843,7 +843,7 @@ class Parser {
     return Call(expression: expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
   }
 
-  @protected
+  @protected // wtf filter!
   Expression? parseFilter(TokenReader reader, [Expression? expression, bool startInline = false]) {
     while (reader.current.test('pipe') || startInline) {
       if (!startInline) {
@@ -885,6 +885,8 @@ class Parser {
 
   @protected
   Expression parseTest(TokenReader reader, Expression expression) {
+    reader.expect('name', 'is');
+
     var negated = false;
 
     if (reader.current.test('name', 'not')) {
@@ -910,7 +912,7 @@ class Parser {
     } else if (reader.current.testAny(['name', 'string', 'integer', 'float', 'lparen', 'lbracket', 'lbrace']) &&
         !reader.current.testAny(['name:else', 'name:or', 'name:and'])) {
       if (reader.current.test('name', 'is')) {
-        fail('You cannot chain multiple tests with is', reader.current.line);
+        fail('You cannot chain multiple tests with is');
       }
 
       var argument = parsePrimary(reader);

@@ -1,7 +1,7 @@
 import 'package:renderable/jinja.dart';
 import 'package:renderable/reflection.dart';
-import 'package:renderable/src/markup.dart';
-import 'package:renderable/src/utils.dart';
+import 'package:renderable/markup.dart';
+import 'package:renderable/utils.dart';
 import 'package:test/test.dart';
 
 class User {
@@ -18,13 +18,12 @@ void main() {
       final environment = Environment(getField: getField);
       final template = environment.fromString('{{ user | attr("name") }}');
       final user = User('jane');
-      expect(template.render({'user': user}), equals('jane'));
+      expect(render(template, user: user), equals('jane'));
     });
 
     test('batch', () {
       final template = environment.fromString('{{ foo | batch(3) | list }}|{{ foo | batch(3, "X") | list }}');
-      expect(template.render({'foo': range(10)}),
-          equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]|[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, X, X]]'));
+      expect(render(template, foo: range(10)), equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]|[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, X, X]]'));
     });
 
     test('capitalize', () {
@@ -43,9 +42,9 @@ void main() {
     });
 
     test('default', () {
-      final template = environment.fromString(
-          '{{ missing | default("no") }}|{{ false | default("no") }}|{{ false | default("no", true) }}|{{ given | default("no") }}');
-      expect(template.render({'given': 'yes'}), equals('no|false|no|yes'));
+      final template =
+          environment.fromString('{{ missing | default("no") }}|{{ false | default("no") }}|{{ false | default("no", true) }}|{{ given | default("no") }}');
+      expect(render(template, given: 'yes'), equals('no|false|no|yes'));
     });
 
     test('escape', () {
@@ -69,12 +68,12 @@ void main() {
 
     test('first', () {
       final template = environment.fromString('{{ foo | first }}');
-      expect(template.render({'foo': range(10)}), equals('0'));
+      expect(render(template, foo: range(10)), equals('0'));
     });
 
     test('force escape', () {
       final template = environment.fromString('{{ x | forceescape }}');
-      expect(template.render({'x': Markup('<div />')}), equals('&lt;div /&gt;'));
+      expect(render(template, x: Markup('<div />')), equals('&lt;div /&gt;'));
     });
 
     test('join', () {
@@ -85,12 +84,12 @@ void main() {
     test('join attribute', () {
       final template = environment.fromString('{{ users | join(", ", "username") }}');
       final users = ['foo', 'bar'].map((name) => {'username': name});
-      expect(template.render({'users': users}), equals('foo, bar'));
+      expect(render(template, users: users), equals('foo, bar'));
     });
 
     test('last', () {
       final template = environment.fromString('''{{ foo | last }}''');
-      expect(template.render({'foo': range(10)}), equals('9'));
+      expect(render(template, foo: range(10)), equals('9'));
     });
 
     test('length', () {

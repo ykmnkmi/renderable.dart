@@ -145,7 +145,7 @@ class Environment extends Configuration {
     } on NoSuchMethodError {
       try {
         return object[field];
-      } on NoSuchMethodError {
+      } on Exception {
         return null;
       }
     }
@@ -166,7 +166,27 @@ class Environment extends Configuration {
       }
     }
 
-    return object[key];
+    if (key is int && object is List<dynamic>) {
+      if (key < 0) {
+        return object[key + object.length];
+      }
+
+      return object[key];
+    }
+
+    try {
+      return object[key];
+    } on NoSuchMethodError {
+      if (key is String) {
+        try {
+          return getField(object, key);
+        } on Exception {
+          return null;
+        }
+      }
+
+      return null;
+    }
   }
 
   Template fromString(String source, {String? path}) {

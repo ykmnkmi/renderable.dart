@@ -9,7 +9,7 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{{ foo(\'a\', c=\'d\', e=\'f\', *[\'b\'], **{\'g\': \'h\'}) }}';
+  final source = '{{ () }}';
 
   try {
     final environment = Environment();
@@ -37,7 +37,7 @@ void main(List<String> arguments) {
     // template.nodes.forEach(print);
 
     print('\nrender:');
-    print('"' + template.render({'foo': (a, b, {c, e, g}) => a + b + c + e + g}).replaceAll(' ', '•') + '"');
+    print('"' + template.render().replaceAll(' ', '•') + '"');
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

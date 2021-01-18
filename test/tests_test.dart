@@ -1,6 +1,7 @@
 // ignore_for_file: inference_failure_on_collection_literal
 
 import 'package:renderable/jinja.dart';
+import 'package:renderable/reflection.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -9,7 +10,7 @@ void main() {
 
     test('no paren for arg 1', () {
       final template = environment.fromString('{{ foo is sameas none }}');
-      expect(template.render({'foo': null}), equals('true'));
+      expect(render(template, foo: null), equals('true'));
     });
 
     test('defined', () {
@@ -51,13 +52,11 @@ void main() {
           '{{ 10 is number }}|'
           '{{ (10 ** 2) is number }}|'
           '{{ 3.14159 is number }}');
-      expect(template.render({'mydict': {}}),
-          equals('false|true|false|true|true|false|true|true|true|true|false|true|true|true|false|true|true|true'));
+      expect(render(template, mydict: {}), equals('false|true|false|true|true|false|true|true|true|true|false|true|true|true|false|true|true|true'));
     });
 
     test('sequence', () {
-      final template =
-          environment.fromString('{{ [1, 2, 3] is sequence }}|{{ "foo" is sequence }}|{{ 42 is sequence }}');
+      final template = environment.fromString('{{ [1, 2, 3] is sequence }}|{{ "foo" is sequence }}|{{ 42 is sequence }}');
       expect(template.render(), equals('true|true|false'));
     });
 
@@ -75,7 +74,7 @@ void main() {
           '{{ bar is eq ("ba" + "z") }}|'
           '{{ bar is eq bar }}|'
           '{{ bar is eq foo }}');
-      expect(template.render({'foo': 12, 'bar': 'baz'}), equals('true|false|true|true|false|true|true|false'));
+      expect(render(template, foo: 12, bar: 'baz'), equals('true|false|true|true|false|true|true|false'));
     });
 
     test('compare aliases', () {
@@ -91,13 +90,12 @@ void main() {
           '{{ 2 is gt 2 }}|'
           '{{ 2 is ge 2 }}|'
           '{{ 2 is ge 3 }}');
-      expect(template.render({'foo': 12, 'bar': 'baz'}),
-          equals('true|false|true|false|true|false|true|false|true|false|true|false'));
+      expect(render(template, foo: 12, bar: 'baz'), equals('true|false|true|false|true|false|true|false|true|false|true|false'));
     });
 
     test('same as', () {
       final template = environment.fromString('{{ foo is sameas false }}|{{ 0 is sameas false }}');
-      expect(template.render({'foo': false}), equals('true|false'));
+      expect(render(template, foo: false), equals('true|false'));
     });
 
     test('greater than', () {
@@ -119,8 +117,7 @@ void main() {
       }
 
       final environment = Environment(tests: {'matching': matching});
-      final template = environment.fromString(
-          '{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
+      final template = environment.fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
 
       expect(template.render(), equals('false'));
       expect(items.first, equals(['us-west-1', '(us-east-1|ap-northeast-1)']));

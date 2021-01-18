@@ -133,13 +133,14 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   Expression visitCompare(Compare compare, [Context? context]) {
     compare.expression = optimize(compare.expression, context);
-    visitAll(compare.operands, context);
+    visitAllNotSafe(compare.operands, context);
     return constant(compare, context);
   }
 
   @override
   Expression visitConcat(Concat concat, [Context? context]) {
-    return optimize(concat, context);
+    visitAllNotSafe(concat.expressions);
+    return constant(concat, context);
   }
 
   @override
