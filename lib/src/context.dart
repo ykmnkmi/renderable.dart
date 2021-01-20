@@ -44,7 +44,7 @@ class Context {
   }
 
   void pop() {
-    if (contexts.length > 2) {
+    if (contexts.length > 1) {
       contexts.removeLast();
     }
   }

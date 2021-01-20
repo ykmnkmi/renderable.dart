@@ -1,5 +1,7 @@
 import 'package:renderable/jinja.dart';
 import 'package:renderable/reflection.dart';
+import 'package:renderable/src/nodes.dart';
+import 'package:renderable/src/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -61,7 +63,14 @@ void main() {
 
     test('compare', () {
       final environment = Environment();
-      final matches = {'>': [1, 0], '>=': [1, 1], '<': [2, 3], '<=': [3, 4], '==': [4, 4], '!=': [4, 5]};
+      final matches = {
+        '>': [1, 0],
+        '>=': [1, 1],
+        '<': [2, 3],
+        '<=': [3, 4],
+        '==': [4, 4],
+        '!=': [4, 5]
+      };
 
       matches.forEach((operation, pair) {
         final template = environment.fromString('{{ ${pair.first} $operation ${pair.last} }}');
@@ -169,6 +178,147 @@ void main() {
       expect(template.render(), equals('FOOBAR'));
     });
 
-    // TODO: https://github.com/pallets/jinja/blob/81911fdb3065f1156d84ca52ee3a257c229ebc59/tests/test_lexnparse.py#L452
+    test('function calls', () {
+      final environment = Environment();
+      final matches = {
+        '*foo, bar': true,
+        '*foo, *bar': true,
+        '**foo, *bar': true,
+        '**foo, bar': true,
+        '**foo, **bar': true,
+        '**foo, bar=42': true,
+        'foo, bar': false,
+        'foo, bar=42': false,
+        'foo, bar=23, *args': false,
+        'foo, *args, bar=23': false,
+        'a, b=c, *d, **e': false,
+        '*foo, bar=42': false,
+        '*foo, **bar': false,
+        '*foo, bar=42, **baz': false,
+        'foo, *args, bar=23, **baz': false,
+      };
+
+      matches.forEach((sig, shouldFail) {
+        if (shouldFail) {
+          expect(() => environment.fromString('{{ foo($sig) }}'), equals(throwsA(isA<TemplateSyntaxError>())));
+        } else {
+          expect(environment.fromString('{{ foo($sig) }}'), isA<Template>());
+        }
+      });
+    });
+
+    test('tuple expr', () {
+      final environment = Environment();
+      final sources = {
+        '{{ () }}',
+        '{{ (1, 2) }}',
+        '{{ (1, 2,) }}',
+        '{{ 1, }}',
+        '{{ 1, 2 }}',
+        '{% for foo, bar in seq %}...{% endfor %}',
+        '{% for x in foo, bar %}...{% endfor %}',
+        '{% for x in foo, %}...{% endfor %}',
+      };
+
+      sources.forEach((source) {
+        expect(environment.fromString(source), isA<Template>());
+      });
+    });
+
+    test('triling comma', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ (1, 2,) }}|{{ [1, 2,] }}|{{ {1: 2,} }}');
+      // tuple is list
+      expect(template.render(), equals('[1, 2]|[1, 2]|{1: 2}'));
+    });
+
+    test('block end name', () {
+      final environment = Environment();
+      expect(environment.fromString('{% block foo %}...{% endblock foo %}'), isA<Template>());
+      expect(() => environment.fromString('{% block x %}{% endblock y %}'), throwsA(isA<TemplateSyntaxError>()));
+    });
+
+    test('constant casing', () {
+      final environment = Environment();
+
+      for (final constant in [true, false, null]) {
+        final string = constant.toString();
+        final template = environment.fromString('{{ $string }}|{{ ${string.toLowerCase()} }}|{{ ${string.toUpperCase()} }}');
+        expect(template.render(), equals('$constant|$constant|'));
+      }
+    });
+
+    test('string concatenation', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ "foo" "bar" "baz" }}');
+      expect(template.render(), equals('foobarbaz'));
+    });
+
+    test('notin', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ not 42 in bar }}');
+      expect(render(template, bar: range(100)), equals('false'));
+    });
+
+    test('operator precedence', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ 2 * 3 + 4 % 2 + 1 - 2 }}');
+      expect(template.render(), equals('5'));
+    });
+
+    test('implicit subscribed tuple', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ foo[1, 2] }}');
+      // tuple is list
+      expect(render(template, foo: Foo()), equals('[1, 2]'));
+    });
+
+    test('raw2', () {
+      final environment = Environment();
+      final template = environment.fromString('{% raw %}{{ FOO }} and {% BAR %}{% endraw %}');
+      // tuple is list
+      expect(template.render(), equals('{{ FOO }} and {% BAR %}'));
+    });
+
+    test('const', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ true }}|{{ false }}|{{ none }}|{{ none is defined }}|{{ missing is defined }}');
+      expect(template.render(), equals('true|false|null|true|false'));
+    });
+
+    test('neg filter priority', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ -1|foo }}');
+      expect((template.nodes[0] as Output).nodes[0], isA<Filter>());
+      expect(((template.nodes[0] as Output).nodes[0] as Filter).expression, isA<Neg>());
+    });
+
+    test('const assign', () {
+      final environment = Environment();
+
+      for (final source in ['{% set true = 42 %}', '{% for none in seq %}{% endfor %}']) {
+        expect(() => environment.fromString(source), throwsA(isA<TemplateSyntaxError>()));
+      }
+    });
+
+    test('localset', () {
+      final environment = Environment();
+      final template = environment.fromString('{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}{% endfor %}{{ foo }}');
+      expect(template.render(), equals('0'));
+    });
+
+    test('parse unary', () {
+      final environment = Environment();
+      var template = environment.fromString('{{ -foo["bar"] }}');
+      expect(render(template, foo: {'bar': 42}), equals('-42'));
+      template = environment.fromString('{{ foo["bar"] }}');
+      expect(render(template, foo: {'bar': 42}), equals('42'));
+    });
   });
+}
+
+class Foo {
+  dynamic operator [](dynamic key) {
+    return key;
+  }
 }

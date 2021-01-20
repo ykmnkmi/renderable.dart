@@ -9,7 +9,7 @@ import 'package:renderable/src/reader.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{{ () }}';
+  final source = '{{ foo(**a, b=42) }}';
 
   try {
     final environment = Environment();

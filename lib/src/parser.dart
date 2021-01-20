@@ -124,7 +124,6 @@ class Parser {
   List<Node> parseStatements(TokenReader reader, List<String> endTokens, {bool dropNeedle = false}) {
     reader.skipIf('colon');
     reader.expect('block_end');
-
     final nodes = subParse(reader, endTokens: endTokens);
 
     if (reader.current.test('eof')) {
@@ -141,7 +140,6 @@ class Parser {
   @protected
   Statement parseSet(TokenReader reader) {
     reader.expect('name', 'set');
-
     final target = parseAssignTarget(reader, withNamespace: true);
 
     if (reader.skipIf('assign')) {
@@ -172,13 +170,9 @@ class Parser {
   @protected
   For parseFor(TokenReader reader) {
     reader.expect('name', 'for');
-
     final target = parseAssignTarget(reader, extraEndRules: <String>['name:in']);
-
     reader.expect('name', 'in');
-
     final iterable = parseTuple(reader, withCondition: false);
-
     var hasLoop = false;
 
     void visit(Node node) {
@@ -220,7 +214,6 @@ class Parser {
   @protected
   If parseIf(TokenReader reader) {
     reader.expect('name', 'if');
-
     final test = parseTuple(reader, withCondition: false);
     final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
     final root = If(test is Test ? test : Test('defined', expression: test), body);
@@ -277,9 +270,7 @@ class Parser {
 
     if (withNamespace && reader.look().test('dot')) {
       final namespace = reader.expect('name');
-
       reader.next(); // skip dot
-
       final attribute = reader.expect('name');
       target = NamespaceReference(namespace.value, attribute.value);
     } else if (nameOnly) {
@@ -365,15 +356,12 @@ class Parser {
     while (true) {
       if (reader.current.testAny(['eq', 'ne', 'lt', 'lteq', 'gt', 'gteq'])) {
         type = reader.current.type;
-
         reader.next();
-
         operands.add(Operand(type, parseMath1(reader)));
       } else if (reader.skipIf('name', 'in')) {
         operands.add(Operand('in', parseMath1(reader)));
       } else if (reader.current.test('name', 'not') && reader.look().test('name', 'in')) {
         reader.skip(2);
-
         operands.add(Operand('notin', parseMath1(reader)));
       } else {
         break;
@@ -396,12 +384,10 @@ class Parser {
       switch (reader.current.type) {
         case 'add':
           reader.next();
-
           expression = Add(expression, parseConcat(reader));
           break;
         case 'sub':
           reader.next();
-
           expression = Sub(expression, parseConcat(reader));
           break;
         default:
@@ -418,7 +404,6 @@ class Parser {
 
     while (reader.current.test('tilde')) {
       reader.next();
-
       expressions.add(parseMath2(reader));
     }
 
@@ -438,17 +423,14 @@ class Parser {
       switch (reader.current.type) {
         case 'mul':
           reader.next();
-
           expression = Mul(expression, parsePow(reader));
           break;
         case 'div':
           reader.next();
-
           expression = Div(expression, parsePow(reader));
           break;
         case 'floordiv':
           reader.next();
-
           expression = FloorDiv(expression, parsePow(reader));
           break;
         case 'mod':
@@ -469,7 +451,6 @@ class Parser {
 
     while (reader.current.test('pow')) {
       reader.next();
-
       expression = Pow(expression, parseUnary(reader));
     }
 
@@ -483,7 +464,6 @@ class Parser {
     switch (reader.current.type) {
       case 'add':
         reader.next();
-
         expression = parseUnary(reader, withFilter: false);
         expression = Pos(expression);
         break;
@@ -523,6 +503,7 @@ class Parser {
             break;
           case 'None':
           case 'none':
+          case 'null':
             expression = Constant<Null>(null);
             break;
           default:
@@ -533,7 +514,6 @@ class Parser {
         break;
       case 'string':
         final buffer = StringBuffer(reader.current.value);
-
         reader.next();
 
         while (reader.current.test('string')) {
@@ -547,18 +527,14 @@ class Parser {
       case 'integer':
         expression = Constant<int>(int.parse(reader.current.value));
         reader.next();
-
         break;
       case 'float':
         expression = Constant<double>(double.parse(reader.current.value));
         reader.next();
-
         break;
       case 'lparen':
         reader.next();
-
         expression = parseTuple(reader, explicitParentheses: true);
-
         reader.expect('rparen');
         break;
       case 'lbracket':
@@ -623,7 +599,6 @@ class Parser {
   @protected
   Expression parseList(TokenReader reader) {
     reader.expect('lbracket');
-
     final values = <Expression>[];
 
     while (!reader.current.test('rbracket')) {
@@ -639,14 +614,12 @@ class Parser {
     }
 
     reader.expect('rbracket');
-
     return ListLiteral(values);
   }
 
   @protected
   Expression parseDict(TokenReader reader) {
     reader.expect('lbrace');
-
     final pairs = <Pair>[];
 
     while (!reader.current.test('rbrace')) {
@@ -659,9 +632,7 @@ class Parser {
       }
 
       final key = parseExpression(reader);
-
       reader.expect('colon');
-
       final value = parseExpression(reader);
       pairs.add(Pair(key, value));
     }
@@ -717,7 +688,7 @@ class Parser {
 
       return Item(Constant<int>(int.parse(attributeToken.value)), expression);
     } else if (token.test('lbracket')) {
-      var arguments = <Expression>[];
+      final arguments = <Expression>[];
 
       while (!reader.current.test('rbracket')) {
         if (arguments.isNotEmpty) {
@@ -729,13 +700,11 @@ class Parser {
 
       reader.expect('rbracket');
 
-      arguments = arguments.reversed.toList();
-
-      while (arguments.isNotEmpty) {
-        expression = Item(arguments.removeLast(), expression);
+      if (arguments.length == 1) {
+        return Item(arguments[0], expression);
+      } else {
+        return Item(TupleLiteral(arguments), expression);
       }
-
-      return expression;
     }
 
     fail('expected subscript expression', token.line);
@@ -747,7 +716,6 @@ class Parser {
 
     if (reader.current.test('colon')) {
       reader.next();
-
       arguments.add(null);
     } else {
       final expression = parseExpression(reader);
@@ -757,7 +725,6 @@ class Parser {
       }
 
       reader.next();
-
       arguments.add(expression);
     }
 
@@ -787,7 +754,6 @@ class Parser {
   @protected
   Call parseCall(TokenReader reader, [Expression? expression]) {
     final token = reader.expect('lparen');
-
     final arguments = <Expression>[];
     final keywordArguments = <Keyword>[];
     Expression? dArguments, dKeywordArguments;
@@ -811,22 +777,17 @@ class Parser {
 
       if (reader.current.test('pow')) {
         ensure(dKeywordArguments == null);
-
         reader.next();
-
         dKeywordArguments = parseExpression(reader);
       } else if (reader.current.test('mul')) {
         ensure(dArguments == null && dKeywordArguments == null);
-
         reader.next();
-
         dArguments = parseExpression(reader);
       } else {
         if (reader.current.test('name') && reader.look().test('assign')) {
+          ensure(dKeywordArguments == null);
           final key = reader.current.value;
-
           reader.skip(2);
-
           final value = parseExpression(reader);
           keywordArguments.add(Keyword(key, value));
         } else {
@@ -839,7 +800,6 @@ class Parser {
     }
 
     reader.expect('rparen');
-
     return Call(expression: expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
   }
 
@@ -855,7 +815,6 @@ class Parser {
 
       while (reader.current.test('dot')) {
         reader.next();
-
         token = reader.expect('name');
         name = '$name.${token.value}';
       }
@@ -886,12 +845,10 @@ class Parser {
   @protected
   Expression parseTest(TokenReader reader, Expression expression) {
     reader.expect('name', 'is');
-
     var negated = false;
 
     if (reader.current.test('name', 'not')) {
       reader.next();
-
       negated = true;
     }
 
@@ -900,7 +857,6 @@ class Parser {
 
     while (reader.current.test('dot')) {
       reader.next();
-
       token = reader.expect('name');
       name = '$name.${token.value}';
     }
