@@ -85,8 +85,7 @@ void main() {
         return value;
       }
 
-      final environment = Environment(getField: getField, trimBlocks: true);
-      environment.filters['myfilter'] = myfilter;
+      final environment = Environment(filters: {'myfilter': myfilter}, getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set a = " xxx " %}{% set foo | myfilter(a) | trim | length | string %} '
           '{% set b = " yy " %} 42 {{ a }}{{ b }}   {% endset %}{{ foo }}');
       expect(template.render(), equals('11'));

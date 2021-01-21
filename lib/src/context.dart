@@ -9,11 +9,15 @@ class Context {
     if (data != null) {
       contexts.add(data);
     }
+
+    minimal = contexts.length;
   }
 
   final Environment environment;
 
   final List<Map<String, dynamic>> contexts;
+
+  late int minimal;
 
   dynamic operator [](String key) {
     return get(key);
@@ -44,7 +48,7 @@ class Context {
   }
 
   void pop() {
-    if (contexts.length > 1) {
+    if (contexts.length > minimal) {
       contexts.removeLast();
     }
   }

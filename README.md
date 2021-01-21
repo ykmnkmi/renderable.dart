@@ -1,11 +1,12 @@
 Renderable.dart
 ===============
 
-[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) first stable version (1.0.0).
+Will be [Jinja.dart](https://github.com/ykmnkmi/jinja.dart) first stable version (1.0.0).
 
 Status:
 ------
 - Variables `[a-zA-Z$_][a-zA-Z0-9$_]*`
+  - ~~Undefined~~
 - Filters
 - Tests
 - Comments
@@ -13,7 +14,7 @@ Status:
 - Escaping
 - Line Statements
   - Comments
-  - ~~Blocks~~
+  - Blocks
 - ~~Template Inheritance~~
   - ~~Base Template~~
   - ~~Child Template~~

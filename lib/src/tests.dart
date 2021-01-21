@@ -73,8 +73,8 @@ bool isInteger(dynamic value) {
   return value is int;
 }
 
-bool iterable(dynamic value) {
-  if (value is Iterable<dynamic>) {
+bool isIterable(dynamic value) {
+  if (value is Iterable) {
     return true;
   }
 
@@ -127,7 +127,11 @@ bool isSameAs(dynamic value, dynamic other) {
 
 bool isSequence(dynamic value) {
   try {
-    return value.length != null;
+    value.length;
+    value[0];
+    return true;
+  } on RangeError {
+    return true;
   } catch (e) {
     return false;
   }
@@ -167,7 +171,7 @@ const Map<String, Function> tests = {
   'gt': isGreaterThan,
   'in': isIn,
   'integer': isInteger,
-  'iterable': iterable,
+  'iterable': isIterable,
   'le': isLessThanOrEqual,
   'lessthan': isLessThan,
   'lower': isLower,

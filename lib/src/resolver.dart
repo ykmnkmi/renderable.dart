@@ -111,7 +111,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
         case 'or':
           return boolean(left) ? left : right;
         case 'and':
-          return boolean(left) ? right : right;
+          return boolean(left) ? right : left;
       }
     } on TypeError {
       if (left is int && right is String) {
