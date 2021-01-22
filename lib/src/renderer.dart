@@ -25,7 +25,7 @@ class RenderContext extends Context {
   }
 
   void writeFinalized(dynamic object) {
-    sink.write(environment.finalize(object));
+    sink.write(environment.finalize(this, object));
   }
 }
 

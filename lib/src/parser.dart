@@ -1,18 +1,18 @@
 import 'package:meta/meta.dart';
 
+import 'enirvonment.dart';
 import 'exceptions.dart';
 import 'lexer.dart';
 import 'nodes.dart';
-import 'configuration.dart';
 import 'reader.dart';
 import 'utils.dart' show represent;
 
 class Parser {
-  Parser(this.configuration, {this.name, this.fileName})
+  Parser(this.environment, {this.name, this.fileName})
       : endTokensStack = <List<String>>[],
         tagStack = <String>[];
 
-  final Configuration configuration;
+  final Environment environment;
 
   final String? name;
 
@@ -955,7 +955,7 @@ class Parser {
   }
 
   List<Node> parse(String template, {String? path}) {
-    final tokens = Lexer(configuration).tokenize(template, path: path);
+    final tokens = Lexer(environment).tokenize(template, path: path);
     final reader = TokenReader(tokens);
     final nodes = scan(reader);
     return nodes;

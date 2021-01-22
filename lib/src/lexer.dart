@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
-import 'configuration.dart';
+import 'enirvonment.dart';
 import 'exceptions.dart';
 
 part 'token.dart';
@@ -111,7 +111,7 @@ class MultiTokenRule extends Rule {
 
 @doNotStore
 class Lexer {
-  Lexer(Configuration configuration)
+  Lexer(Environment environment)
       : newLineRe = RegExp('(\r\n|\r|\n)'),
         whitespaceRe = RegExp('\\s+'),
         nameRe = RegExp('[a-zA-Z\$_][a-zA-Z0-9\$_]*', unicode: true),
@@ -119,21 +119,21 @@ class Lexer {
         integerRe = RegExp('(\\d+_)*\\d+'),
         floatRe = RegExp('(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?e[+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)'),
         operatorRe = RegExp('\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;'),
-        lStripUnlessRe = configuration.lStripBlocks ? compile('[^ \\t]') : null,
-        newLine = configuration.newLine,
-        keepTrailingNewLine = configuration.keepTrailingNewLine {
-    final blockSuffixRe = configuration.trimBlocks ? r'\n?' : '';
+        lStripUnlessRe = environment.lStripBlocks ? compile('[^ \\t]') : null,
+        newLine = environment.newLine,
+        keepTrailingNewLine = environment.keepTrailingNewLine {
+    final blockSuffixRe = environment.trimBlocks ? r'\n?' : '';
 
-    final commentBeginRe = escape(configuration.commentBegin);
-    final commentEndRe = escape(configuration.commentEnd);
+    final commentBeginRe = escape(environment.commentBegin);
+    final commentEndRe = escape(environment.commentEnd);
     final commentEnd = compile('(.*?)((?:\\+${commentEndRe}|-${commentEndRe}\\s*|${commentEndRe}${blockSuffixRe}))');
 
-    final variableBeginRe = escape(configuration.variableBegin);
-    final variableEndRe = escape(configuration.variableEnd);
+    final variableBeginRe = escape(environment.variableBegin);
+    final variableEndRe = escape(environment.variableEnd);
     final variableEnd = compile('-${variableEndRe}\\s*|${variableEndRe}');
 
-    final blockBeginRe = escape(configuration.blockBegin);
-    final blockEndRe = escape(configuration.blockEnd);
+    final blockBeginRe = escape(environment.blockBegin);
+    final blockEndRe = escape(environment.blockEnd);
     final blockEnd = compile('(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe})');
 
     final tagRules = <Rule>[
@@ -146,13 +146,12 @@ class Lexer {
     ];
 
     final rootTagRules = <List<String>>[
-      ['comment_begin', configuration.commentBegin, commentBeginRe],
-      ['variable_begin', configuration.variableBegin, variableBeginRe],
-      ['block_begin', configuration.blockBegin, blockBeginRe],
-      if (configuration.lineCommentPrefix != null)
-        ['linecomment_begin', configuration.lineCommentPrefix!, '(?:^|(?<=\\S))[^\\S\r\n]*' + configuration.lineCommentPrefix!],
-      if (configuration.lineStatementPrefix != null)
-        ['linestatement_begin', configuration.lineStatementPrefix!, '^[ \t\v]*' + configuration.lineStatementPrefix!],
+      ['comment_begin', environment.commentBegin, commentBeginRe],
+      ['variable_begin', environment.variableBegin, variableBeginRe],
+      ['block_begin', environment.blockBegin, blockBeginRe],
+      if (environment.lineCommentPrefix != null)
+        ['linecomment_begin', environment.lineCommentPrefix!, '(?:^|(?<=\\S))[^\\S\r\n]*' + environment.lineCommentPrefix!],
+      if (environment.lineStatementPrefix != null) ['linestatement_begin', environment.lineStatementPrefix!, '^[ \t\v]*' + environment.lineStatementPrefix!],
     ];
 
     rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
@@ -190,11 +189,11 @@ class Lexer {
         MultiTokenRule.optionalLStrip(rawEnd, <String>['data', 'raw_end'], '#pop'),
         MultiTokenRule(compile('(.)'), <String>['@missing end of raw directive']),
       ],
-      if (configuration.lineCommentPrefix != null)
+      if (environment.lineCommentPrefix != null)
         'linecomment_begin': <Rule>[
           MultiTokenRule(compile('(.*?)()(?=\n|\$)'), <String>['linecomment', 'linecomment_end'], '#pop'),
         ],
-      if (configuration.lineStatementPrefix != null)
+      if (environment.lineStatementPrefix != null)
         'linestatement_begin': <Rule>[
           SingleTokenRule(compile('\\s*(\n|\$)'), 'linestatement_end', '#pop'),
           ...tagRules,

@@ -239,6 +239,7 @@ void main() {
     });
 
     test('constant casing', () {
+      // TODO: test with undefined
       final environment = Environment();
 
       for (final constant in [true, false, null]) {
@@ -281,6 +282,7 @@ void main() {
     });
 
     test('const', () {
+      // TODO: test with undefined
       final environment = Environment();
       final template = environment.fromString('{{ true }}|{{ false }}|{{ none }}|{{ none is defined }}|{{ missing is defined }}');
       expect(template.render(), equals('true|false|null|true|false'));

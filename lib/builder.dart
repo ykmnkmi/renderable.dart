@@ -5,8 +5,8 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
-import 'src/configuration.dart';
 import 'src/defaults.dart' as defaults;
+import 'src/enirvonment.dart';
 import 'src/nodes.dart';
 import 'src/parser.dart';
 import 'src/visitor.dart';
@@ -18,7 +18,7 @@ Builder htmlTemplateBuilder(BuilderOptions options) {
 class HtmlTemplateBuilder extends Builder {
   factory HtmlTemplateBuilder.fromConfig(Map<String, Object?> config) {
     return HtmlTemplateBuilder(
-      Configuration(
+      Environment(
         commentBegin: config['comment_begin'] as String? ?? defaults.commentBegin,
         commentEnd: config['comment_end'] as String? ?? defaults.commentEnd,
         variableBegin: config['variable_begin'] as String? ?? defaults.variableBegin,
@@ -31,7 +31,7 @@ class HtmlTemplateBuilder extends Builder {
 
   HtmlTemplateBuilder(this.environment) : formatter = DartFormatter();
 
-  final Configuration environment;
+  final Environment environment;
 
   final DartFormatter formatter;
 

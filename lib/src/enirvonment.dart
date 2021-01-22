@@ -1,7 +1,8 @@
 import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
-import 'configuration.dart';
+import 'package:meta/meta.dart';
+
 import 'context.dart';
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
@@ -12,27 +13,32 @@ import 'renderable.dart';
 import 'renderer.dart';
 import 'utils.dart';
 
+typedef Finalizer = dynamic Function(dynamic value);
+typedef ContextFinalizer = dynamic Function(Context context, dynamic value);
+typedef EnvironmentFinalizer = dynamic Function(Environment environment, dynamic value);
+
 typedef FieldGetter = dynamic Function(dynamic object, String field);
 
 typedef Caller = dynamic Function(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named]);
 
-class Environment extends Configuration {
+@immutable
+class Environment {
   Environment(
-      {String blockBegin = defaults.blockBegin,
-      String blockEnd = defaults.blockEnd,
-      String variableBegin = defaults.variableBegin,
-      String variableEnd = defaults.variableEnd,
-      String commentBegin = defaults.commentBegin,
-      String commentEnd = defaults.commentEnd,
-      String? lineCommentPrefix = defaults.lineCommentPrefix,
-      String? lineStatementPrefix = defaults.lineStatementPrefix,
-      bool trimBlocks = defaults.trimBlocks,
-      bool lStripBlocks = defaults.lStripBlocks,
-      String newLine = defaults.newLine,
-      bool keepTrailingNewLine = defaults.keepTrailingNewLine,
-      bool optimized = true,
-      Finalizer finalize = defaults.finalize,
-      bool autoEscape = false,
+      {this.commentBegin = defaults.commentBegin,
+      this.commentEnd = defaults.commentEnd,
+      this.variableBegin = defaults.variableBegin,
+      this.variableEnd = defaults.variableEnd,
+      this.blockBegin = defaults.blockBegin,
+      this.blockEnd = defaults.blockEnd,
+      this.lineCommentPrefix = defaults.lineCommentPrefix,
+      this.lineStatementPrefix = defaults.lineStatementPrefix,
+      this.lStripBlocks = defaults.lStripBlocks,
+      this.trimBlocks = defaults.trimBlocks,
+      this.newLine = defaults.newLine,
+      this.keepTrailingNewLine = defaults.keepTrailingNewLine,
+      this.optimized = true,
+      Function finalize = defaults.finalize,
+      this.autoEscape = false,
       Map<String, dynamic>? globals,
       Map<String, Function>? filters,
       Set<String>? environmentFilters,
@@ -41,27 +47,18 @@ class Environment extends Configuration {
       Random? random,
       this.getField = defaults.getField,
       this.callCallable = defaults.callCallable})
-      : templates = HashMap<String, Template>(),
-        super(
-            commentBegin: commentBegin,
-            commentEnd: commentEnd,
-            variableBegin: variableBegin,
-            variableEnd: variableEnd,
-            blockBegin: blockBegin,
-            blockEnd: blockEnd,
-            lineCommentPrefix: lineCommentPrefix,
-            lineStatementPrefix: lineStatementPrefix,
-            lStripBlocks: lStripBlocks,
-            trimBlocks: trimBlocks,
-            newLine: newLine,
-            keepTrailingNewLine: keepTrailingNewLine,
-            optimized: optimized,
-            finalize: finalize,
-            autoEscape: autoEscape,
-            globals: HashMap<String, dynamic>.of(defaults.globals),
-            filters: HashMap<String, Function>.of(defaults.filters),
-            environmentFilters: HashSet<String>.of(defaults.environmentFilters),
-            tests: HashMap<String, Function>.of(defaults.tests)) {
+      : assert(finalize is Finalizer || finalize is ContextFinalizer || finalize is EnvironmentFinalizer),
+        finalize = finalize is EnvironmentFinalizer
+            ? ((context, value) => finalize(context.environment, value))
+            : finalize is ContextFinalizer
+                ? finalize
+                : ((context, value) => finalize(value)),
+        globals = Map<String, dynamic>.of(defaults.globals),
+        filters = Map<String, Function>.of(defaults.filters),
+        environmentFilters = HashSet<String>.of(defaults.environmentFilters),
+        tests = Map<String, Function>.of(defaults.tests),
+        templates = HashMap<String, Template>(),
+        random = Random() {
     if (globals != null) {
       this.globals.addAll(globals);
     }
@@ -83,13 +80,52 @@ class Environment extends Configuration {
     }
   }
 
+  final String commentBegin;
+
+  final String commentEnd;
+
+  final String variableBegin;
+
+  final String variableEnd;
+
+  final String blockBegin;
+
+  final String blockEnd;
+
+  final String? lineCommentPrefix;
+
+  final String? lineStatementPrefix;
+
+  final bool lStripBlocks;
+
+  final bool trimBlocks;
+
+  final String newLine;
+
+  final bool keepTrailingNewLine;
+
+  final bool optimized;
+
+  final ContextFinalizer finalize;
+
+  final bool autoEscape;
+
+  final Map<String, dynamic> globals;
+
+  final Map<String, Function> filters;
+
+  final Set<String> environmentFilters;
+
+  final Map<String, Function> tests;
+
+  final Map<String, Template> templates;
+
+  final Random random;
+
   final FieldGetter getField;
 
   final Caller callCallable;
 
-  final Map<String, Template> templates;
-
-  @override
   Environment copy(
       {String? commentBegin,
       String? commentEnd,
@@ -104,13 +140,13 @@ class Environment extends Configuration {
       String? newLine,
       bool? keepTrailingNewLine,
       bool? optimized,
-      Finalizer? finalize,
+      Function? finalize,
       bool? autoEscape,
-      Random? random,
       Map<String, dynamic>? globals,
       Map<String, Function>? filters,
       Set<String>? environmentFilters,
       Map<String, Function>? tests,
+      Random? random,
       FieldGetter? getField,
       Caller? callCallable}) {
     return Environment(
@@ -255,7 +291,7 @@ class Template implements Renderable {
       bool lStripBlocks = defaults.lStripBlocks,
       String newLine = defaults.newLine,
       bool keepTrailingNewLine = defaults.keepTrailingNewLine,
-      Finalizer finalize = defaults.finalize,
+      Function finalize = defaults.finalize,
       bool optimized = true,
       bool autoEscape = false,
       Map<String, Object>? globals,
