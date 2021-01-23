@@ -1,5 +1,7 @@
 library utils;
 
+// import 'package:dart_style/dart_style.dart';
+
 typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
 
 bool boolean(Object? value) {
@@ -28,6 +30,12 @@ bool boolean(Object? value) {
   }
 
   return true;
+}
+
+String format(dynamic object) {
+  final source = represent(object);
+  return source;
+  // return DartFormatter().formatStatement(source);
 }
 
 List<dynamic> list(dynamic iterable) {
@@ -127,3 +135,55 @@ String sliceString(String string, Indices indices) {
 //   // ignore: return_of_invalid_type
 //   return object;
 // }
+
+class Cycler extends Iterable<dynamic> {
+  Cycler(List<dynamic> values)
+      : values = List<dynamic>.of(values),
+        length = values.length,
+        index = 0;
+
+  final List<dynamic> values;
+
+  @override
+  final int length;
+
+  int index;
+
+  dynamic get current {
+    return values[index];
+  }
+
+  @override
+  Iterator<dynamic> get iterator {
+    return CyclerIterator(this);
+  }
+
+  dynamic next() {
+    final result = current;
+    index = (index + 1) % length;
+    return result;
+  }
+
+  void reset() {
+    index = 0;
+  }
+}
+
+class CyclerIterator extends Iterator<dynamic> {
+  CyclerIterator(this.cycler);
+
+  final Cycler cycler;
+
+  dynamic last;
+
+  @override
+  dynamic get current {
+    return last;
+  }
+
+  @override
+  bool moveNext() {
+    last = cycler.next();
+    return true;
+  }
+}

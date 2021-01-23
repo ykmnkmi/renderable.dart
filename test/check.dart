@@ -1,8 +1,16 @@
 import 'package:renderable/jinja.dart';
 
+import 'dart:math';
+
 void main() {
-  final environment = Environment();
-  final template = environment.fromString('{{ {} is sequence }}');
+  final random = Random(0);
+  final environment = Environment(random: random);
+  final template = environment.fromString('{{ "123456789" | random }}');
   print(template.nodes);
-  print(template.render());
+
+  for (var i = 0; i < 10; i++) {
+    print(template.render());
+    print(template.render());
+    print(template.render());
+  }
 }

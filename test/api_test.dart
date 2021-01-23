@@ -1,6 +1,6 @@
 import 'package:renderable/jinja.dart';
 import 'package:renderable/reflection.dart';
-import 'package:renderable/src/utils.dart';
+import 'package:renderable/runtime.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -49,5 +49,30 @@ void main() {
       final template = environment.fromString('{{ value }}');
       expect(render(template, value: 'hello'), equals("{{ 'hello' }}"));
     });
+
+    test('cycler', () {
+      final items = [1, 2, 3];
+      final cycler = Cycler(items);
+      final iterator = cycler.iterator;
+
+      for (final item in items + items) {
+        expect(cycler.current, equals(item));
+        iterator.moveNext();
+        expect(iterator.current, equals(item));
+      }
+
+      iterator.moveNext();
+      expect(cycler.current, equals(2));
+      cycler.reset();
+      expect(cycler.current, equals(1));
+    });
+
+    // TODO: compileExpression test
+
+    // TODO: getTemplate test
+
+    // TODO: getTemplate test
+
+    // TODO: autoEscapeMatcher test
   });
 }

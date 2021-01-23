@@ -58,7 +58,7 @@ class Environment {
         environmentFilters = HashSet<String>.of(defaults.environmentFilters),
         tests = Map<String, Function>.of(defaults.tests),
         templates = HashMap<String, Template>(),
-        random = Random() {
+        random = random ?? Random() {
     if (globals != null) {
       this.globals.addAll(globals);
     }
@@ -241,7 +241,7 @@ class Environment {
     return template;
   }
 
-  dynamic callFilter(String name, dynamic value, {List<dynamic> positional = const [], Map<Symbol, dynamic> named = const {}}) {
+  dynamic callFilter(String name, dynamic value, {List<dynamic>? positional, Map<Symbol, dynamic>? named}) {
     Function filter;
 
     if (filters.containsKey(name)) {
@@ -251,16 +251,18 @@ class Environment {
     }
 
     if (environmentFilters.contains(name)) {
+      positional ??= <dynamic>[];
       positional.insert(0, this);
       positional.insert(1, value);
     } else {
+      positional ??= <dynamic>[];
       positional.insert(0, value);
     }
 
     return Function.apply(filter, positional, named);
   }
 
-  bool callTest(String name, dynamic value, {List<dynamic> positional = const [], Map<Symbol, dynamic> named = const {}}) {
+  bool callTest(String name, dynamic value, {List<dynamic>? positional, Map<Symbol, dynamic>? named}) {
     Function test;
 
     if (tests.containsKey(name)) {
@@ -269,6 +271,7 @@ class Environment {
       throw TemplateRuntimeError('test not found: $name');
     }
 
+    positional ??= <dynamic>[];
     positional.insert(0, value);
 
     return Function.apply(test, positional, named) as bool;

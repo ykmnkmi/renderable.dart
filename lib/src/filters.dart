@@ -4,7 +4,7 @@ import 'enirvonment.dart';
 import 'markup.dart' show Markup;
 import 'utils.dart' as utils;
 
-const List<List<String>> _suffixes = <List<String>>[
+const List<List<String>> suffixes = [
   [' KiB', ' kB'],
   [' MiB', ' MB'],
   [' GiB', ' GB'],
@@ -141,15 +141,15 @@ String doFileSizeFormat(dynamic value, [bool binary = false]) {
     final k = binary ? 0 : 1;
     late num unit;
 
-    for (var i = 0; i < _suffixes.length; i++) {
+    for (var i = 0; i < suffixes.length; i++) {
       unit = math.pow(base, i + 2);
 
       if (bytes < unit) {
-        return (base * bytes / unit).toStringAsFixed(1) + _suffixes[i][k];
+        return (base * bytes / unit).toStringAsFixed(1) + suffixes[i][k];
       }
     }
 
-    return (base * bytes / unit).toStringAsFixed(1) + _suffixes.last[k];
+    return (base * bytes / unit).toStringAsFixed(1) + suffixes.last[k];
   }
 }
 
@@ -157,48 +157,50 @@ dynamic doFirst(Iterable<dynamic> values) {
   return values.first;
 }
 
-double doFloat(dynamic value, [double defaultValue = 0.0]) {
-  if (value == null) {
-    return defaultValue;
-  }
-
-  if (value is num) {
-    return value.toDouble();
-  }
-
+double doFloat(dynamic value, {double default_ = 0.0}) {
   if (value is String) {
     try {
       return double.parse(value);
     } on FormatException {
-      return defaultValue;
+      return default_;
     }
   }
 
-  return defaultValue;
+  try {
+    return value.toDouble() as double;
+  } catch (e) {
+    return default_;
+  }
 }
 
 Markup doForceEscape(dynamic value) {
   return Markup.escape(value.toString());
 }
 
-int doInteger(dynamic value, [int defaultValue = 0, int radix = 10]) {
-  if (value == null) {
-    return defaultValue;
-  }
-
-  if (value is num) {
-    return value.toInt();
-  }
-
+int doInteger(dynamic value, {int default_ = 0, int base = 10}) {
   if (value is String) {
+    if (base == 16 && value.startsWith('0x')) {
+      value = value.substring(2);
+    }
+
     try {
-      return int.parse(value, radix: radix);
+      return int.parse(value, radix: base);
     } on FormatException {
-      return defaultValue;
+      if (base == 10) {
+        try {
+          return double.parse(value).toInt();
+        } on FormatException {
+          // pass
+        }
+      }
     }
   }
 
-  return defaultValue;
+  try {
+    return value.toInt() as int;
+  } catch (e) {
+    return default_;
+  }
 }
 
 String doJoin(Environment environment, Iterable<dynamic> items, [String delimiter = '', String? attribute]) {
@@ -217,9 +219,14 @@ String doLower(String string) {
   return string.toLowerCase();
 }
 
-dynamic doRandom(Environment environment, List<dynamic> values) {
-  final length = values.length;
-  return values[environment.random.nextInt(length)];
+String doPPrint(dynamic object) {
+  return utils.format(object);
+}
+
+dynamic doRandom(Environment environment, dynamic values) {
+  final length = values.length as int;
+  final index = environment.random.nextInt(length);
+  return values[index];
 }
 
 String doString(dynamic value) {
@@ -263,6 +270,7 @@ const Map<String, Function> filters = {
   'length': doLength,
   'list': utils.list,
   'lower': doLower,
+  'pprint': doPPrint,
   'random': doRandom,
   'string': doString,
   'sum': doSum,
@@ -276,7 +284,6 @@ const Map<String, Function> filters = {
   // 'map': doMap,
   // 'max': doMax,
   // 'min': doMin,
-  // 'pprint': doPPrint,
   // 'reject': doReject,
   // 'rejectattr': doRejectAttr,
   // 'replace': doReplace,
@@ -299,4 +306,4 @@ const Map<String, Function> filters = {
   // 'xmlattr': doXMLAttr,
 };
 
-const Set<String> environmentFilters = {'attr', 'join', 'random'};
+const Set<String> environmentFilters = {'attr', 'join', 'random', 'sum'};

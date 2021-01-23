@@ -86,7 +86,7 @@ class LoopContext {
                       values.add(arg09);
 
                       // wanna more?
-                      // look ath this https://api.flutter.dev/flutter/dart-ui/hashValues.html
+                      // look at this https://api.flutter.dev/flutter/dart-ui/hashValues.html
                     }
                   }
                 }

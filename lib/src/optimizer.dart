@@ -182,7 +182,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitFilter(Filter filter, [Context? context]) {
-    if (!context!.environment.filters.containsKey(filter.name)) {
+    if (filter.name == 'random' || !context!.environment.filters.containsKey(filter.name)) {
       throw Impossible();
     }
 

@@ -15,9 +15,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   @literal
   const ExpressionResolver();
 
-  // wtf on
-
-  @protected
+  @protected // update
   T Function(T Function(List<dynamic>, Map<Symbol, dynamic>)) callable<T>(Callable callable, [C? context]) {
     final positional = <dynamic>[];
 
@@ -31,7 +29,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
     if (callable.keywordArguments != null) {
       for (final keywordArgument in callable.keywordArguments!) {
-        named[Symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
+        named[symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
       }
     }
     if (callable.dArguments != null) {
@@ -41,7 +39,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
     if (callable.dKeywordArguments != null) {
       named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<dynamic, dynamic>)
           .cast<String, dynamic>()
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(Symbol(key), value)));
+          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(symbol(key), value)));
     }
 
     return (T Function(List<dynamic> positional, Map<Symbol, dynamic> named) callback) => callback(positional, named);
@@ -64,8 +62,6 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
     return callable<bool>(test, context)(callback);
   }
-
-  // wtf off
 
   @override
   void visitAll(List<Node> nodes, [C? context]) {
@@ -391,5 +387,15 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   @override
   void visitWith(With wiz, [C? context]) {
     throw UnimplementedError();
+  }
+
+  @protected
+  static Symbol symbol(String keyword) {
+    switch (keyword) {
+      case 'default':
+        return #default_;
+      default:
+        return Symbol(keyword);
+    }
   }
 }
