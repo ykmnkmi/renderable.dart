@@ -6,7 +6,6 @@ Will be [Jinja.dart](https://github.com/ykmnkmi/jinja.dart) first stable version
 Status:
 ------
 - Variables `[a-zA-Z$_][a-zA-Z0-9$_]*`
-  - ~~Undefined~~
 - Filters
 - Tests
 - Comments
@@ -65,7 +64,10 @@ Status:
   - length, count
   - list
   - lower
+  - pprint (bool, num, String, List, Map, Set)
   - random
+  - reverse
+  - safe
   - string
   - sum
   - trim
@@ -100,8 +102,9 @@ Status:
   - undefined
   - upper
 - List of Global Functions
-  - range
+  - list
   - namespace
+  - range
 - Extensions
   - With Statement
   - ~~i18n~~

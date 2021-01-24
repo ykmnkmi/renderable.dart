@@ -1,11 +1,13 @@
 library utils;
 
+import 'runtime.dart';
+
 // import 'package:dart_style/dart_style.dart';
 
 typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
 
 bool boolean(Object? value) {
-  if (value == null) {
+  if (value == null || value is Undefined) {
     return false;
   }
 

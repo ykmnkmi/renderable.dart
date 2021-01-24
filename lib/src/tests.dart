@@ -1,5 +1,6 @@
+import 'package:renderable/src/runtime.dart';
+
 import 'markup.dart';
-import 'utils.dart' as utils;
 
 bool isBoolean(dynamic object) {
   return object is bool;
@@ -10,7 +11,7 @@ bool isCallable(dynamic object) {
 }
 
 bool isDefined(dynamic value) {
-  return utils.boolean(value);
+  return value is! Undefined;
 }
 
 bool isDivisibleBy(num value, num divider) {
@@ -145,6 +146,10 @@ bool isTrue(dynamic value) {
   return value == true;
 }
 
+bool isUndefined(dynamic value) {
+  return value is Undefined;
+}
+
 bool isUpper(String value) {
   return value == value.toUpperCase();
 }
@@ -185,6 +190,6 @@ const Map<String, Function> tests = {
   'sequence': isSequence,
   'string': isString,
   'true': isTrue,
-  'undefined': isNone,
+  'undefined': isUndefined,
   'upper': isUpper,
 };

@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:renderable/src/runtime.dart';
+
 import 'enirvonment.dart';
 import 'exceptions.dart';
 import 'markup.dart';
@@ -99,11 +101,12 @@ int doLength(dynamic items) {
 }
 
 dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool asBoolean = false]) {
-  if (asBoolean) {
-    return boolean(value) ? value : defaultValue;
+
+  if (value is Undefined || (asBoolean && !boolean(value))) {
+    return defaultValue;
   }
 
-  return value ?? defaultValue;
+  return value;
 }
 
 Markup doEscape(dynamic value) {

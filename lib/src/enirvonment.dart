@@ -3,7 +3,6 @@ import 'dart:math' show Random;
 
 import 'package:meta/meta.dart';
 
-import 'context.dart';
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
 import 'nodes.dart';
@@ -11,15 +10,18 @@ import 'optimizer.dart';
 import 'parser.dart';
 import 'renderable.dart';
 import 'renderer.dart';
+import 'runtime.dart';
 import 'utils.dart';
 
 typedef Finalizer = dynamic Function(dynamic value);
 typedef ContextFinalizer = dynamic Function(Context context, dynamic value);
 typedef EnvironmentFinalizer = dynamic Function(Environment environment, dynamic value);
 
+typedef Caller = dynamic Function(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named]);
+
 typedef FieldGetter = dynamic Function(dynamic object, String field);
 
-typedef Caller = dynamic Function(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named]);
+typedef UndefinedFactory = Undefined Function({String? hint, Object? object, String? name});
 
 @immutable
 class Environment {
@@ -37,6 +39,7 @@ class Environment {
       this.newLine = defaults.newLine,
       this.keepTrailingNewLine = defaults.keepTrailingNewLine,
       this.optimized = true,
+      this.undefined = defaults.undefined,
       Function finalize = defaults.finalize,
       this.autoEscape = false,
       Map<String, dynamic>? globals,
@@ -106,6 +109,8 @@ class Environment {
 
   final bool optimized;
 
+  final UndefinedFactory undefined;
+
   final ContextFinalizer finalize;
 
   final bool autoEscape;
@@ -140,6 +145,7 @@ class Environment {
       String? newLine,
       bool? keepTrailingNewLine,
       bool? optimized,
+      UndefinedFactory? undefined,
       Function? finalize,
       bool? autoEscape,
       Map<String, dynamic>? globals,
@@ -163,6 +169,7 @@ class Environment {
       newLine: newLine ?? this.newLine,
       keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
       optimized: optimized ?? this.optimized,
+      undefined: undefined ?? this.undefined,
       finalize: finalize ?? this.finalize,
       autoEscape: autoEscape ?? this.autoEscape,
       globals: globals ?? this.globals,
@@ -182,7 +189,7 @@ class Environment {
       try {
         return object[field];
       } on Exception {
-        return null;
+        return undefined(object: object, name: field);
       }
     }
   }
@@ -217,11 +224,11 @@ class Environment {
         try {
           return getField(object, key);
         } on Exception {
-          return null;
+          // do nothing.
         }
       }
 
-      return null;
+      return undefined(object: object, name: '$key');
     }
   }
 
@@ -294,8 +301,9 @@ class Template implements Renderable {
       bool lStripBlocks = defaults.lStripBlocks,
       String newLine = defaults.newLine,
       bool keepTrailingNewLine = defaults.keepTrailingNewLine,
-      Function finalize = defaults.finalize,
       bool optimized = true,
+      UndefinedFactory undefined = defaults.undefined,
+      Function finalize = defaults.finalize,
       bool autoEscape = false,
       Map<String, Object>? globals,
       Map<String, Function>? filters,
@@ -319,8 +327,9 @@ class Template implements Renderable {
           trimBlocks: trimBlocks,
           newLine: newLine,
           keepTrailingNewLine: keepTrailingNewLine,
-          finalize: finalize,
           optimized: optimized,
+          undefined: undefined,
+          finalize: finalize,
           autoEscape: autoEscape,
           globals: globals,
           filters: filters,
@@ -342,8 +351,9 @@ class Template implements Renderable {
           trimBlocks: trimBlocks,
           newLine: newLine,
           keepTrailingNewLine: keepTrailingNewLine,
-          finalize: finalize,
           optimized: optimized,
+          undefined: undefined,
+          finalize: finalize,
           autoEscape: autoEscape,
           globals: globals,
           filters: filters,

@@ -20,25 +20,26 @@ const bool keepTrailingNewLine = false;
 
 const Map<String, dynamic> globals = {
   'namespace': Namespace.factory,
+  'list': list,
   'range': range,
 };
 
 dynamic finalize(dynamic value) {
-  if (value == null) {
+  if (value is Undefined) {
     return '';
   }
 
-  if (value is String) {
-    return value;
-  }
-
   return value;
+}
+
+dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
+  return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
 }
 
 dynamic getField(dynamic object, String field) {
   throw NoSuchMethodError.withInvocation(object, Invocation.getter(Symbol(field)));
 }
 
-dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
-  return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
+Undefined undefined({String? hint, Object? object, String? name}) {
+  return Undefined(hint: hint, object: object, name: name);
 }

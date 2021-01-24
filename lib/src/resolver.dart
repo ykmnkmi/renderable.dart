@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
 
-import 'context.dart';
 import 'nodes.dart';
 import 'runtime.dart';
 import 'tests.dart' as tests;
@@ -203,7 +202,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       return expression.accept(this, context);
     }
 
-    return null;
+    return context!.environment.undefined();
   }
 
   @override
