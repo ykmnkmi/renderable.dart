@@ -17,7 +17,7 @@ class Markup {
   }
 
   @override
-  bool operator ==(Object other) {
+  bool operator ==(dynamic other) {
     return other is Markup && value == other.value;
   }
 

@@ -52,7 +52,7 @@ List<dynamic> list(dynamic iterable) {
   }
 
   if (iterable is Map) {
-    return iterable.entries.map((entry) => [entry.key, entry.value]).toList();
+    return iterable.keys.toList();
   }
 
   return iterable.toList() as List<dynamic>;

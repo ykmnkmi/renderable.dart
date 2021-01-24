@@ -1,8 +1,9 @@
 import 'dart:math' as math;
 
 import 'enirvonment.dart';
-import 'markup.dart' show Markup;
-import 'utils.dart' as utils;
+import 'exceptions.dart';
+import 'markup.dart';
+import 'utils.dart';
 
 const List<List<String>> suffixes = [
   [' KiB', ' kB'],
@@ -97,9 +98,9 @@ int doLength(dynamic items) {
   return items.length as int;
 }
 
-dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool boolean = false]) {
-  if (boolean) {
-    return utils.boolean(value) ? value : defaultValue;
+dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool asBoolean = false]) {
+  if (asBoolean) {
+    return boolean(value) ? value : defaultValue;
   }
 
   return value ?? defaultValue;
@@ -203,12 +204,16 @@ int doInteger(dynamic value, {int default_ = 0, int base = 10}) {
   }
 }
 
-String doJoin(Environment environment, Iterable<dynamic> items, [String delimiter = '', String? attribute]) {
+dynamic doJoin(Environment environment, Iterable<dynamic> values, [String delimiter = '', String? attribute]) {
   if (attribute != null) {
-    return items.map<dynamic>(makeAttributeGetter(environment, attribute)).join(delimiter);
+    values = values.map<dynamic>(makeAttributeGetter(environment, attribute));
   }
 
-  return items.join(delimiter);
+  if (!environment.autoEscape) {
+    return values.join(delimiter);
+  }
+
+  return Markup(values.map((value) => value is Markup ? value : escape('$value')).join(delimiter));
 }
 
 dynamic doLast(Iterable<dynamic> values) {
@@ -220,13 +225,26 @@ String doLower(String string) {
 }
 
 String doPPrint(dynamic object) {
-  return utils.format(object);
+  return format(object);
 }
 
 dynamic doRandom(Environment environment, dynamic values) {
   final length = values.length as int;
   final index = environment.random.nextInt(length);
   return values[index];
+}
+
+dynamic doReverse(dynamic value) {
+  try {
+    final values = list(value);
+    return values.reversed;
+  } catch (e) {
+    throw FilterArgumentError('argument must be iterable');
+  }
+}
+
+Markup doMarkSafe(String value) {
+  return Markup(value);
 }
 
 String doString(dynamic value) {
@@ -245,8 +263,8 @@ String doTrim(String value) {
   return value.trim();
 }
 
-String doUpper(String string) {
-  return string.toUpperCase();
+String doUpper(String value) {
+  return value.toUpperCase();
 }
 
 const Map<String, Function> filters = {
@@ -268,10 +286,12 @@ const Map<String, Function> filters = {
   'join': doJoin,
   'last': doLast,
   'length': doLength,
-  'list': utils.list,
+  'list': list,
   'lower': doLower,
   'pprint': doPPrint,
   'random': doRandom,
+  'reverse': doReverse,
+  'safe': doMarkSafe,
   'string': doString,
   'sum': doSum,
   'trim': doTrim,
@@ -287,9 +307,7 @@ const Map<String, Function> filters = {
   // 'reject': doReject,
   // 'rejectattr': doRejectAttr,
   // 'replace': doReplace,
-  // 'reverse': doReverse,
   // 'round': doRound,
-  // 'safe': doMarkSafe,
   // 'select': doSelect,
   // 'selectattr': doSelectAttr,
   // 'slice': doSlice,

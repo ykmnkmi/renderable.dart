@@ -53,9 +53,23 @@ class TemplateRuntimeError extends TemplateError {
   @override
   String toString() {
     if (message == null) {
-      return 'TemplateRuntimeError()';
+      return 'TemplateRuntimeError';
     }
 
-    return 'TemplateRuntimeError($message)';
+    return 'TemplateRuntimeError: $message';
+  }
+}
+
+/// This error is raised if a filter was called with inappropriate arguments.
+class FilterArgumentError extends TemplateRuntimeError {
+  FilterArgumentError([dynamic message]) : super(message);
+
+  @override
+  String toString() {
+    if (message == null) {
+      return 'FilterArgumentError';
+    }
+
+    return 'FilterArgumentError: $message';
   }
 }
