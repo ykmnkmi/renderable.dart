@@ -89,7 +89,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
     final iterable = forNode.iterable.accept(this, context);
     final orElse = forNode.orElse;
 
-    if (iterable == null) {
+    if (iterable == null || iterable is Undefined) {
       if (orElse == null) {
         throw TypeError();
       } else {
@@ -118,10 +118,14 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
           if (index > 0) {
             previous = values[index - 1];
+          } else {
+            previous = context.environment.undefined();
           }
 
           if (index < values.length - 1) {
             next = values[index + 1];
+          } else {
+            next = context.environment.undefined();
           }
 
           bool changed(dynamic item) {
@@ -136,9 +140,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
             return true;
           }
 
-          data['loop'] = forNode.recursive
-              ? RecursiveLoopContext(index, values.length, previous, next, changed, loop)
-              : LoopContext(index, values.length, previous, next, changed);
+          data['loop'] = LoopContext(index, values.length, previous, next, changed, loop);
           return data;
         };
       } else {

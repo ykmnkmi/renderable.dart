@@ -216,7 +216,7 @@ class Parser {
     reader.expect('name', 'if');
     final test = parseTuple(reader, withCondition: false);
     final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-    final root = If(test is Test ? test : Test('defined', expression: test), body);
+    final root = If(test, body);
     var node = root;
 
     while (true) {
@@ -225,7 +225,7 @@ class Parser {
       if (tag.test('name', 'elif')) {
         final test = parseTuple(reader, withCondition: false);
         final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-        node.nextIf = If(test is Test ? test : Test('defined', expression: test), body);
+        node.nextIf = If(test, body);
         node = node.nextIf!;
         continue;
       }

@@ -1,3 +1,5 @@
+import 'package:renderable/src/defaults.dart';
+
 import 'enirvonment.dart';
 
 typedef ContextCallback<C extends Context> = void Function(C context);
@@ -40,7 +42,7 @@ class Context {
       }
     }
 
-    return environment.undefined(name: key);
+    return undefined(name: key);
   }
 
   bool has(String name) {
@@ -69,17 +71,19 @@ class Context {
   }
 
   void set(String key, dynamic value) {
-    contexts.last[key] = value;
+    contexts.last[key] = value is Undefined ? null : value;
   }
 }
 
+// TODO: update
 class LoopContext {
-  LoopContext(this.index0, this.length, this.previtem, this.nextitem, this.changed)
-      : index = index0 + 1,
-        first = index0 == 0,
-        last = index0 + 1 == length,
-        revindex = length - index0,
-        revindex0 = length - index0 - 1;
+  LoopContext(this.index0, this.length, this.previtem, this.nextitem, this.changed, this.recurse) {
+    index = index0 + 1;
+    first = index0 == 0;
+    last = index == length;
+    revindex = length - index0;
+    revindex0 = revindex - 1;
+  }
 
   final int index0;
 
@@ -91,15 +95,17 @@ class LoopContext {
 
   final bool Function(dynamic) changed;
 
-  final int index;
+  final void Function(dynamic data) recurse;
 
-  final bool first;
+  late int index;
 
-  final bool last;
+  late bool first;
 
-  final int revindex;
+  late bool last;
 
-  final int revindex0;
+  late int revindex;
+
+  late int revindex0;
 
   dynamic operator [](String key) {
     switch (key) {
@@ -128,6 +134,10 @@ class LoopContext {
       default:
         throw NoSuchMethodError.withInvocation(this, Invocation.getter(Symbol(key)));
     }
+  }
+
+  void call(dynamic data) {
+    recurse(data);
   }
 
   Object cycle([Object? arg01, Object? arg02, Object? arg03, Object? arg04, Object? arg05, Object? arg06, Object? arg07, Object? arg08, Object? arg09]) {
@@ -177,17 +187,6 @@ class LoopContext {
     }
 
     return values[index0 % values.length];
-  }
-}
-
-class RecursiveLoopContext extends LoopContext {
-  RecursiveLoopContext(int index0, int length, dynamic previtem, dynamic nextitem, bool Function(dynamic) changed, this.render)
-      : super(index0, length, previtem, nextitem, changed);
-
-  final void Function(dynamic data) render;
-
-  void call(dynamic data) {
-    render(data);
   }
 }
 

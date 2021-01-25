@@ -218,19 +218,12 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Node visitIf(If ifNode, [Context? context]) {
-    if (ifNode.test.expression != null) {
-      ifNode.test.expression = optimizeSafe(ifNode.test.expression!, context);
-    }
-
+    ifNode.test = optimizeSafe(ifNode.test, context);
     visitAll(ifNode.body, context);
-
     var next = ifNode.nextIf;
 
     while (next != null) {
-      if (next.test.expression != null) {
-        next.test.expression = optimizeSafe(next.test.expression!, context);
-      }
-
+      next.test = optimizeSafe(next.test, context);
       visitAll(next.body, context);
       next = next.nextIf;
     }

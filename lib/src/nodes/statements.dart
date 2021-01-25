@@ -109,7 +109,7 @@ class For extends Statement {
 class If extends Statement {
   If(this.test, this.body, {this.nextIf, this.orElse});
 
-  Test test;
+  Expression test;
 
   List<Node> body;
 
