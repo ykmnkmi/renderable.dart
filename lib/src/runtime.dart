@@ -1,5 +1,3 @@
-import 'package:renderable/src/defaults.dart';
-
 import 'enirvonment.dart';
 
 typedef ContextCallback<C extends Context> = void Function(C context);
@@ -42,7 +40,7 @@ class Context {
       }
     }
 
-    return undefined(name: key);
+    return environment.undefined(name: key);
   }
 
   bool has(String name) {

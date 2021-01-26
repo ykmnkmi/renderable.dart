@@ -127,7 +127,7 @@ void main() {
         '42': '42',
         'abc': '0',
         '32.32': '32',
-        // expensive to support
+        // no bigint
         // '12345678901234567890': '12345678901234567890'
       };
 
@@ -297,5 +297,15 @@ void main() {
       final template = environment.fromString('{{ x | forceescape }}');
       expect(render(template, x: Markup('<div />')), equals('&lt;div /&gt;'));
     });
+
+    test('safe', () {
+      final environment = Environment(autoEscape: true);
+      var template = environment.fromString('{{ "<div>foo</div>" | safe }}');
+      expect(template.render(), equals('<div>foo</div>'));
+      template = environment.fromString('{{ "<div>foo</div>" }}');
+      expect(template.render(), equals('&lt;div&gt;foo&lt;/div&gt;'));
+    });
+
+    // TODO: https://github.com/pallets/jinja/blob/master/tests/test_filters.py#L741
   });
 }

@@ -24,16 +24,12 @@ const Map<String, dynamic> globals = {
   'range': range,
 };
 
-dynamic finalize(dynamic value) {
-  if (value is Undefined) {
-    return '';
-  }
-
-  return value;
+dynamic apply(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
+  return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
 }
 
-dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
-  return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
+dynamic finalize(dynamic value) {
+  return value;
 }
 
 dynamic getField(dynamic object, String field) {

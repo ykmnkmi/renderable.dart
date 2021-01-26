@@ -23,7 +23,7 @@ Status:
   - ~~Block Nesting and Scope~~
   - ~~Template Objects~~
 - HTML Escaping (working)
-  - ~~Working with Manual Escaping~~
+  - Working with Manual Escaping
   - ~~Working with Automatic Escaping~~
 - List of Control Structures
   - For
@@ -66,6 +66,7 @@ Status:
   - lower
   - pprint (bool, num, String, List, Map, Set)
   - random
+  - replace
   - reverse
   - safe
   - string

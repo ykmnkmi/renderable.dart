@@ -128,7 +128,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
         return Function.apply(function, positional, named);
       }
 
-      return context!.environment.callCallable(function, positional, named);
+      return context!.environment.apply(function, positional, named);
     }
 
     return callable(call, context)(callback);
@@ -392,7 +392,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   static Symbol symbol(String keyword) {
     switch (keyword) {
       case 'default':
-        return #default_;
+        return #d;
       default:
         return Symbol(keyword);
     }

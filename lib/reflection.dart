@@ -2,13 +2,13 @@ import 'dart:mirrors' show MirrorSystem, reflect;
 
 import 'jinja.dart';
 
+dynamic apply(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
+  return reflect(object).invoke(#call, positional, named).reflectee;
+}
+
 dynamic getField(dynamic object, String field) {
   final mirror = reflect(object).getField(Symbol(field));
   return mirror.reflectee;
-}
-
-dynamic callCallable(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
-  return reflect(object).invoke(#call, positional, named).reflectee;
 }
 
 /// Shorthand for call [Template.render] with given named arguments.

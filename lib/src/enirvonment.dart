@@ -49,7 +49,7 @@ class Environment {
       Map<String, Template>? templates,
       Random? random,
       this.getField = defaults.getField,
-      this.callCallable = defaults.callCallable})
+      this.apply = defaults.apply})
       : assert(finalize is Finalizer || finalize is ContextFinalizer || finalize is EnvironmentFinalizer),
         finalize = finalize is EnvironmentFinalizer
             ? ((context, value) => finalize(context.environment, value))
@@ -129,7 +129,7 @@ class Environment {
 
   final FieldGetter getField;
 
-  final Caller callCallable;
+  final Caller apply;
 
   Environment copy(
       {String? commentBegin,
@@ -178,7 +178,7 @@ class Environment {
       tests: tests ?? this.tests,
       random: random ?? this.random,
       getField: getField ?? this.getField,
-      callCallable: callCallable ?? this.callCallable,
+      apply: callCallable ?? this.apply,
     );
   }
 
@@ -239,7 +239,7 @@ class Environment {
       optimizer.visitAll(nodes, Context(this));
     }
 
-    final template = Template.parsed(this, nodes, path);
+    final template = Template.parsed(this, nodes, path: path);
 
     if (path != null) {
       templates[path] = template;
@@ -366,11 +366,15 @@ class Template implements Renderable {
     return environment.fromString(source, path: path);
   }
 
-  Template.parsed(this.environment, List<Node> nodes, [String? path])
+  Template.parsed(this.environment, List<Node> nodes, {String? path, List<NodeVisitor> visitors = const [namespace]})
       : renderer = Renderer(environment),
         nodes = List<Node>.of(nodes),
         path = path {
-    nodes.forEach(prepare);
+    for (final visitor in visitors) {
+      for (final node in nodes) {
+        visitor(node);
+      }
+    }
 
     if (path != null) {
       environment.templates[path] = this;
@@ -391,7 +395,7 @@ class Template implements Renderable {
   }
 }
 
-void prepare(Node node) {
+void namespace(Node node) {
   if (node is Call) {
     if (node.expression is Name && (node.expression as Name).name == 'namespace') {
       final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
@@ -421,5 +425,5 @@ void prepare(Node node) {
     }
   }
 
-  node.visitChildNodes(prepare);
+  node.visitChildNodes(namespace);
 }

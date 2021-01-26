@@ -101,7 +101,6 @@ int doLength(dynamic items) {
 }
 
 dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool asBoolean = false]) {
-
   if (value is Undefined || (asBoolean && !boolean(value))) {
     return defaultValue;
   }
@@ -161,19 +160,19 @@ dynamic doFirst(Iterable<dynamic> values) {
   return values.first;
 }
 
-double doFloat(dynamic value, {double default_ = 0.0}) {
+double doFloat(dynamic value, {double d = 0.0}) {
   if (value is String) {
     try {
       return double.parse(value);
     } on FormatException {
-      return default_;
+      return d;
     }
   }
 
   try {
     return value.toDouble() as double;
   } catch (e) {
-    return default_;
+    return d;
   }
 }
 
@@ -181,7 +180,7 @@ Markup doForceEscape(dynamic value) {
   return Markup.escape(value.toString());
 }
 
-int doInteger(dynamic value, {int default_ = 0, int base = 10}) {
+int doInteger(dynamic value, {int d = 0, int base = 10}) {
   if (value is String) {
     if (base == 16 && value.startsWith('0x')) {
       value = value.substring(2);
@@ -203,7 +202,7 @@ int doInteger(dynamic value, {int default_ = 0, int base = 10}) {
   try {
     return value.toInt() as int;
   } catch (e) {
-    return default_;
+    return d;
   }
 }
 
@@ -235,6 +234,32 @@ dynamic doRandom(Environment environment, dynamic values) {
   final length = values.length as int;
   final index = environment.random.nextInt(length);
   return values[index];
+}
+
+dynamic doReplace(dynamic object, String from, String to, [int? count]) {
+  late String string;
+  late bool isNotMarkup;
+
+  if (object is String) {
+    string = object;
+    isNotMarkup = true;
+  } else if (object is Markup) {
+    string = object.value;
+    isNotMarkup = false;
+  } else {
+    string = '$object';
+    isNotMarkup = true;
+  }
+
+  if (count == null) {
+    string = string.replaceAll(from, to);
+  } else {
+    while (count > 0) {
+      string = string.replaceAll(from, to);
+    }
+  }
+
+  return isNotMarkup ? string : Markup(string);
 }
 
 dynamic doReverse(dynamic value) {
@@ -293,6 +318,7 @@ const Map<String, Function> filters = {
   'lower': doLower,
   'pprint': doPPrint,
   'random': doRandom,
+  'replace': doReplace,
   'reverse': doReverse,
   'safe': doMarkSafe,
   'string': doString,
@@ -309,7 +335,6 @@ const Map<String, Function> filters = {
   // 'min': doMin,
   // 'reject': doReject,
   // 'rejectattr': doRejectAttr,
-  // 'replace': doReplace,
   // 'round': doRound,
   // 'select': doSelect,
   // 'selectattr': doSelectAttr,
