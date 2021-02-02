@@ -150,7 +150,7 @@ void main() {
 
       matches.forEach((op, expekt) {
         final template = environment.fromString('{{ $op }}');
-        expect(render(template, mydict: MyMap()), equals('$expekt'));
+        expect(render(template, mydict: MyMap<Object, Object>()), equals('$expekt'));
       });
     });
 
@@ -227,19 +227,19 @@ void main() {
     });
 
     test('multiple test', () {
-      final items = [];
+      final items = <Object>[];
 
-      bool matching(dynamic x, dynamic y) {
-        items.add([x, y]);
+      bool matching(Object x, Object y) {
+        items.add(<Object>[x, y]);
         return false;
       }
 
       final environment = Environment(tests: {'matching': matching});
       final template = environment.fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
       expect(template.render(), equals('false'));
-      expect(items, containsAllInOrder([['us-west-1', '(us-east-1|ap-northeast-1)'], ['stage', '(dev|stage)']]));
+      expect(items, containsAllInOrder(<List<String>>[<String>['us-west-1', '(us-east-1|ap-northeast-1)'], <String>['stage', '(dev|stage)']]));
     });
-    
+
     test('in', () {
       final environment = Environment();
       final template = environment.fromString('{{ "o" is in "foo" }}|'

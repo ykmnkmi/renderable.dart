@@ -5,7 +5,7 @@ typedef ContextCallback<C extends Context> = void Function(C context);
 class Context {
   Context.from(this.environment, this.contexts);
 
-  Context(this.environment, [Map<String, dynamic>? data]) : contexts = <Map<String, dynamic>>[environment.globals] {
+  Context(this.environment, [Map<String, Object?>? data]) : contexts = <Map<String, Object?>>[environment.globals] {
     if (data != null) {
       contexts.add(data);
     }
@@ -15,25 +15,25 @@ class Context {
 
   final Environment environment;
 
-  final List<Map<String, dynamic>> contexts;
+  final List<Map<String, Object?>> contexts;
 
   late int minimal;
 
-  dynamic operator [](String key) {
+  Object? operator [](String key) {
     return get(key);
   }
 
-  void operator []=(String key, dynamic value) {
+  void operator []=(String key, Object? value) {
     set(key, value);
   }
 
-  void apply<C extends Context>(Map<String, dynamic> data, ContextCallback<C> closure) {
+  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
     push(data);
     closure(this as C);
     pop();
   }
 
-  dynamic get(String key) {
+  Object? get(String key) {
     for (final context in contexts.reversed) {
       if (context.containsKey(key)) {
         return context[key];
@@ -53,7 +53,7 @@ class Context {
     }
   }
 
-  void push(Map<String, dynamic> context) {
+  void push(Map<String, Object?> context) {
     contexts.add(context);
   }
 
@@ -68,7 +68,7 @@ class Context {
     return false;
   }
 
-  void set(String key, dynamic value) {
+  void set(String key, Object? value) {
     contexts.last[key] = value is Undefined ? null : value;
   }
 }
@@ -87,13 +87,13 @@ class LoopContext {
 
   final int length;
 
-  final dynamic previtem;
+  final Object? previtem;
 
-  final dynamic nextitem;
+  final Object? nextitem;
 
-  final bool Function(dynamic) changed;
+  final bool Function(Object?) changed;
 
-  final void Function(dynamic data) recurse;
+  final void Function(Object? data) recurse;
 
   late int index;
 
@@ -134,7 +134,7 @@ class LoopContext {
     }
   }
 
-  void call(dynamic data) {
+  void call(Object? data) {
     recurse(data);
   }
 
@@ -207,7 +207,7 @@ class Undefined {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object? other) {
     return other is Undefined;
   }
 
@@ -218,16 +218,16 @@ class Undefined {
 }
 
 class Namespace {
-  static Namespace factory([List<dynamic>? datas]) {
+  static Namespace factory([List<Object?>? datas]) {
     if (datas == null) {
       return Namespace();
     }
 
-    final context = <String, dynamic>{};
+    final context = <String, Object?>{};
 
     for (final data in datas) {
       if (data is Map) {
-        context.addAll(data.cast<String, dynamic>());
+        context.addAll(data.cast<String, Object?>());
       } else {
         throw TypeError();
       }
@@ -236,7 +236,7 @@ class Namespace {
     return Namespace(context);
   }
 
-  Namespace([Map<String, dynamic>? context]) : context = <String, dynamic>{} {
+  Namespace([Map<String, Object?>? context]) : context = <String, Object?>{} {
     if (context != null) {
       this.context.addAll(context);
     }
@@ -244,15 +244,15 @@ class Namespace {
 
   final Map<String, dynamic> context;
 
-  Iterable<MapEntry<String, dynamic>> get entries {
+  Iterable<MapEntry<String, Object?>> get entries {
     return context.entries;
   }
 
-  dynamic operator [](String key) {
+  Object? operator [](String key) {
     return context[key];
   }
 
-  void operator []=(String key, dynamic value) {
+  void operator []=(String key, Object? value) {
     context[key] = value;
   }
 

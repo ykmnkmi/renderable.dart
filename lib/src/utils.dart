@@ -23,29 +23,29 @@ bool boolean(Object? value) {
     return value.isNotEmpty;
   }
 
-  if (value is Iterable) {
+  if (value is Iterable<Object?>) {
     return value.isNotEmpty;
   }
 
-  if (value is Map) {
+  if (value is Map<Object?, Object?>) {
     return value.isNotEmpty;
   }
 
   return true;
 }
 
-String format(dynamic object) {
+String format(Object? object) {
   final source = represent(object);
   return source;
   // return DartFormatter().formatStatement(source);
 }
 
-List<dynamic> list(dynamic iterable) {
+List<Object?> list(Object? iterable) {
   if (iterable is List) {
     return iterable;
   }
 
-  if (iterable is Iterable) {
+  if (iterable is Iterable<Object?>) {
     return iterable.toList();
   }
 
@@ -53,11 +53,11 @@ List<dynamic> list(dynamic iterable) {
     return iterable.split('');
   }
 
-  if (iterable is Map) {
+  if (iterable is Map<Object?, Object?>) {
     return iterable.keys.toList();
   }
 
-  return iterable.toList() as List<dynamic>;
+  return (iterable as dynamic).toList() as List<Object?>;
 }
 
 Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
@@ -138,29 +138,29 @@ String sliceString(String string, Indices indices) {
 //   return object;
 // }
 
-class Cycler extends Iterable<dynamic> {
-  Cycler(List<dynamic> values)
+class Cycler extends Iterable<Object?> {
+  Cycler(List<Object?> values)
       : values = List<dynamic>.of(values),
         length = values.length,
         index = 0;
 
-  final List<dynamic> values;
+  final List<Object?> values;
 
   @override
   final int length;
 
   int index;
 
-  dynamic get current {
+  Object? get current {
     return values[index];
   }
 
   @override
-  Iterator<dynamic> get iterator {
+  Iterator<Object?> get iterator {
     return CyclerIterator(this);
   }
 
-  dynamic next() {
+  Object? next() {
     final result = current;
     index = (index + 1) % length;
     return result;
@@ -171,15 +171,15 @@ class Cycler extends Iterable<dynamic> {
   }
 }
 
-class CyclerIterator extends Iterator<dynamic> {
+class CyclerIterator extends Iterator<Object?> {
   CyclerIterator(this.cycler);
 
   final Cycler cycler;
 
-  dynamic last;
+  Object? last;
 
   @override
-  dynamic get current {
+  Object? get current {
     return last;
   }
 

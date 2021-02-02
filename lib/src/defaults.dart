@@ -18,21 +18,21 @@ const bool lStripBlocks = false;
 const String newLine = '\n';
 const bool keepTrailingNewLine = false;
 
-const Map<String, dynamic> globals = {
+const Map<String, Object?> globals = <String, Object?>{
   'namespace': Namespace.factory,
   'list': list,
   'range': range,
 };
 
-dynamic apply(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named = const {}]) {
+Object? apply(Object object, List<Object?> positional, [Map<Symbol, Object?> named = const <Symbol, Object?>{}]) {
   return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
 }
 
-dynamic finalize(dynamic value) {
+Object? finalize(Object? value) {
   return value;
 }
 
-dynamic getField(dynamic object, String field) {
+Object? getField(Object? object, String field) {
   throw NoSuchMethodError.withInvocation(object, Invocation.getter(Symbol(field)));
 }
 

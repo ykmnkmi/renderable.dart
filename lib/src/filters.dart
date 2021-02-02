@@ -22,11 +22,11 @@ List<String> prepareAttributeParts(String attribute) {
   return attribute.split('.');
 }
 
-dynamic Function(dynamic) makeAttributeGetter(Environment environment, String attributeOrAttributes,
-    {dynamic Function(dynamic)? postProcess, dynamic defaultValue}) {
+Object? Function(Object?) makeAttributeGetter(Environment environment, String attributeOrAttributes,
+    {Object? Function(Object?)? postProcess, Object? defaultValue}) {
   final attributes = prepareAttributeParts(attributeOrAttributes);
 
-  dynamic attributeGetter(dynamic item) {
+  Object? attributeGetter(Object? item) {
     for (final part in attributes) {
       item = doAttribute(environment, item, part);
 
@@ -53,17 +53,17 @@ num doAbs(num number) {
   return number.abs();
 }
 
-dynamic doAttribute(Environment environment, dynamic object, String attribute) {
+Object? doAttribute(Environment environment, Object? object, String attribute) {
   return environment.getAttribute(object, attribute);
 }
 
-Iterable<List<dynamic>> doBatch(Iterable<dynamic> items, int lineCount, [dynamic fillWith]) sync* {
-  var temp = <dynamic>[];
+Iterable<List<Object?>> doBatch(Iterable<Object?> items, int lineCount, [Object? fillWith]) sync* {
+  var temp = <Object?>[];
 
   for (final item in items) {
     if (temp.length == lineCount) {
       yield temp;
-      temp = <dynamic>[];
+      temp = <Object?>[];
     }
 
     temp.add(item);
@@ -71,7 +71,7 @@ Iterable<List<dynamic>> doBatch(Iterable<dynamic> items, int lineCount, [dynamic
 
   if (temp.isNotEmpty) {
     if (fillWith != null) {
-      temp.addAll(List<dynamic>.filled(lineCount - temp.length, fillWith));
+      temp.addAll(List<Object?>.filled(lineCount - temp.length, fillWith));
     }
 
     yield temp;
@@ -206,16 +206,16 @@ int doInteger(dynamic value, {int d = 0, int base = 10}) {
   }
 }
 
-dynamic doJoin(Environment environment, Iterable<dynamic> values, [String delimiter = '', String? attribute]) {
+Object? doJoin(Environment environment, Iterable<Object?> values, [String delimiter = '', String? attribute]) {
   if (attribute != null) {
-    values = values.map<dynamic>(makeAttributeGetter(environment, attribute));
+    values = values.map<Object?>(makeAttributeGetter(environment, attribute));
   }
 
   if (!environment.autoEscape) {
     return values.join(delimiter);
   }
 
-  return Markup(values.map((value) => value is Markup ? value : escape('$value')).join(delimiter));
+  return Markup(values.map<Object>((value) => value is Markup ? value : escape('$value')).join(delimiter));
 }
 
 dynamic doLast(Iterable<dynamic> values) {
@@ -295,6 +295,10 @@ String doUpper(String value) {
   return value.toUpperCase();
 }
 
+String doWordWrap(Environment environment, String value, {String? wrapString}) {
+  throw UnimplementedError();
+}
+
 const Map<String, Function> filters = {
   'abs': doAbs,
   'attr': doAttribute,
@@ -325,6 +329,7 @@ const Map<String, Function> filters = {
   'sum': doSum,
   'trim': doTrim,
   'upper': doUpper,
+  'wordwrap': doWordWrap,
 
   // 'dictsort': doDictSort,
   // 'format': doFormat,
@@ -348,7 +353,6 @@ const Map<String, Function> filters = {
   // 'urlencode': doURLEncode,
   // 'urlize': doURLize,
   // 'wordcount': doWordCount,
-  // 'wordwrap': doWordwrap,
   // 'xmlattr': doXMLAttr,
 };
 

@@ -9,21 +9,21 @@ import 'runtime.dart';
 import 'utils.dart';
 
 class RenderContext extends Context {
-  RenderContext.from(Environment environment, List<Map<String, dynamic>> contexts, this.sink) : super.from(environment, contexts);
+  RenderContext.from(Environment environment, List<Map<String, Object?>> contexts, this.sink) : super.from(environment, contexts);
 
-  RenderContext(Environment environment, this.sink, [Map<String, dynamic>? data]) : super(environment, data);
+  RenderContext(Environment environment, this.sink, [Map<String, Object?>? data]) : super(environment, data);
 
   final StringSink sink;
 
-  RenderContext derived({Environment? environment, List<Map<String, dynamic>>? contexts, StringSink? sink}) {
+  RenderContext derived({Environment? environment, List<Map<String, Object?>>? contexts, StringSink? sink}) {
     return RenderContext.from(environment ?? this.environment, contexts ?? this.contexts, sink ?? this.sink);
   }
 
-  void write(dynamic object) {
+  void write(Object? object) {
     sink.write(object);
   }
 
-  void writeFinalized(dynamic object) {
+  void writeFinalized(Object? object) {
     sink.write(environment.finalize(this, object));
   }
 }
@@ -33,7 +33,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
   final Environment environment;
 
-  String render(List<Node> nodes, [Map<String, dynamic>? data]) {
+  String render(List<Node> nodes, [Map<String, Object?>? data]) {
     final buffer = StringBuffer();
     visitAll(nodes, RenderContext(environment, buffer, data));
     return '$buffer';
@@ -60,7 +60,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
     final target = assign.target.accept(this, context);
     final buffer = StringBuffer();
     visitAll(assign.body, context.derived(sink: buffer));
-    var value = '$buffer' as dynamic;
+    dynamic value = '$buffer';
 
     if (assign.filters == null || assign.filters!.isEmpty) {
       assignTargetsToContext(context, target, context.environment.autoEscape ? Markup('$value') : value);
@@ -233,18 +233,18 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @protected
-  static void assignTargetsToContext(RenderContext context, dynamic target, dynamic current) {
+  static void assignTargetsToContext(RenderContext context, Object? target, Object? current) {
     if (target is String) {
       context[target] = current;
       return;
     }
 
     if (target is List<String>) {
-      List<dynamic> list;
+      List<Object?> list;
 
       if (current is List) {
         list = current;
-      } else if (current is Iterable) {
+      } else if (current is Iterable<Object?>) {
         list = current.toList();
       } else if (current is String) {
         list = current.split('');

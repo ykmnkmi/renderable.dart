@@ -10,13 +10,13 @@ import 'visitor.dart';
 
 const ExpressionResolver resolver = ExpressionResolver();
 
-class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
+class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   @literal
   const ExpressionResolver();
 
   @protected // update
-  T Function(T Function(List<dynamic>, Map<Symbol, dynamic>)) callable<T>(Callable callable, [C? context]) {
-    final positional = <dynamic>[];
+  T Function(T Function(List<Object?>, Map<Symbol, Object?>)) callable<T>(Callable callable, [C? context]) {
+    final positional = <Object?>[];
 
     if (callable.arguments != null) {
       for (final argument in callable.arguments!) {
@@ -24,7 +24,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       }
     }
 
-    final named = <Symbol, dynamic>{};
+    final named = <Symbol, Object?>{};
 
     if (callable.keywordArguments != null) {
       for (final keywordArgument in callable.keywordArguments!) {
@@ -32,30 +32,30 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       }
     }
     if (callable.dArguments != null) {
-      positional.addAll(callable.dArguments!.accept(this, context) as Iterable<dynamic>);
+      positional.addAll(callable.dArguments!.accept(this, context) as Iterable<Object?>);
     }
 
     if (callable.dKeywordArguments != null) {
-      named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<dynamic, dynamic>)
-          .cast<String, dynamic>()
-          .map<Symbol, dynamic>((key, value) => MapEntry<Symbol, dynamic>(symbol(key), value)));
+      named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<Object?, Object?>)
+          .cast<String, Object?>()
+          .map<Symbol, Object?>((key, value) => MapEntry<Symbol, Object?>(symbol(key), value)));
     }
 
-    return (T Function(List<dynamic> positional, Map<Symbol, dynamic> named) callback) => callback(positional, named);
+    return (T Function(List<Object?> positional, Map<Symbol, Object?> named) callback) => callback(positional, named);
   }
 
   @protected
-  dynamic callFilter(Filter filter, [dynamic value, C? context]) {
-    dynamic callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
+  Object? callFilter(Filter filter, [Object? value, C? context]) {
+    Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
       return context!.environment.callFilter(filter.name, value, positional: positional, named: named);
     }
 
-    return callable(filter, context)(callback);
+    return callable<Object?>(filter, context)(callback);
   }
 
   @protected
-  bool callTest(Test test, [dynamic value, C? context]) {
-    bool callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
+  bool callTest(Test test, [Object? value, C? context]) {
+    bool callback(List<Object?> positional, Map<Symbol, Object?> named) {
       return context!.environment.callTest(test.name, value, positional: positional, named: named);
     }
 
@@ -78,14 +78,14 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitAttribute(Attribute attribute, [C? context]) {
-    return context!.environment.getAttribute(attribute.expression.accept(this, context), attribute.attribute);
+  Object? visitAttribute(Attribute attribute, [C? context]) {
+    return context!.environment.getAttribute(attribute.expression.accept(this, context)!, attribute.attribute);
   }
 
   @override
-  dynamic visitBinary(Binary binary, [C? context]) {
-    final left = binary.left.accept(this, context);
-    final right = binary.right.accept(this, context);
+  Object? visitBinary(Binary binary, [C? context]) {
+    final dynamic left = binary.left.accept(this, context);
+    final dynamic right = binary.right.accept(this, context);
 
     try {
       switch (binary.operator) {
@@ -118,12 +118,12 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitCall(Call call, [C? context]) {
+  Object? visitCall(Call call, [C? context]) {
     ArgumentError.checkNotNull(call.expression);
 
-    final function = call.expression!.accept(this, context);
+    final function = call.expression!.accept(this, context)!;
 
-    dynamic callback(List<dynamic> positional, Map<Symbol, dynamic> named) {
+    Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
       if (function is Function) {
         return Function.apply(function, positional, named);
       }
@@ -131,11 +131,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
       return context!.environment.apply(function, positional, named);
     }
 
-    return callable(call, context)(callback);
+    return callable<Object?>(call, context)(callback);
   }
 
   @override
-  dynamic visitCompare(Compare compare, [C? context]) {
+  Object? visitCompare(Compare compare, [C? context]) {
     var left = compare.expression.accept(this, context);
     var result = true; // is needed?
 
@@ -191,7 +191,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitCondition(Condition condition, [C? context]) {
+  Object? visitCondition(Condition condition, [C? context]) {
     if (boolean(condition.test.accept(this, context))) {
       return condition.expression1.accept(this, context);
     }
@@ -206,7 +206,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitConstant(Constant<dynamic> constant, [C? context]) {
+  Object? visitConstant(Constant<dynamic> constant, [C? context]) {
     return constant.value;
   }
 
@@ -216,8 +216,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  Map<dynamic, dynamic> visitDictLiteral(DictLiteral dict, [C? context]) {
-    final result = <dynamic, dynamic>{};
+  Map<Object?, Object?> visitDictLiteral(DictLiteral dict, [C? context]) {
+    final result = <Object?, Object?>{};
 
     for (final pair in dict.pairs) {
       result[pair.key.accept(this, context)] = pair.value.accept(this, context);
@@ -227,8 +227,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitFilter(Filter filter, [C? context]) {
-    dynamic value;
+  Object? visitFilter(Filter filter, [C? context]) {
+    Object? value;
 
     if (filter.expression != null) {
       value = filter.expression!.accept(this, context);
@@ -248,18 +248,18 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitItem(Item item, [C? context]) {
-    return context!.environment.getItem(item.expression.accept(this, context), item.key.accept(this, context));
+  Object? visitItem(Item item, [C? context]) {
+    return context!.environment.getItem(item.expression.accept(this, context)!, item.key.accept(this, context));
   }
 
   @override
-  MapEntry<Symbol, dynamic> visitKeyword(Keyword keyword, [C? context]) {
-    return MapEntry<Symbol, dynamic>(Symbol(keyword.key), keyword.value.accept(this, context));
+  MapEntry<Symbol, Object?> visitKeyword(Keyword keyword, [C? context]) {
+    return MapEntry<Symbol, Object?>(Symbol(keyword.key), keyword.value.accept(this, context));
   }
 
   @override
-  List<dynamic> visitListLiteral(ListLiteral list, [C? context]) {
-    final result = <dynamic>[];
+  List<Object?> visitListLiteral(ListLiteral list, [C? context]) {
+    final result = <Object?>[];
 
     for (final node in list.expressions) {
       result.add(node.accept(this, context));
@@ -269,7 +269,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitName(Name name, [C? context]) {
+  Object? visitName(Name name, [C? context]) {
     switch (name.context) {
       case AssignContext.load:
         return context!.get(name.name);
@@ -282,12 +282,12 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitNamespaceReference(NamespaceReference reference, [C? context]) {
+  Object? visitNamespaceReference(NamespaceReference reference, [C? context]) {
     return NSRef(reference.name, reference.attribute);
   }
 
   @override
-  dynamic visitOperand(Operand oprand, [C? context]) {
+  Object? visitOperand(Operand oprand, [C? context]) {
     return <dynamic>[oprand.operator, oprand.expression.accept(this, context)];
   }
 
@@ -297,8 +297,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  MapEntry<dynamic, dynamic> visitPair(Pair pair, [C? context]) {
-    return MapEntry<dynamic, dynamic>(pair.key.accept(this, context), pair.value.accept(this, context));
+  MapEntry<Object?, Object?> visitPair(Pair pair, [C? context]) {
+    return MapEntry<Object?, Object?>(pair.key.accept(this, context), pair.value.accept(this, context));
   }
 
   @override
@@ -335,7 +335,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
 
   @override
   bool visitTest(Test test, [C? context]) {
-    dynamic value;
+    Object? value;
 
     if (test.expression != null) {
       value = test.expression!.accept(this, context);
@@ -345,10 +345,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  List<dynamic> visitTupleLiteral(TupleLiteral tuple, [C? context]) {
+  List<Object?> visitTupleLiteral(TupleLiteral tuple, [C? context]) {
     switch (tuple.context) {
       case AssignContext.load:
-        final result = <dynamic>[];
+        final result = <Object?>[];
 
         for (final node in tuple.expressions) {
           result.add(node.accept(this, context));
@@ -369,8 +369,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, dynamic> {
   }
 
   @override
-  dynamic visitUnary(Unary unaru, [C? context]) {
-    final value = unaru.expression.accept(this, context);
+  Object? visitUnary(Unary unaru, [C? context]) {
+    final dynamic value = unaru.expression.accept(this, context);
 
     switch (unaru.operator) {
       case '+':

@@ -22,21 +22,22 @@ void main() {
     test('block escaping', () {
       final environment = Environment(autoEscape: true);
       final template = environment.fromString('{% set foo %}<em>{{ test }}</em>{% endset %}foo: {{ foo }}');
-      expect(render(template, test: '<unsafe>'), equals('foo: <em>&lt;unsafe&gt;</em>'));
+      expect(template.render(<String, Object>{'test': '<unsafe>'}), equals('foo: <em>&lt;unsafe&gt;</em>'));
     });
 
     test('set invalid', () {
       final environment = Environment(getField: getField, trimBlocks: true);
       expect(() => environment.fromString('{% set foo["bar"] = 1 %}'), throwsA(isA<TemplateSyntaxError>()));
       final template = environment.fromString('{% set foo.bar = 1 %}');
-      expect(() => render(template, foo: {}), throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
+      expect(() => template.render(<String, Object>{'foo': <Object, Object>{}}),
+          throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
     });
 
     test('namespace redefined', () {
       final environment = Environment(getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
-      expect(
-          () => render(template, namespace: () => {}), throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
+      expect(() => template.render(<String, Object>{'namespace': () => <Object, Object>{}}),
+          throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
     });
 
     test('namespace', () {
@@ -54,15 +55,20 @@ void main() {
     test('init namespace', () {
       final environment = Environment(getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set ns = namespace(d, self=37) %}{% set ns.b = 42 %}{{ ns.a }}|{{ ns.self }}|{{ ns.b }}');
-      expect(render(template, d: {'a': 13}), equals('13|37|42'));
+      expect(
+        template.render(<String, Object>{
+          'd': <String, Object>{'a': 13}
+        }),
+        equals('13|37|42'),
+      );
     });
 
     test('namespace loop', () {
       final environment = Environment(getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set ns = namespace(found=false) %}{% for x in range(4) %}{% if x == v %}'
           '{% set ns.found = true %}{% endif %}{% endfor %}{{ ns.found }}');
-      expect(render(template, v: 3), equals('true'));
-      expect(render(template, v: 4), equals('false'));
+      expect(template.render(<String, Object>{'v': 3}), equals('true'));
+      expect(template.render(<String, Object>{'v': 4}), equals('false'));
     });
 
     // TODO: namespace macro
@@ -70,7 +76,7 @@ void main() {
     test('block escapeing filtered', () {
       final environment = Environment(autoEscape: true);
       final template = environment.fromString('{% set foo | trim %}<em>{{ test }}</em>    {% endset %}foo: {{ foo }}');
-      expect(render(template, test: '<unsafe>'), equals('foo: <em>&lt;unsafe&gt;</em>'));
+      expect(template.render(<String, Object>{'test': '<unsafe>'}), equals('foo: <em>&lt;unsafe&gt;</em>'));
     });
 
     test('block filtered', () {

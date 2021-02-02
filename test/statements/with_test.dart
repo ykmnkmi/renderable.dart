@@ -1,9 +1,6 @@
-// ignore_for_file: inference_failure_on_collection_literal
-
 import 'dart:convert';
 
 import 'package:renderable/jinja.dart';
-import 'package:renderable/reflection.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -14,8 +11,12 @@ void main() {
             {{ a }} = {{ b }}
         {% endwith -%}
             {{ a }} = {{ b }}''');
-      final lines = [for (final line in const LineSplitter().convert(render(template, a: 1, b: 2) as String)) line.trim()];
-      expect(lines, containsAllInOrder(['42 = 23', '1 = 2']));
+
+      final lines = <String>[
+        for (final line in const LineSplitter().convert(template.render(<String, Object>{'a': 1, 'b': 2}))) line.trim()
+      ];
+
+      expect(lines, containsAllInOrder(<String>['42 = 23', '1 = 2']));
     });
 
     test('with argument scoping', () {
@@ -24,7 +25,7 @@ void main() {
         {%- with a=1, b=2, c=b, d=e, e=5 -%}
             {{ a }}|{{ b }}|{{ c }}|{{ d }}|{{ e }}
         {%- endwith -%}''');
-      expect(render(template, b: 3, e: 4), equals('1|2|3|4|5'));
+      expect(template.render(<String, Object>{'b': 3, 'e': 4}), equals('1|2|3|4|5'));
     });
   });
 }

@@ -350,7 +350,7 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @protected
-  static dynamic resolve(Expression expression, [Context? context]) {
+  static Object? resolve(Expression expression, [Context? context]) {
     return expression.accept(resolver, context);
   }
 }

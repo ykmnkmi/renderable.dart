@@ -13,13 +13,13 @@ import 'renderer.dart';
 import 'runtime.dart';
 import 'utils.dart';
 
-typedef Finalizer = dynamic Function(dynamic value);
-typedef ContextFinalizer = dynamic Function(Context context, dynamic value);
-typedef EnvironmentFinalizer = dynamic Function(Environment environment, dynamic value);
+typedef Finalizer = Object? Function(Object? value);
+typedef ContextFinalizer = Object? Function(Context context, Object? value);
+typedef EnvironmentFinalizer = Object? Function(Environment environment, Object? value);
 
-typedef Caller = dynamic Function(dynamic object, List<dynamic> positional, [Map<Symbol, dynamic> named]);
+typedef Caller = Object? Function(Object object, List<Object?> positional, [Map<Symbol, Object?> named]);
 
-typedef FieldGetter = dynamic Function(dynamic object, String field);
+typedef FieldGetter = Object? Function(Object? object, String field);
 
 typedef UndefinedFactory = Undefined Function({String? hint, Object? object, String? name});
 
@@ -154,7 +154,7 @@ class Environment {
       Map<String, Function>? tests,
       Random? random,
       FieldGetter? getField,
-      Caller? callCallable}) {
+      Caller? apply}) {
     return Environment(
       commentBegin: commentBegin ?? this.commentBegin,
       commentEnd: commentEnd ?? this.commentEnd,
@@ -178,25 +178,25 @@ class Environment {
       tests: tests ?? this.tests,
       random: random ?? this.random,
       getField: getField ?? this.getField,
-      apply: callCallable ?? this.apply,
+      apply: apply ?? this.apply,
     );
   }
 
-  dynamic getAttribute(dynamic object, String field) {
+  dynamic getAttribute(Object? object, String field) {
     try {
       return getField(object, field);
     } on NoSuchMethodError {
       try {
-        return object[field];
+        return (object as dynamic)[field];
       } on Exception {
         return undefined(object: object, name: field);
       }
     }
   }
 
-  dynamic getItem(dynamic object, dynamic key) {
+  Object? getItem(Object object, Object? key) {
     if (key is Indices) {
-      if (object is List) {
+      if (object is List<Object?>) {
         return slice(object, key);
       }
 
@@ -204,7 +204,7 @@ class Environment {
         return sliceString(object, key);
       }
 
-      if (object is Iterable) {
+      if (object is Iterable<Object?>) {
         return slice(object.toList(), key);
       }
     }
@@ -218,7 +218,7 @@ class Environment {
     }
 
     try {
-      return object[key];
+      return (object as dynamic)[key];
     } on NoSuchMethodError {
       if (key is String) {
         try {
