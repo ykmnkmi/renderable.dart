@@ -6,11 +6,17 @@ import 'package:stack_trace/stack_trace.dart';
 void main() {
   try {
     final environment = Environment();
-    final template = environment.fromString('{% for i in items %}{{ i }}{% if not loop.last %},{% endif %}{% endfor %}');
+    final template = environment.fromString('{{ foo() }}');
     print(template.nodes);
-    print(template.render(<String, Object>{'items': <int>[1, 2, 3]}));
+    print(template.render(<String, Object>{'foo': Foo()}));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));
+  }
+}
+
+class Foo {
+  String call() {
+    return 'FOO';
   }
 }

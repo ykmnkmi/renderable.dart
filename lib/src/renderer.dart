@@ -89,13 +89,8 @@ class Renderer extends ExpressionResolver<RenderContext> {
     final iterable = forNode.iterable.accept(this, context);
     final orElse = forNode.orElse;
 
-    if (iterable == null || iterable is Undefined) {
-      if (orElse == null) {
-        throw TypeError();
-      } else {
-        visitAll(orElse, context);
-        return;
-      }
+    if (iterable == null) {
+      throw TypeError();
     }
 
     void loop(dynamic iterable) {

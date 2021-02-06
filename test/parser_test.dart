@@ -1,5 +1,4 @@
 import 'package:renderable/jinja.dart';
-import 'package:renderable/reflection.dart';
 import 'package:renderable/utils.dart';
 import 'package:test/test.dart';
 
@@ -10,7 +9,7 @@ void main() {
       final template = environment.fromString('''<!-- I'm a comment, I'm not interesting --><? for item in seq -?>
     <?= item ?>
 <?- endfor ?>''');
-      expect(render(template, seq: range(5)), equals('01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('01234'));
     });
 
     test('erb syntax', () {
@@ -18,7 +17,7 @@ void main() {
       final template = environment.fromString('''<%# I'm a comment, I'm not interesting %><% for item in seq -%>
     <%= item %>
 <%- endfor %>''');
-      expect(render(template, seq: range(5)), equals('01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('01234'));
     });
 
     test('comment syntax', () {
@@ -26,7 +25,7 @@ void main() {
       final template = environment.fromString(r'''<!--# I'm a comment, I'm not interesting --><!-- for item in seq --->
     ${item}
 <!--- endfor -->''');
-      expect(render(template, seq: range(5)), equals('01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('01234'));
     });
 
     test('balancing', () {
@@ -59,7 +58,8 @@ and bar comment #}
     ${item} ## the rest of the stuff
 % endfor''');
       final sequence = range(5).toList();
-      final numbers = (render(template, seq: sequence) as String)
+      final numbers = template
+          .render(<String, Object>{'seq': sequence})
           .split(RegExp('\\s+'))
           .map((String string) => string.trim())
           .where((String string) => string.isNotEmpty)
@@ -76,7 +76,11 @@ and bar comment #}
 ## for item in seq:
 * ${item}          # this is just extra stuff
 ## endfor''');
-      expect((render(template, seq: [1, 2]) as String).trim(), equals('* 1\n* 2'));
+      expect(
+          template.render(<String, Object>{
+            'seq': <int>[1, 2]
+          }).trim(),
+          equals('* 1\n* 2'));
 
       environment =
           Environment(variableBegin: '\${', variableEnd: '}', commentBegin: '/*', commentEnd: '*/', lineCommentPrefix: '##', lineStatementPrefix: '#');
@@ -86,7 +90,12 @@ and bar comment #}
 * ${item}          ## this is just extra stuff
     ## extra stuff i just want to ignore
 # endfor''');
-      expect((render(template, seq: [1, 2]) as String).trim(), equals('* 1\n\n* 2'));
+      expect(
+        template.render(<String, Object>{
+          'seq': <int>[1, 2]
+        }).trim(),
+        equals('* 1\n\n* 2'),
+      );
     });
 
     test('error messages', () {

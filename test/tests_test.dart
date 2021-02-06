@@ -3,7 +3,6 @@
 import 'dart:collection';
 
 import 'package:renderable/jinja.dart';
-import 'package:renderable/reflection.dart';
 import 'package:renderable/markup.dart';
 import 'package:test/test.dart';
 
@@ -150,7 +149,7 @@ void main() {
 
       matches.forEach((op, expekt) {
         final template = environment.fromString('{{ $op }}');
-        expect(render(template, mydict: MyMap<Object, Object>()), equals('$expekt'));
+        expect(template.render(<String, Object>{'mydict': MyMap<Object, Object>()}), equals('$expekt'));
       });
     });
 
@@ -170,7 +169,7 @@ void main() {
           '{{ bar is eq ("ba" + "z") }}|'
           '{{ bar is eq bar }}|'
           '{{ bar is eq foo }}');
-      expect(render(template, foo: 12, bar: 'baz'), equals('true|false|true|true|false|true|true|false'));
+      expect(template.render(<String, Object>{'foo': 12, 'bar': 'baz'}), equals('true|false|true|true|false|true|true|false'));
     });
 
     test('compare aliases', () {
@@ -199,19 +198,19 @@ void main() {
     test('same as', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo is sameas false }}|{{ 0 is sameas false }}');
-      expect(render(template, foo: false), equals('true|false'));
+      expect(template.render(<String, Object>{'foo': false}), equals('true|false'));
     });
 
     test('no paren for arg 1', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo is sameas none }}');
-      expect(render(template, foo: null), equals('true'));
+      expect(template.render(<String, Object?>{'foo': null}), equals('true'));
     });
 
     test('escaped', () {
       final environment = Environment();
       final template = environment.fromString('{{  x is escaped }}|{{ y is escaped  }}');
-      expect(render(template, x: 'foo', y: Markup('foo')), equals('false|true'));
+      expect(template.render(<String, Object>{'x': 'foo', 'y': Markup('foo')}), equals('false|true'));
     });
 
     test('greater than', () {
@@ -237,7 +236,13 @@ void main() {
       final environment = Environment(tests: {'matching': matching});
       final template = environment.fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
       expect(template.render(), equals('false'));
-      expect(items, containsAllInOrder(<List<String>>[<String>['us-west-1', '(us-east-1|ap-northeast-1)'], <String>['stage', '(dev|stage)']]));
+      expect(
+        items,
+        containsAllInOrder(<List<String>>[
+          <String>['us-west-1', '(us-east-1|ap-northeast-1)'],
+          <String>['stage', '(dev|stage)']
+        ]),
+      );
     });
 
     test('in', () {

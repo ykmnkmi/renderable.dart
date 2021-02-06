@@ -94,8 +94,8 @@ abstract class _BaseToken implements Token {
       }
 
       value = null;
-    } else if (type == null) {
-      type = this.type;
+    } else {
+      type ??= this.type;
     }
 
     return value == null ? Token.simple(line, type) : Token(line, type, value);

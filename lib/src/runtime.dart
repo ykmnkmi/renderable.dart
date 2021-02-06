@@ -1,3 +1,6 @@
+import 'package:meta/meta.dart';
+import 'package:renderable/src/exceptions.dart';
+
 import 'enirvonment.dart';
 
 typedef ContextCallback<C extends Context> = void Function(C context);
@@ -168,7 +171,6 @@ class LoopContext {
                     if (arg09 != null) {
                       values.add(arg09);
 
-                      // wanna more?
                       // look at this https://api.flutter.dev/flutter/dart-ui/hashValues.html
                     }
                   }
@@ -188,12 +190,11 @@ class LoopContext {
   }
 }
 
+/// The default undefined type.
+///
+/// This undefined type can be printed and iterated over, but every other access will raise an [UndefinedErro].
 class Undefined {
-  static int nextId = 1;
-
-  Undefined({this.hint, this.object, this.name}) : id = nextId++;
-
-  final int id;
+  Undefined({this.hint, this.object, this.name});
 
   final String? hint;
 
@@ -203,12 +204,30 @@ class Undefined {
 
   @override
   int get hashCode {
-    return 0xEE ^ id;
+    return null.hashCode;
+  }
+
+  /// Build a message about the undefined value based on how it was accessed.
+  @protected
+  String get undefinedMessage {
+    if (hint != null) {
+      return hint!;
+    }
+
+    if (object == null) {
+      return '$name is undefined';
+    }
+
+    return '${object!.runtimeType} has no attribute $name';
   }
 
   @override
   bool operator ==(Object? other) {
     return other is Undefined;
+  }
+
+  Object? noSuchMethodError(Invocation invocation) {
+    throw UndefinedError(undefinedMessage);
   }
 
   @override

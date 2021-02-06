@@ -9,7 +9,7 @@ import 'package:renderable/src/runtime.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{{ foo(**a, b=42) }}';
+  final source = '{{ foo() }}';
 
   try {
     final environment = Environment();
@@ -37,9 +37,13 @@ void main(List<String> arguments) {
     // template.nodes.forEach(print);
 
     print('\nrender:');
-    print('"' + template.render().replaceAll(' ', '•') + '"');
+    print('"' + template.render(<String, Object?>{'foo': foo}).replaceAll(' ', '•') + '"');
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));
   }
+}
+
+String foo() {
+  return 'Foo';
 }

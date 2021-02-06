@@ -1,18 +1,20 @@
+/// Baseclass for all template errors.
 abstract class TemplateError implements Exception {
   TemplateError([this.message]);
 
-  final dynamic message;
+  final Object? message;
 
   @override
   String toString() {
     if (message == null) {
-      return 'TemplateError';
+      return '$runtimeType';
     }
 
-    return 'TemplateError: $message';
+    return '$runtimeType: $message';
   }
 }
 
+/// Raised to tell the user that there is a problem with the template.
 class TemplateSyntaxError extends TemplateError {
   TemplateSyntaxError(String message, {this.line, this.name, this.fileName}) : super(message);
 
@@ -47,29 +49,19 @@ class TemplateSyntaxError extends TemplateError {
   }
 }
 
+/// A generic runtime error in the template engine.
+///
+/// Under some situations Jinja may raise this exception.
 class TemplateRuntimeError extends TemplateError {
-  TemplateRuntimeError([dynamic message]) : super(message);
+  TemplateRuntimeError([Object? message]) : super(message);
+}
 
-  @override
-  String toString() {
-    if (message == null) {
-      return 'TemplateRuntimeError';
-    }
-
-    return 'TemplateRuntimeError: $message';
-  }
+/// Raised if a template tries to operate on [Undefined].
+class UndefinedError extends TemplateRuntimeError {
+  UndefinedError([Object? message]) : super(message);
 }
 
 /// This error is raised if a filter was called with inappropriate arguments.
 class FilterArgumentError extends TemplateRuntimeError {
-  FilterArgumentError([dynamic message]) : super(message);
-
-  @override
-  String toString() {
-    if (message == null) {
-      return 'FilterArgumentError';
-    }
-
-    return 'FilterArgumentError: $message';
-  }
+  FilterArgumentError([Object? message]) : super(message);
 }

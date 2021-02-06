@@ -24,10 +24,6 @@ const Map<String, Object?> globals = <String, Object?>{
   'range': range,
 };
 
-Object? apply(Object object, List<Object?> positional, [Map<Symbol, Object?> named = const <Symbol, Object?>{}]) {
-  return object.noSuchMethod(Invocation.genericMethod(#call, null, positional, named));
-}
-
 Object? finalize(Object? value) {
   return value;
 }

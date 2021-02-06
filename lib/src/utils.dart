@@ -41,6 +41,10 @@ String format(Object? object) {
 }
 
 List<Object?> list(Object? iterable) {
+  if (iterable is Undefined) {
+    return const <Object?>[];
+  }
+
   if (iterable is List) {
     return iterable;
   }

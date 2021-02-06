@@ -119,16 +119,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @override
   Object? visitCall(Call call, [C? context]) {
-    ArgumentError.checkNotNull(call.expression);
-
-    final function = call.expression!.accept(this, context)!;
+    dynamic function = call.expression!.accept(this, context)!;
 
     Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      if (function is Function) {
-        return Function.apply(function, positional, named);
-      }
-
-      return context!.environment.apply(function, positional, named);
+      return Function.apply(function.call as Function, positional, named);
     }
 
     return callable<Object?>(call, context)(callback);

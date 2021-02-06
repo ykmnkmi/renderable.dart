@@ -1,5 +1,4 @@
 import 'package:renderable/jinja.dart';
-import 'package:renderable/reflection.dart';
 import 'package:renderable/src/nodes.dart';
 import 'package:renderable/src/utils.dart';
 import 'package:test/test.dart';
@@ -22,13 +21,23 @@ void main() {
     test('attr', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo.bar }}|{{ foo["bar"] }}');
-      expect(render(template, foo: {'bar': 42}), equals('42|42'));
+      expect(
+        template.render(<String, Object>{
+          'foo': <String, Object>{'bar': 42}
+        }),
+        equals('42|42'),
+      );
     });
 
     test('subscript', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo[0] }}|{{ foo[-1] }}');
-      expect(render(template, foo: [0, 1, 2]), equals('0|2'));
+      expect(
+        template.render(<String, Object>{
+          'foo': <int>[0, 1, 2]
+        }),
+        equals('0|2'),
+      );
     });
 
     test('tuple', () {
@@ -63,13 +72,13 @@ void main() {
 
     test('compare', () {
       final environment = Environment();
-      final matches = {
-        '>': [1, 0],
-        '>=': [1, 1],
-        '<': [2, 3],
-        '<=': [3, 4],
-        '==': [4, 4],
-        '!=': [4, 5]
+      final matches = <String, List<int>>{
+        '>': <int>[1, 0],
+        '>=': <int>[1, 1],
+        '<': <int>[2, 3],
+        '<=': <int>[3, 4],
+        '==': <int>[4, 4],
+        '!=': <int>[4, 5]
       };
 
       matches.forEach((operation, pair) {
@@ -83,7 +92,7 @@ void main() {
       // num * bool not supported
       // '{{ i * (j < 5) }}'
       final template = environment.fromString('{{ i == (j < 5) }}');
-      expect(render(template, i: 2, j: 3), equals('false'));
+      expect(template.render(<String, Object>{'i': 2, 'j': 3}), equals('false'));
     });
 
     test('compare compound', () {
@@ -99,7 +108,7 @@ void main() {
 
       matches.forEach((source, expekt) {
         final template = environment.fromString(source);
-        expect(render(template, a: 4, b: 2, c: 3), equals(expekt));
+        expect(template.render(<String, Object>{'a': 4, 'b': 2, 'c': 3}), equals(expekt));
       });
     });
 
@@ -121,7 +130,7 @@ void main() {
 
     test('numeric literal', () {
       final environment = Environment();
-      final matches = {
+      final matches = <String, String>{
         '1': '1',
         '123': '123',
         '12_34_56': '123456',
@@ -258,7 +267,7 @@ void main() {
     test('notin', () {
       final environment = Environment();
       final template = environment.fromString('{{ not 42 in bar }}');
-      expect(render(template, bar: range(100)), equals('false'));
+      expect(template.render(<String, Object>{'bar': range(100)}), equals('false'));
     });
 
     test('operator precedence', () {
@@ -271,7 +280,7 @@ void main() {
       final environment = Environment();
       final template = environment.fromString('{{ foo[1, 2] }}');
       // tuple is list
-      expect(render(template, foo: Foo()), equals('[1, 2]'));
+      expect(template.render(<String, Object>{'foo': Foo()}), equals('[1, 2]'));
     });
 
     test('raw2', () {
@@ -312,15 +321,25 @@ void main() {
     test('parse unary', () {
       final environment = Environment();
       var template = environment.fromString('{{ -foo["bar"] }}');
-      expect(render(template, foo: {'bar': 42}), equals('-42'));
+      expect(
+        template.render(<String, Object>{
+          'foo': <String, Object>{'bar': 42}
+        }),
+        equals('-42'),
+      );
       template = environment.fromString('{{ foo["bar"] }}');
-      expect(render(template, foo: {'bar': 42}), equals('42'));
+      expect(
+        template.render(<String, Object>{
+          'foo': <String, Object>{'bar': 42}
+        }),
+        equals('42'),
+      );
     });
   });
 }
 
 class Foo {
-  dynamic operator [](dynamic key) {
+  Object? operator [](Object? key) {
     return key;
   }
 }

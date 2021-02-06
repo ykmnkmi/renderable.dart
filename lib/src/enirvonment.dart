@@ -25,32 +25,31 @@ typedef UndefinedFactory = Undefined Function({String? hint, Object? object, Str
 
 @immutable
 class Environment {
-  Environment(
-      {this.commentBegin = defaults.commentBegin,
-      this.commentEnd = defaults.commentEnd,
-      this.variableBegin = defaults.variableBegin,
-      this.variableEnd = defaults.variableEnd,
-      this.blockBegin = defaults.blockBegin,
-      this.blockEnd = defaults.blockEnd,
-      this.lineCommentPrefix = defaults.lineCommentPrefix,
-      this.lineStatementPrefix = defaults.lineStatementPrefix,
-      this.lStripBlocks = defaults.lStripBlocks,
-      this.trimBlocks = defaults.trimBlocks,
-      this.newLine = defaults.newLine,
-      this.keepTrailingNewLine = defaults.keepTrailingNewLine,
-      this.optimized = true,
-      this.undefined = defaults.undefined,
-      Function finalize = defaults.finalize,
-      this.autoEscape = false,
-      Map<String, dynamic>? globals,
-      Map<String, Function>? filters,
-      Set<String>? environmentFilters,
-      Map<String, Function>? tests,
-      Map<String, Template>? templates,
-      Random? random,
-      this.getField = defaults.getField,
-      this.apply = defaults.apply})
-      : assert(finalize is Finalizer || finalize is ContextFinalizer || finalize is EnvironmentFinalizer),
+  Environment({
+    this.commentBegin = defaults.commentBegin,
+    this.commentEnd = defaults.commentEnd,
+    this.variableBegin = defaults.variableBegin,
+    this.variableEnd = defaults.variableEnd,
+    this.blockBegin = defaults.blockBegin,
+    this.blockEnd = defaults.blockEnd,
+    this.lineCommentPrefix = defaults.lineCommentPrefix,
+    this.lineStatementPrefix = defaults.lineStatementPrefix,
+    this.lStripBlocks = defaults.lStripBlocks,
+    this.trimBlocks = defaults.trimBlocks,
+    this.newLine = defaults.newLine,
+    this.keepTrailingNewLine = defaults.keepTrailingNewLine,
+    this.optimized = true,
+    this.undefined = defaults.undefined,
+    Function finalize = defaults.finalize,
+    this.autoEscape = false,
+    Map<String, dynamic>? globals,
+    Map<String, Function>? filters,
+    Set<String>? environmentFilters,
+    Map<String, Function>? tests,
+    Map<String, Template>? templates,
+    Random? random,
+    this.getField = defaults.getField,
+  })  : assert(finalize is Finalizer || finalize is ContextFinalizer || finalize is EnvironmentFinalizer),
         finalize = finalize is EnvironmentFinalizer
             ? ((context, value) => finalize(context.environment, value))
             : finalize is ContextFinalizer
@@ -129,32 +128,30 @@ class Environment {
 
   final FieldGetter getField;
 
-  final Caller apply;
-
-  Environment copy(
-      {String? commentBegin,
-      String? commentEnd,
-      String? variableBegin,
-      String? variableEnd,
-      String? blockBegin,
-      String? blockEnd,
-      String? lineCommentPrefix,
-      String? lineStatementPrefix,
-      bool? lStripBlocks,
-      bool? trimBlocks,
-      String? newLine,
-      bool? keepTrailingNewLine,
-      bool? optimized,
-      UndefinedFactory? undefined,
-      Function? finalize,
-      bool? autoEscape,
-      Map<String, dynamic>? globals,
-      Map<String, Function>? filters,
-      Set<String>? environmentFilters,
-      Map<String, Function>? tests,
-      Random? random,
-      FieldGetter? getField,
-      Caller? apply}) {
+  Environment copy({
+    String? commentBegin,
+    String? commentEnd,
+    String? variableBegin,
+    String? variableEnd,
+    String? blockBegin,
+    String? blockEnd,
+    String? lineCommentPrefix,
+    String? lineStatementPrefix,
+    bool? lStripBlocks,
+    bool? trimBlocks,
+    String? newLine,
+    bool? keepTrailingNewLine,
+    bool? optimized,
+    UndefinedFactory? undefined,
+    Function? finalize,
+    bool? autoEscape,
+    Map<String, dynamic>? globals,
+    Map<String, Function>? filters,
+    Set<String>? environmentFilters,
+    Map<String, Function>? tests,
+    Random? random,
+    FieldGetter? getField,
+  }) {
     return Environment(
       commentBegin: commentBegin ?? this.commentBegin,
       commentEnd: commentEnd ?? this.commentEnd,
@@ -178,11 +175,10 @@ class Environment {
       tests: tests ?? this.tests,
       random: random ?? this.random,
       getField: getField ?? this.getField,
-      apply: apply ?? this.apply,
     );
   }
 
-  dynamic getAttribute(Object? object, String field) {
+  Object? getAttribute(Object? object, String field) {
     try {
       return getField(object, field);
     } on NoSuchMethodError {
@@ -286,88 +282,96 @@ class Environment {
 }
 
 class Template implements Renderable {
-  factory Template(String source,
-      {String? path,
-      Environment? parent,
-      String blockBegin = defaults.blockBegin,
-      String blockEnd = defaults.blockEnd,
-      String variableBegin = defaults.variableBegin,
-      String variableEnd = defaults.variableEnd,
-      String commentBegin = defaults.commentBegin,
-      String commentEnd = defaults.commentEnd,
-      String? lineCommentPrefix = defaults.lineCommentPrefix,
-      String? lineStatementPrefix = defaults.lineStatementPrefix,
-      bool trimBlocks = defaults.trimBlocks,
-      bool lStripBlocks = defaults.lStripBlocks,
-      String newLine = defaults.newLine,
-      bool keepTrailingNewLine = defaults.keepTrailingNewLine,
-      bool optimized = true,
-      UndefinedFactory undefined = defaults.undefined,
-      Function finalize = defaults.finalize,
-      bool autoEscape = false,
-      Map<String, Object>? globals,
-      Map<String, Function>? filters,
-      Set<String>? environmentFilters,
-      Map<String, Function>? tests,
-      Random? random,
-      FieldGetter getField = defaults.getField}) {
+  factory Template(
+    String source, {
+    String? path,
+    Environment? parent,
+    String blockBegin = defaults.blockBegin,
+    String blockEnd = defaults.blockEnd,
+    String variableBegin = defaults.variableBegin,
+    String variableEnd = defaults.variableEnd,
+    String commentBegin = defaults.commentBegin,
+    String commentEnd = defaults.commentEnd,
+    String? lineCommentPrefix = defaults.lineCommentPrefix,
+    String? lineStatementPrefix = defaults.lineStatementPrefix,
+    bool trimBlocks = defaults.trimBlocks,
+    bool lStripBlocks = defaults.lStripBlocks,
+    String newLine = defaults.newLine,
+    bool keepTrailingNewLine = defaults.keepTrailingNewLine,
+    bool optimized = true,
+    UndefinedFactory undefined = defaults.undefined,
+    Function finalize = defaults.finalize,
+    bool autoEscape = false,
+    Map<String, Object>? globals,
+    Map<String, Function>? filters,
+    Set<String>? environmentFilters,
+    Map<String, Function>? tests,
+    Random? random,
+    FieldGetter getField = defaults.getField,
+  }) {
     Environment environment;
 
     if (parent != null) {
       environment = parent.copy(
-          commentBegin: commentBegin,
-          commentEnd: commentEnd,
-          variableBegin: variableBegin,
-          variableEnd: variableEnd,
-          blockBegin: blockBegin,
-          blockEnd: blockEnd,
-          lineCommentPrefix: lineCommentPrefix,
-          lineStatementPrefix: lineStatementPrefix,
-          lStripBlocks: lStripBlocks,
-          trimBlocks: trimBlocks,
-          newLine: newLine,
-          keepTrailingNewLine: keepTrailingNewLine,
-          optimized: optimized,
-          undefined: undefined,
-          finalize: finalize,
-          autoEscape: autoEscape,
-          globals: globals,
-          filters: filters,
-          environmentFilters: environmentFilters,
-          tests: tests,
-          random: random,
-          getField: getField);
+        commentBegin: commentBegin,
+        commentEnd: commentEnd,
+        variableBegin: variableBegin,
+        variableEnd: variableEnd,
+        blockBegin: blockBegin,
+        blockEnd: blockEnd,
+        lineCommentPrefix: lineCommentPrefix,
+        lineStatementPrefix: lineStatementPrefix,
+        lStripBlocks: lStripBlocks,
+        trimBlocks: trimBlocks,
+        newLine: newLine,
+        keepTrailingNewLine: keepTrailingNewLine,
+        optimized: optimized,
+        undefined: undefined,
+        finalize: finalize,
+        autoEscape: autoEscape,
+        globals: globals,
+        filters: filters,
+        environmentFilters: environmentFilters,
+        tests: tests,
+        random: random,
+        getField: getField,
+      );
     } else {
       environment = Environment(
-          commentBegin: commentBegin,
-          commentEnd: commentEnd,
-          variableBegin: variableBegin,
-          variableEnd: variableEnd,
-          blockBegin: blockBegin,
-          blockEnd: blockEnd,
-          lineCommentPrefix: lineCommentPrefix,
-          lineStatementPrefix: lineStatementPrefix,
-          lStripBlocks: lStripBlocks,
-          trimBlocks: trimBlocks,
-          newLine: newLine,
-          keepTrailingNewLine: keepTrailingNewLine,
-          optimized: optimized,
-          undefined: undefined,
-          finalize: finalize,
-          autoEscape: autoEscape,
-          globals: globals,
-          filters: filters,
-          environmentFilters: environmentFilters,
-          tests: tests,
-          random: random,
-          getField: getField);
+        commentBegin: commentBegin,
+        commentEnd: commentEnd,
+        variableBegin: variableBegin,
+        variableEnd: variableEnd,
+        blockBegin: blockBegin,
+        blockEnd: blockEnd,
+        lineCommentPrefix: lineCommentPrefix,
+        lineStatementPrefix: lineStatementPrefix,
+        lStripBlocks: lStripBlocks,
+        trimBlocks: trimBlocks,
+        newLine: newLine,
+        keepTrailingNewLine: keepTrailingNewLine,
+        optimized: optimized,
+        undefined: undefined,
+        finalize: finalize,
+        autoEscape: autoEscape,
+        globals: globals,
+        filters: filters,
+        environmentFilters: environmentFilters,
+        tests: tests,
+        random: random,
+        getField: getField,
+      );
     }
 
     return environment.fromString(source, path: path);
   }
 
-  Template.parsed(this.environment, List<Node> nodes, {String? path, List<NodeVisitor> visitors = const [namespace]})
-      : renderer = Renderer(environment),
+  Template.parsed(
+    this.environment,
+    List<Node> nodes, {
+    String? path,
+    List<NodeVisitor> visitors = const <NodeVisitor>[namespace],
+  })  : renderer = Renderer(environment),
         nodes = List<Node>.of(nodes),
         path = path {
     for (final visitor in visitors) {
@@ -390,7 +394,7 @@ class Template implements Renderable {
   final String? path;
 
   @override
-  String render([Map<String, dynamic>? data]) {
+  String render([Map<String, Object?>? data]) {
     return renderer.render(nodes, data);
   }
 }

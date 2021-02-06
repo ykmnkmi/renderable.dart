@@ -1,6 +1,5 @@
 import 'package:renderable/ast.dart';
 import 'package:renderable/jinja.dart';
-import 'package:renderable/reflection.dart';
 import 'package:renderable/utils.dart';
 import 'package:test/test.dart';
 
@@ -38,7 +37,7 @@ void main() {
     test('raw3', () {
       final environment = Environment(lStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('bar\n{% raw %}\n  {{baz}}2 spaces\n{% endraw %}\nfoo');
-      expect(render(template, baz: 'test'), equals('bar\n\n  {{baz}}2 spaces\nfoo'));
+      expect(template.render(<String, Object>{'baz': 'test'}), equals('bar\n\n  {{baz}}2 spaces\nfoo'));
     });
 
     test('raw4', () {
@@ -51,7 +50,12 @@ void main() {
       final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: '\${', variableEnd: '}');
       final template = environment.fromString(r'''{% for item in seq
             %}${{'foo': item} | string | upper}{% endfor %}''');
-      expect(render(template, seq: [0, 1, 2]), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
+      expect(
+        template.render(<String, Object>{
+          'seq': <int>[0, 1, 2]
+        }),
+        equals('{FOO: 0}{FOO: 1}{FOO: 2}'),
+      );
     });
 
     test('comments', () {
@@ -62,7 +66,12 @@ void main() {
   <li>{item}</li>
 <!--- endfor -->
 </ul>''');
-      expect(render(template, seq: [0, 1, 2]), equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
+      expect(
+        template.render(<String, Object>{
+          'seq': <int>[0, 1, 2]
+        }),
+        equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'),
+      );
     });
 
     test('string escapes', () {
@@ -282,7 +291,7 @@ hello
     <% for item in seq %>
 ${item} ## the rest of the stuff
    <% endfor %>''');
-      expect(render(template, seq: range(5)), equals(range(5).map((int n) => '$n\n').join()));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals(range(5).map((int n) => '$n\n').join()));
     });
 
     test('lstrip angle bracket compact', () {
@@ -301,7 +310,7 @@ ${item} ## the rest of the stuff
     <%for item in seq%>
 ${item} ## the rest of the stuff
    <%endfor%>''');
-      expect(render(template, seq: range(5)), equals(range(5).map((int n) => '$n\n').join()));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals(range(5).map((int n) => '$n\n').join()));
     });
 
     test('lstrip blocks outside with new line', () {
@@ -309,7 +318,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}(\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  ){% endif %}');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('(\na=1 b=2 \n  )'));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('(\na=1 b=2 \n  )'),
+      );
     });
 
     test('lstrip trim blocks outside with new line', () {
@@ -317,7 +334,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}(\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  ){% endif %}');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('(\na=1 b=2   )'));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('(\na=1 b=2   )'),
+      );
     });
 
     test('lstrip blocks inside with new line', () {
@@ -325,7 +350,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  ({% if kvs %}\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  {% endif %})');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('  (\na=1 b=2 \n)'));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('  (\na=1 b=2 \n)'),
+      );
     });
 
     test('lstrip trim blocks inside with new line', () {
@@ -333,7 +366,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  ({% if kvs %}\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  {% endif %})');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('  (a=1 b=2 )'));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('  (a=1 b=2 )'),
+      );
     });
 
     test('lstrip blocks without new line', () {
@@ -341,7 +382,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}'
           '  {% endif %}');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('   a=1 b=2   '));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('   a=1 b=2   '),
+      );
     });
 
     test('lstrip trim blocks without new line', () {
@@ -349,7 +398,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}'
           '  {% endif %}');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('   a=1 b=2   '));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('   a=1 b=2   '),
+      );
     });
 
     test('lstrip blocks consume after without new line', () {
@@ -357,7 +414,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs -%}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor -%}'
           '  {% endif -%}');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('a=1 b=2 '));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('a=1 b=2 '),
+      );
     });
 
     test('lstrip trim blocks consume before without new line', () {
@@ -365,7 +430,15 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {%- if kvs %}'
           '   {%- for k, v in kvs %}{{ k }}={{ v }} {% endfor -%}'
           '  {%- endif %}');
-      expect(render(template, kvs: [['a', 1], ['b', 2]]), equals('a=1 b=2 '));
+      expect(
+        template.render(<String, Object>{
+          'kvs': <List<Object>>[
+            <Object>['a', 1],
+            <Object>['b', 2]
+          ]
+        }),
+        equals('a=1 b=2 '),
+      );
     });
 
     test('lstrip trim blocks comment', () {
@@ -377,7 +450,7 @@ ${item} ## the rest of the stuff
     test('lstrip trim blocks raw', () {
       final environment = Environment(lStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('{{x}}\n{%- raw %} {% endraw -%}\n{{ y }}');
-      expect(render(template, x: 1, y: 2), equals('1 2'));
+      expect(template.render(<String, Object>{'x': 1, 'y': 2}), equals('1 2'));
     });
 
     test('php syntax with manual', () {
@@ -394,7 +467,7 @@ ${item} ## the rest of the stuff
     <? for item in seq -?>
         <?= item ?>
     <?- endfor ?>''');
-      expect(render(template, seq: range(5)), equals('01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('01234'));
     });
 
     test('php syntax', () {
@@ -411,7 +484,7 @@ ${item} ## the rest of the stuff
     <? for item in seq ?>
         <?= item ?>
     <? endfor ?>''');
-      expect(render(template, seq: range(5)), equals(range(5).map<String>((int n) => '        $n\n').join()));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals(range(5).map<String>((int n) => '        $n\n').join()));
     });
 
     test('php syntax compact', () {
@@ -428,7 +501,7 @@ ${item} ## the rest of the stuff
     <?for item in seq?>
         <?=item?>
     <?endfor?>''');
-      expect(render(template, seq: range(5)), equals(range(5).map<String>((int n) => '        $n\n').join()));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals(range(5).map<String>((int n) => '        $n\n').join()));
     });
 
     test('erb syntax', () {
@@ -446,7 +519,7 @@ ${item} ## the rest of the stuff
     <%= item %>
     <% endfor %>
 ''');
-      expect(render(template, seq: range(5)), equals(range(5).map<String>((int n) => '    $n\n').join()));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals(range(5).map<String>((int n) => '    $n\n').join()));
     });
 
     test('erb syntax with manual', () {
@@ -463,7 +536,7 @@ ${item} ## the rest of the stuff
     <% for item in seq -%>
         <%= item %>
     <%- endfor %>''');
-      expect(render(template, seq: range(5)), equals('01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('01234'));
     });
 
     test('erb syntax no lstrip', () {
@@ -480,7 +553,7 @@ ${item} ## the rest of the stuff
     <%+ for item in seq -%>
         <%= item %>
     <%- endfor %>''');
-      expect(render(template, seq: range(5)), equals('    01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('    01234'));
     });
 
     test('comment syntax', () {
@@ -497,7 +570,7 @@ ${item} ## the rest of the stuff
 <!-- for item in seq --->
     ${item}
 <!--- endfor -->''');
-      expect(render(template, seq: range(5)), equals('01234'));
+      expect(template.render(<String, Object>{'seq': range(5)}), equals('01234'));
     });
   });
 
@@ -583,13 +656,13 @@ ${item} ## the rest of the stuff
     test('raw trim lstrip', () {
       final environment = Environment(lStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('{{x}}{% raw %}\n\n    {% endraw %}\n\n{{ y }}');
-      expect(render(template, x: 1, y: 2), equals('1\n\n\n2'));
+      expect(template.render(<String, Object>{'x': 1, 'y': 2}), equals('1\n\n\n2'));
     });
 
     test('raw no trim lstrip', () {
       final environment = Environment(lStripBlocks: true);
       final template = environment.fromString('{{x}}{% raw %}\n\n      {% endraw +%}\n\n{{ y }}');
-      expect(render(template, x: 1, y: 2), equals('1\n\n\n\n2'));
+      expect(template.render(<String, Object>{'x': 1, 'y': 2}), equals('1\n\n\n\n2'));
     });
 
     test('no trim angle bracket', () {
