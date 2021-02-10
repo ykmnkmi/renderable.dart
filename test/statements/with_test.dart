@@ -12,11 +12,9 @@ void main() {
         {% endwith -%}
             {{ a }} = {{ b }}''');
 
-      final lines = <String>[
-        for (final line in const LineSplitter().convert(template.render(<String, Object>{'a': 1, 'b': 2}))) line.trim()
-      ];
-
-      expect(lines, containsAllInOrder(<String>['42 = 23', '1 = 2']));
+      final lines = LineSplitter().convert(template.render({'a': 1, 'b': 2})).map((line) => line.trim()).toList();
+      expect(lines[0], equals('42 = 23'));
+      expect(lines[1], equals('1 = 2'));
     });
 
     test('with argument scoping', () {
@@ -25,7 +23,7 @@ void main() {
         {%- with a=1, b=2, c=b, d=e, e=5 -%}
             {{ a }}|{{ b }}|{{ c }}|{{ d }}|{{ e }}
         {%- endwith -%}''');
-      expect(template.render(<String, Object>{'b': 3, 'e': 4}), equals('1|2|3|4|5'));
+      expect(template.render({'b': 3, 'e': 4}), equals('1|2|3|4|5'));
     });
   });
 }

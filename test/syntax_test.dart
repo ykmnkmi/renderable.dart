@@ -21,23 +21,13 @@ void main() {
     test('attr', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo.bar }}|{{ foo["bar"] }}');
-      expect(
-        template.render(<String, Object>{
-          'foo': <String, Object>{'bar': 42}
-        }),
-        equals('42|42'),
-      );
+      expect(template.render({'foo': {'bar': 42}}), equals('42|42'));
     });
 
     test('subscript', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo[0] }}|{{ foo[-1] }}');
-      expect(
-        template.render(<String, Object>{
-          'foo': <int>[0, 1, 2]
-        }),
-        equals('0|2'),
-      );
+      expect(template.render({'foo': [0, 1, 2]}), equals('0|2'));
     });
 
     test('tuple', () {
@@ -72,14 +62,7 @@ void main() {
 
     test('compare', () {
       final environment = Environment();
-      final matches = <String, List<int>>{
-        '>': <int>[1, 0],
-        '>=': <int>[1, 1],
-        '<': <int>[2, 3],
-        '<=': <int>[3, 4],
-        '==': <int>[4, 4],
-        '!=': <int>[4, 5]
-      };
+      final matches = {'>': [1, 0], '>=': [1, 1], '<': [2, 3], '<=': [3, 4], '==': [4, 4], '!=': [4, 5]};
 
       matches.forEach((operation, pair) {
         final template = environment.fromString('{{ ${pair.first} $operation ${pair.last} }}');
@@ -92,7 +75,7 @@ void main() {
       // num * bool not supported
       // '{{ i * (j < 5) }}'
       final template = environment.fromString('{{ i == (j < 5) }}');
-      expect(template.render(<String, Object>{'i': 2, 'j': 3}), equals('false'));
+      expect(template.render({'i': 2, 'j': 3}), equals('false'));
     });
 
     test('compare compound', () {
@@ -103,12 +86,12 @@ void main() {
         '{{ 4 > 2 > 3 }}': 'false',
         '{{ a > b > c }}': 'false',
         '{{ 4 > 2 < 3 }}': 'true',
-        '{{ a > b < c }}': 'true'
+        '{{ a > b < c }}': 'true',
       };
 
       matches.forEach((source, expekt) {
         final template = environment.fromString(source);
-        expect(template.render(<String, Object>{'a': 4, 'b': 2, 'c': 3}), equals(expekt));
+        expect(template.render({'a': 4, 'b': 2, 'c': 3}), equals(expekt));
       });
     });
 
@@ -130,7 +113,7 @@ void main() {
 
     test('numeric literal', () {
       final environment = Environment();
-      final matches = <String, String>{
+      final matches = {
         '1': '1',
         '123': '123',
         '12_34_56': '123456',
@@ -141,7 +124,7 @@ void main() {
         '10e1': '100.0',
         '2.5e100': '2.5e+100',
         '2.5e+100': '2.5e+100',
-        '25.6e-10': '2.56e-9', // not '2.56e-09'
+        '25.6e-10': /* difference: '2.56e-09' */ '2.56e-9',
         '1_2.3_4e5_6': '1.234e+57',
       };
 
@@ -267,7 +250,7 @@ void main() {
     test('notin', () {
       final environment = Environment();
       final template = environment.fromString('{{ not 42 in bar }}');
-      expect(template.render(<String, Object>{'bar': range(100)}), equals('false'));
+      expect(template.render({'bar': range(100)}), equals('false'));
     });
 
     test('operator precedence', () {
@@ -280,7 +263,7 @@ void main() {
       final environment = Environment();
       final template = environment.fromString('{{ foo[1, 2] }}');
       // tuple is list
-      expect(template.render(<String, Object>{'foo': Foo()}), equals('[1, 2]'));
+      expect(template.render({'foo': Foo()}), equals('[1, 2]'));
     });
 
     test('raw2', () {
@@ -299,7 +282,7 @@ void main() {
 
     test('neg filter priority', () {
       final environment = Environment();
-      final template = environment.fromString('{{ -1|foo }}');
+      final template = environment.fromString('{{ -1 | foo }}');
       expect((template.nodes[0] as Output).nodes[0], isA<Filter>());
       expect(((template.nodes[0] as Output).nodes[0] as Filter).expression, isA<Neg>());
     });
@@ -321,19 +304,9 @@ void main() {
     test('parse unary', () {
       final environment = Environment();
       var template = environment.fromString('{{ -foo["bar"] }}');
-      expect(
-        template.render(<String, Object>{
-          'foo': <String, Object>{'bar': 42}
-        }),
-        equals('-42'),
-      );
+      expect(template.render({'foo': {'bar': 42}}), equals('-42'));
       template = environment.fromString('{{ foo["bar"] }}');
-      expect(
-        template.render(<String, Object>{
-          'foo': <String, Object>{'bar': 42}
-        }),
-        equals('42'),
-      );
+      expect(template.render({'foo': {'bar': 42}}), equals('42'));
     });
   });
 }

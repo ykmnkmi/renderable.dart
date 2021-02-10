@@ -1,8 +1,7 @@
 import 'dart:math' show Random;
 
 import 'package:renderable/jinja.dart';
-import 'package:renderable/markup.dart';
-import 'package:renderable/utils.dart';
+import 'package:renderable/runtime.dart';
 import 'package:test/test.dart';
 
 class User {
@@ -21,7 +20,7 @@ void main() {
   group('Filter', () {
     test('filter calling', () {
       final environment = Environment();
-      expect(environment.callFilter('sum', <int>[1, 2, 3]), equals(6));
+      expect(environment.callFilter('sum', [1, 2, 3]), equals(6));
     });
 
     test('capitalize', () {
@@ -40,7 +39,7 @@ void main() {
       final environment = Environment();
       final template = environment.fromString('{{ missing | default("no") }}|{{ false | default("no") }}|'
           '{{ false | default("no", true) }}|{{ given | default("no") }}');
-      expect(template.render(<String, Object>{'given': 'yes'}), equals('no|false|no|yes'));
+      expect(template.render({'given': 'yes'}), equals('no|false|no|yes'));
     });
 
     test('dictsort', () {
@@ -51,7 +50,7 @@ void main() {
       final environment = Environment();
       final template = environment.fromString('{{ foo | batch(3) | list }}|{{ foo | batch(3, "X") | list }}');
       expect(
-        template.render(<String, Object>{'foo': range(10)}),
+        template.render({'foo': range(10)}),
         equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]|[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, X, X]]'),
       );
     });
@@ -92,7 +91,7 @@ void main() {
     test('first', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo | first }}');
-      expect(template.render(<String, Object>{'foo': range(10)}), equals('0'));
+      expect(template.render({'foo': range(10)}), equals('0'));
     });
 
     test('float', () {
@@ -101,14 +100,14 @@ void main() {
 
       matches.forEach((value, expekt) {
         final template = environment.fromString('{{ value | float }}');
-        expect(template.render(<String, Object>{'value': value}), equals(expekt));
+        expect(template.render({'value': value}), equals(expekt));
       });
     });
 
     test('float default', () {
       final environment = Environment();
       final template = environment.fromString('{{ value | float(default=1.0) }}');
-      expect(template.render(<String, Object>{'value': 'abc'}), equals('1.0'));
+      expect(template.render({'value': 'abc'}), equals('1.0'));
     });
 
     test('format', () {
@@ -135,7 +134,7 @@ void main() {
 
       matches.forEach((value, expekt) {
         final template = environment.fromString('{{ value | int }}');
-        expect(template.render(<String, Object>{'value': value}), equals(expekt));
+        expect(template.render({'value': value}), equals(expekt));
       });
     });
 
@@ -151,20 +150,20 @@ void main() {
         final base = match.first;
         final expekt = match.last;
         final template = environment.fromString('{{ value | int(base=$base) }}');
-        expect(template.render(<String, Object>{'value': value}), equals(expekt));
+        expect(template.render({'value': value}), equals(expekt));
       });
     });
 
     test('int default', () {
       final environment = Environment();
       final template = environment.fromString('{{ value | int(default=1) }}');
-      expect(template.render(<String, Object>{'value': 'abc'}), equals('1'));
+      expect(template.render({'value': 'abc'}), equals('1'));
     });
 
     test('int special method', () {
       final environment = Environment();
       final template = environment.fromString('{{ value | int }}');
-      expect(template.render(<String, Object>{'value': IntIsh()}), equals('42'));
+      expect(template.render({'value': IntIsh()}), equals('42'));
     });
 
     test('join', () {
@@ -185,13 +184,13 @@ void main() {
         {'username': 'bar'},
       ];
 
-      expect(template.render(<String, Object>{'users': users}), equals('foo, bar'));
+      expect(template.render({'users': users}), equals('foo, bar'));
     });
 
     test('last', () {
       final environment = Environment();
       final template = environment.fromString('''{{ foo | last }}''');
-      expect(template.render(<String, Object>{'foo': range(10)}), equals('9'));
+      expect(template.render({'foo': range(10)}), equals('9'));
     });
 
     test('length', () {
@@ -209,8 +208,8 @@ void main() {
     test('pprint', () {
       final environment = Environment();
       final template = environment.fromString('{{ data | pprint }}');
-      final data = List<int>.generate(10, (index) => index);
-      expect(template.render(<String, Object>{'data': data}), equals(format(data)));
+      final data = List.generate(10, (index) => index);
+      expect(template.render({'data': data}), equals(format(data)));
     });
 
     test('random', () {
@@ -235,7 +234,7 @@ void main() {
       final values = [1, 2, 3, 4, 5];
       final environment = Environment();
       final template = environment.fromString('{{ values | string }}');
-      expect(template.render(<String, Object>{'values': values}), equals('$values'));
+      expect(template.render({'values': values}), equals('$values'));
     });
 
     test('truncate', () {
@@ -297,7 +296,7 @@ void main() {
     test('force escape', () {
       final environment = Environment();
       final template = environment.fromString('{{ x | forceescape }}');
-      expect(template.render(<String, Object>{'x': Markup('<div />')}), equals('&lt;div /&gt;'));
+      expect(template.render({'x': Markup('<div />')}), equals('&lt;div /&gt;'));
     });
 
     test('safe', () {

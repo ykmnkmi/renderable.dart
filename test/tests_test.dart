@@ -3,7 +3,7 @@
 import 'dart:collection';
 
 import 'package:renderable/jinja.dart';
-import 'package:renderable/markup.dart';
+import 'package:renderable/runtime.dart';
 import 'package:test/test.dart';
 
 class MyMap<K, V> extends MapBase<K, V> {
@@ -101,13 +101,13 @@ void main() {
         '4.2 is float': true,
         '(10 ** 100) is float': false,
         'none is number': false,
-        // false is not num
+        // difference: false is not num
         'false is number': false,
-        // true is not num
+        // difference: true is not num
         'true is number': false,
         '42 is number': true,
         '3.14159 is number': true,
-        // complex not supported
+        // not supported: complex
         // 'complex is number': true,
         '(10 ** 100) is number': true,
         'none is string': false,
@@ -132,10 +132,10 @@ void main() {
         'none is iterable': false,
         'false is iterable': false,
         '42 is iterable': false,
-        // String is not iterable
+        // difference: string is not iterable
         '"foo" is iterable': false,
         '[] is iterable': true,
-        // Map is not iterable
+        // difference: map is not iterable
         '{} is iterable': false,
         'range(5) is iterable': true,
         'none is callable': false,
@@ -149,7 +149,7 @@ void main() {
 
       matches.forEach((op, expekt) {
         final template = environment.fromString('{{ $op }}');
-        expect(template.render(<String, Object>{'mydict': MyMap<Object, Object>()}), equals('$expekt'));
+        expect(template.render({'mydict': MyMap<dynamic, dynamic>()}), equals('$expekt'));
       });
     });
 
@@ -169,7 +169,7 @@ void main() {
           '{{ bar is eq ("ba" + "z") }}|'
           '{{ bar is eq bar }}|'
           '{{ bar is eq foo }}');
-      expect(template.render(<String, Object>{'foo': 12, 'bar': 'baz'}), equals('true|false|true|true|false|true|true|false'));
+      expect(template.render({'foo': 12, 'bar': 'baz'}), equals('true|false|true|true|false|true|true|false'));
     });
 
     test('compare aliases', () {
@@ -198,19 +198,19 @@ void main() {
     test('same as', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo is sameas false }}|{{ 0 is sameas false }}');
-      expect(template.render(<String, Object>{'foo': false}), equals('true|false'));
+      expect(template.render({'foo': false}), equals('true|false'));
     });
 
     test('no paren for arg 1', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo is sameas none }}');
-      expect(template.render(<String, Object?>{'foo': null}), equals('true'));
+      expect(template.render({'foo': null}), equals('true'));
     });
 
     test('escaped', () {
       final environment = Environment();
       final template = environment.fromString('{{  x is escaped }}|{{ y is escaped  }}');
-      expect(template.render(<String, Object>{'x': 'foo', 'y': Markup('foo')}), equals('false|true'));
+      expect(template.render({'x': 'foo', 'y': Markup('foo')}), equals('false|true'));
     });
 
     test('greater than', () {
@@ -226,23 +226,18 @@ void main() {
     });
 
     test('multiple test', () {
-      final items = <Object>[];
+      final items = <dynamic>[];
 
-      bool matching(Object x, Object y) {
-        items.add(<Object>[x, y]);
+      bool matching(dynamic x, dynamic y) {
+        items.add(<dynamic>[x, y]);
         return false;
       }
 
       final environment = Environment(tests: {'matching': matching});
       final template = environment.fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
       expect(template.render(), equals('false'));
-      expect(
-        items,
-        containsAllInOrder(<List<String>>[
-          <String>['us-west-1', '(us-east-1|ap-northeast-1)'],
-          <String>['stage', '(dev|stage)']
-        ]),
-      );
+      expect(items[0], equals(['us-west-1', '(us-east-1|ap-northeast-1)']));
+      expect(items[1], equals(['stage', '(dev|stage)']));
     });
 
     test('in', () {

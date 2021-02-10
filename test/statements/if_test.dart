@@ -17,13 +17,13 @@ void main() {
     });
 
     test('elif deep', () {
-      final source = '{% if a == 0 %}0' + List<String>.generate(999, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() + '{% else %}x{% endif %}';
+      final source = '{% if a == 0 %}0' + List.generate(999, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() + '{% else %}x{% endif %}';
       final environment = Environment();
       final template = environment.fromString(source);
-      expect(template.render(<String, Object>{'a': 0}), equals('0'));
-      expect(template.render(<String, Object>{'a': 10}), equals('10'));
-      expect(template.render(<String, Object>{'a': 999}), equals('999'));
-      expect(template.render(<String, Object>{'a': 1000}), equals('x'));
+      expect(template.render({'a': 0}), equals('0'));
+      expect(template.render({'a': 10}), equals('10'));
+      expect(template.render({'a': 999}), equals('999'));
+      expect(template.render({'a': 1000}), equals('x'));
     });
 
     test('else', () {
@@ -41,13 +41,13 @@ void main() {
     test('complete', () {
       final environment = Environment();
       final template = environment.fromString('{% if a %}A{% elif b %}B{% elif c == d %}C{% else %}D{% endif %}');
-      expect(template.render(<String, Object>{'a': 0, 'b': false, 'c': 42, 'd': 42.0}), equals('C'));
+      expect(template.render({'a': 0, 'b': false, 'c': 42, 'd': 42.0}), equals('C'));
     });
 
     test('no scope', () {
       final environment = Environment();
       var template = environment.fromString('{% if a %}{% set foo = 1 %}{% endif %}{{ foo }}');
-      expect(template.render(<String, Object>{'a': true}), equals('1'));
+      expect(template.render({'a': true}), equals('1'));
       template = environment.fromString('{% if true %}{% set foo = 1 %}{% endif %}{{ foo }}');
       expect(template.render(), equals('1'));
     });

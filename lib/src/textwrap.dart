@@ -1,20 +1,23 @@
 import 'package:meta/meta.dart';
 
 class TextWrapper {
-  static const String whitespaces = '\t\n\x0b\x0c\r ';
+  static final String whitespaces = '\t\n\x0b\x0c\r ';
 
-  static const Map<int, int> unicodeWhiteSpaceTranslateTable = <int, int>{9: 32, 10: 32, 11: 32, 12: 32, 13: 32};
+  static final Map<int, int> unicodeWhiteSpaceTranslateTable = const <int, int>{9: 32, 10: 32, 11: 32, 12: 32, 13: 32};
 
-  TextWrapper(this.width,
-      {this.initialIndent = '',
-      this.subsequentIndent = '',
-      this.expandTabs = true,
-      this.replaceWhitespace = true,
-      this.fixSentenceEndings = false,
-      this.breakOnHyphens = true,
-      this.tabSize = 8,
-      this.maxLines,
-      this.placeholder = ' [...]'}) {
+  TextWrapper({
+    this.width = 80,
+    this.initialIndent = '',
+    this.subsequentIndent = '',
+    this.expandTabs = true,
+    this.replaceWhitespace = true,
+    this.fixSentenceEndings = false,
+    this.dropWhitespace = true,
+    this.breakOnHyphens = true,
+    this.tabSize = 8,
+    this.maxLines = -1,
+    this.placeholder = ' [...]',
+  }) {
     final whitespace = '[${RegExp.escape(whitespaces)}]';
     final noWhitespace = '[^${whitespace.substring(1)}';
     final wordPuctuation = '[\\w!"\'&.,?]';
@@ -37,11 +40,13 @@ class TextWrapper {
 
   final bool fixSentenceEndings;
 
+  final bool dropWhitespace;
+
   final bool breakOnHyphens;
 
   final int tabSize;
 
-  final int? maxLines;
+  final int maxLines;
 
   final String placeholder;
 
@@ -106,11 +111,9 @@ class TextWrapper {
     ];
   }
 
+  /// Handle a chunk of text (most likely a word, not whitespace) that is too long to fit in any line.
   @protected
-  List<String> splitChunks(String text) {
-    text = mungeWhiteSpace(text);
-    return split(text);
-  }
+  void handleLongWord(List<String> chunks, List<String> currentLine, int currentLength, int width) {}
 
   /// Wrap a sequence of text chunks and return a list of lines of length 'self.width' or less.
   ///
@@ -122,28 +125,103 @@ class TextWrapper {
   /// Chunks should not have internal whitespace; ie. a chunk is either all whitespace or a "word".
   /// Whitespace chunks will be removed from the beginning and end of lines, but apart from that whitespace is preserved.
   @protected
-  String wrapChunks(List<String> chunks) {
+  List<String> wrapChunks(List<String> chunks) {
     if (width < 0) {
-      throw ArgumentError.value(width, 'width');
+      throw Exception('invalid width $width (must be > 0)');
     }
 
     final lines = <String>[];
-    late String indent;
 
-    if (maxLines != null) {
-      if (maxLines! > 1) {
-        indent = subsequentIndent;
-      } else {
-        indent = initialIndent;
+    if (maxLines != -1) {
+      final indent = maxLines > 1 ? subsequentIndent : initialIndent;
+
+      if (indent.length + placeholder.trimLeft().length > width) {
+        throw Exception('placeholder too large for max width');
       }
-
-      if (indent.length + placeholder.length > width) {}
     }
 
-    throw UnimplementedError();
+    chunks = List<String>.generate(chunks.length, (index) => chunks[chunks.length - index - 1]);
+
+    while (chunks.isNotEmpty) {
+      print('hehe');
+
+      var currentLine = <String>[];
+      var currentLength = 0;
+      var indent = lines.isNotEmpty ? subsequentIndent : initialIndent;
+      var width = this.width - indent.length;
+
+      if (dropWhitespace && chunks.last.trim() == '' && lines.isNotEmpty) {
+        chunks.removeLast();
+      }
+
+      while (chunks.isNotEmpty) {
+        var length = chunks.last.length;
+
+        if (currentLength + length <= width) {
+          currentLine.add(chunks.removeLast());
+          currentLength += length;
+        } else {
+          break;
+        }
+      }
+
+      if (chunks.isNotEmpty && chunks.last.length > width) {
+        handleLongWord(chunks, currentLine, currentLength, width);
+        currentLength = currentLine.fold<int>(0, (sum, line) => sum + line.length);
+      }
+
+      if (dropWhitespace && currentLine.isNotEmpty && currentLine.last.trim() == '') {
+        final last = currentLine.removeLast();
+        currentLength -= last.length;
+      }
+
+      if (currentLine.isNotEmpty) {
+        if (maxLines == -1 ||
+            lines.length + 1 < maxLines ||
+            (chunks.isEmpty || dropWhitespace && chunks.length == 1 && chunks[0].trim() == '') && currentLength <= width) {
+          lines.add(indent + currentLine.join());
+        } else {
+          var not = true;
+
+          while (currentLine.isNotEmpty) {
+            if (currentLine.last.trim().isNotEmpty && currentLength + placeholder.length <= width) {
+              currentLine.add(placeholder);
+              lines.add(indent + currentLine.join());
+              not = false;
+              break;
+            }
+
+            final last = currentLine.removeLast();
+            currentLength -= last.length;
+          }
+
+          if (not) {
+            if (lines.isNotEmpty) {
+              final previousLine = lines.last.trimRight();
+
+              if (previousLine.length + placeholder.length <= width) {
+                lines[lines.length - 1] = previousLine + placeholder;
+              }
+
+              lines.add(indent + placeholder.trimLeft());
+            }
+          }
+
+          break;
+        }
+      }
+    }
+
+    return lines;
   }
 
-  String wrap(String text) {
+  @protected
+  List<String> splitChunks(String text) {
+    text = mungeWhiteSpace(text);
+    return split(text);
+  }
+
+  List<String> wrap(String text) {
     final chunks = splitChunks(text);
 
     if (fixSentenceEndings) {

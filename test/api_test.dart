@@ -8,27 +8,17 @@ void main() {
     test('item and attribute', () {
       final environment = Environment(getField: getField);
       final template = environment.fromString('{{ foo["items"] }}');
-      expect(
-        template.render(<String, Object>{
-          'foo': <String, int>{'items': 42}
-        },),
-        equals('42'),
-      );
+      expect(template.render({'foo': {'items': 42}}), equals('42'));
     });
 
     test('finalize', () {
       final environment = Environment(finalize: (dynamic obj) => obj ?? '');
       final template = environment.fromString('{% for item in seq %}|{{ item }}{% endfor %}');
-      expect(
-        template.render(<String, Object>{
-          'seq': <Object?>[null, 1, 'foo']
-        }),
-        equals('||1|foo'),
-      );
+      expect(template.render({'seq': [null, 1, 'foo']}), equals('||1|foo'));
     });
 
     test('finalize constant expression', () {
-      final environment = Environment(finalize: (Object? obj) => obj ?? '');
+      final environment = Environment(finalize: (dynamic obj) => obj ?? '');
       final template = environment.fromString('<{{ none }}>');
       expect(template.render(), equals('<>'));
     });
@@ -37,7 +27,7 @@ void main() {
       final environment = Environment(finalize: (dynamic obj) => obj.runtimeType);
       final template = environment.fromString('<{{ value }}>');
       // if template data was finalized, it would print 'StringintString'.
-      expect(template.render(<String, Object>{'value': 123}), equals('<int>'));
+      expect(template.render({'value': 123}), equals('<int>'));
     });
 
     test('context finalize', () {
@@ -47,7 +37,7 @@ void main() {
 
       final environment = Environment(finalize: finalize);
       final template = environment.fromString('{{ value }}');
-      expect(template.render(<String, Object>{'value': 5, 'scale': 3}), equals('15'));
+      expect(template.render({'value': 5, 'scale': 3}), equals('15'));
     });
 
     test('env autoescape', () {
@@ -57,7 +47,7 @@ void main() {
 
       final environment = Environment(finalize: finalize);
       final template = environment.fromString('{{ value }}');
-      expect(template.render(<String, Object>{'value': 'hello'}), equals("{{ 'hello' }}"));
+      expect(template.render({'value': 'hello'}), equals("{{ 'hello' }}"));
     });
 
     test('cycler', () {
