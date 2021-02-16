@@ -5,8 +5,9 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main() {
   try {
-    final text = "Hello there, how are you this fine day?  I'm glad to hear it!";
-    print(TextWrapper(width: 12).wrap(text));
+    final text = 'Look, goof-ball -- use the -b option!';
+    final wrapper = TextWrapper(breakOnHyphens: false);
+    print(wrapper.wrap(text));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

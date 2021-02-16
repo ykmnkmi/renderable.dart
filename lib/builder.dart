@@ -1,70 +1,12 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-import 'dart:async';
-
-import 'package:build/build.dart';
-import 'package:dart_style/dart_style.dart';
-import 'package:path/path.dart' as path;
-
-import 'src/defaults.dart' as defaults;
-import 'src/enirvonment.dart';
 import 'src/nodes.dart';
-import 'src/parser.dart';
 import 'src/visitor.dart';
-
-Builder htmlTemplateBuilder(BuilderOptions options) {
-  return HtmlTemplateBuilder.fromConfig(options.config);
-}
-
-class HtmlTemplateBuilder extends Builder {
-  factory HtmlTemplateBuilder.fromConfig(Map<String, Object?> config) {
-    return HtmlTemplateBuilder(
-      Environment(
-        commentBegin: config['comment_begin'] as String? ?? defaults.commentBegin,
-        commentEnd: config['comment_end'] as String? ?? defaults.commentEnd,
-        variableBegin: config['variable_begin'] as String? ?? defaults.variableBegin,
-        variableEnd: config['variable_end'] as String? ?? defaults.variableEnd,
-        blockBegin: config['block_begin'] as String? ?? defaults.blockBegin,
-        blockEnd: config['block_end'] as String? ?? defaults.blockEnd,
-      ),
-    );
-  }
-
-  HtmlTemplateBuilder(this.environment) : formatter = DartFormatter();
-
-  final Environment environment;
-
-  final DartFormatter formatter;
-
-  @override
-  Map<String, List<String>> get buildExtensions {
-    return <String, List<String>>{
-      '.html': ['.html.dart'],
-    };
-  }
-
-  @override
-  Future<void> build(BuildStep buildStep) {
-    final inputId = buildStep.inputId;
-
-    var name = path.basenameWithoutExtension(inputId.path);
-    name = name[0].toUpperCase() + name.substring(1);
-    name += 'Template';
-
-    return buildStep.readAsString(buildStep.inputId).then<void>((source) {
-      final nodes = Parser(environment).parse(source, path: inputId.path);
-      final generator = TemplateBuilder(name);
-      final code = formatter.format(generator.visit(nodes));
-      buildStep.writeAsString(buildStep.inputId.changeExtension('.html.dart'), code);
-    });
-  }
-}
 
 class Frame {}
 
-class TemplateBuilder extends Visitor<Frame, String> {
-  TemplateBuilder(this.name);
+class Compiler extends Visitor<Frame, String> {
+  Compiler(this.template);
 
-  final String name;
+  final String template;
 
   String visit(List<Node> nodes) {
     throw UnimplementedError();

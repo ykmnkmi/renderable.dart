@@ -1,31 +1,123 @@
 import 'package:meta/meta.dart';
 
+/// Wrap a single paragraph of text.
+List<String> wrap(
+  String text, {
+  int width = 70,
+  String initialIndent = '',
+  String subsequentIndent = '',
+  bool expandTabs = true,
+  bool replaceWhitespace = true,
+  bool fixSentenceEndings = false,
+  bool breakLongWords = true,
+  bool dropWhitespace = true,
+  bool breakOnHyphens = true,
+  int tabSize = 8,
+  int maxLines = -1,
+  String placeholder = ' [...]',
+}) {
+  final wrapper = TextWrapper(
+    width: width,
+    initialIndent: initialIndent,
+    subsequentIndent: subsequentIndent,
+    expandTabs: expandTabs,
+    replaceWhitespace: replaceWhitespace,
+    fixSentenceEndings: fixSentenceEndings,
+    breakLongWords: breakLongWords,
+    dropWhitespace: dropWhitespace,
+    breakOnHyphens: breakOnHyphens,
+    tabSize: tabSize,
+    maxLines: maxLines,
+    placeholder: placeholder,
+  );
+  return wrapper.wrap(text);
+}
+
+/// Fill a single paragraph of text.
+String fill(
+  String text, {
+  int width = 70,
+  String initialIndent = '',
+  String subsequentIndent = '',
+  bool expandTabs = true,
+  bool replaceWhitespace = true,
+  bool fixSentenceEndings = false,
+  bool breakLongWords = true,
+  bool dropWhitespace = true,
+  bool breakOnHyphens = true,
+  int tabSize = 8,
+  int maxLines = -1,
+  String placeholder = ' [...]',
+}) {
+  final wrapper = TextWrapper(
+    width: width,
+    initialIndent: initialIndent,
+    subsequentIndent: subsequentIndent,
+    expandTabs: expandTabs,
+    replaceWhitespace: replaceWhitespace,
+    fixSentenceEndings: fixSentenceEndings,
+    breakLongWords: breakLongWords,
+    dropWhitespace: dropWhitespace,
+    breakOnHyphens: breakOnHyphens,
+    tabSize: tabSize,
+    maxLines: maxLines,
+    placeholder: placeholder,
+  );
+  return wrapper.fill(text);
+}
+
+/// Collapse and truncate the given text to fit in the given width.
+String shorten(
+  String text,
+  int width, {
+  int maxLines = 1,
+  String initialIndent = '',
+  String subsequentIndent = '',
+  bool expandTabs = true,
+  bool replaceWhitespace = true,
+  bool fixSentenceEndings = false,
+  bool breakLongWords = true,
+  bool dropWhitespace = true,
+  bool breakOnHyphens = true,
+  int tabSize = 8,
+  String placeholder = ' [...]',
+}) {
+  final wrapper = TextWrapper(
+    width: width,
+    initialIndent: initialIndent,
+    subsequentIndent: subsequentIndent,
+    expandTabs: expandTabs,
+    replaceWhitespace: replaceWhitespace,
+    fixSentenceEndings: fixSentenceEndings,
+    breakLongWords: breakLongWords,
+    dropWhitespace: dropWhitespace,
+    breakOnHyphens: breakOnHyphens,
+    tabSize: tabSize,
+    maxLines: maxLines,
+    placeholder: placeholder,
+  );
+  return wrapper.fill(text.split(RegExp('\s+')).join(' '));
+}
+
 class TextWrapper {
-  static final String whitespaces = '\t\n\x0b\x0c\r ';
-
-  static final Map<int, int> unicodeWhiteSpaceTranslateTable = const <int, int>{9: 32, 10: 32, 11: 32, 12: 32, 13: 32};
-
   TextWrapper({
-    this.width = 80,
+    this.width = 70,
     this.initialIndent = '',
     this.subsequentIndent = '',
     this.expandTabs = true,
     this.replaceWhitespace = true,
     this.fixSentenceEndings = false,
+    this.breakLongWords = true,
     this.dropWhitespace = true,
     this.breakOnHyphens = true,
     this.tabSize = 8,
     this.maxLines = -1,
     this.placeholder = ' [...]',
   }) {
-    final whitespace = '[${RegExp.escape(whitespaces)}]';
-    final noWhitespace = '[^${whitespace.substring(1)}';
-    final wordPuctuation = '[\\w!"\'&.,?]';
-    final letter = '[^\\d\\W]';
-    wordSeparatorRe = RegExp('(${whitespace}s+|(?<=${wordPuctuation}s)-{2,}(?=\\w)|${noWhitespace}s+?(?:-(?:(?<=$letter{2}-)|'
-        '(?<=$letter-$letter-))(?=$letter-?$letter)|(?=${whitespace}s|\\Z)|(?<=${wordPuctuation}s)(?=-{2,}\\w)))');
-    wordSeparatorSimpleRe = RegExp('($whitespace)+');
-    sentenceEndRe = RegExp('[a-z][\\.\\!\\?][\\"\\\']?\\Z');
+    wordSeparatorRe = RegExp('([\t\n\v\r ]+|(?<=[\w!"\'&.,?]) -{2,} (?=\w)|[^\t\n\v\r ]+?(?:-(?:(?<=[^\d\W]{2}-)|(?<=[^\d\W]-[^\d\W]-))(?=[^\d\W]-?[^\d\W])|'
+        '(?=[\t\n\v\r ]|\Z)|(?<=[\w!"\'&.,?])(?=-{2,}\w)))');
+    wordSeparatorSimpleRe = RegExp('([\t\n\v\r\ ])+');
+    sentenceEndRe = RegExp('[a-z][\.\!\?]["\']?\Z');
   }
 
   final int width;
@@ -39,6 +131,8 @@ class TextWrapper {
   final bool replaceWhitespace;
 
   final bool fixSentenceEndings;
+
+  final bool breakLongWords;
 
   final bool dropWhitespace;
 
@@ -56,74 +150,55 @@ class TextWrapper {
 
   late RegExp sentenceEndRe;
 
-  /// Munge whitespace in text: expand tabs and convert all other whitespace characters to spaces.
-  ///
-  /// Eg.
-  ///
-  ///     " foo\\tbar\\n\\nbaz"
-  ///
-  /// becomes
-  ///
-  ///     " foo    bar  baz"
   @protected
-  String mungeWhiteSpace(String text) {
+  String mungeWhitespace(String text) {
     if (expandTabs) {
       text = text.expandTabs(tabSize);
     }
 
     if (replaceWhitespace) {
-      text = text.translate(unicodeWhiteSpaceTranslateTable);
+      text = text.translate();
     }
 
     return text;
   }
 
-  /// Split the text to wrap into indivisible chunks.
-  ///
-  /// Chunks are not quite the same as words; see [wrapChunks] for full details.
-  ///
-  /// As an example, the text
-  ///
-  ///     'Look, goof-ball -- use the -b option!'
-  ///
-  /// breaks into the following chunks:
-  ///
-  ///     ['Look,', ' ', 'goof-', 'ball', ' ', '--', ' ', 'use', ' ', 'the', ' ', '-b', ' ', 'option!']
-  ///
-  /// if [breakOnHyphens] is true:
-  ///
-  ///     ['Look,', ' ', 'goof-ball', ' ', '--', ' ', 'use', ' ', 'the', ' ', '-b', ' ', option!']
-  ///
-  /// otherwise.
   @protected
   List<String> split(String text) {
-    late List<String> chunks;
+    List<String?> chunks;
 
     if (breakOnHyphens) {
-      chunks = text.split(wordSeparatorRe);
+      chunks = wordSeparatorRe.split(text);
     } else {
-      chunks = text.split(wordSeparatorSimpleRe);
+      chunks = wordSeparatorSimpleRe.split(text);
     }
 
-    return <String>[
-      for (final chunk in chunks)
-        if (chunks.isNotEmpty) chunk
-    ];
+    return chunks.whereType<String>().where((chunk) => chunk.isNotEmpty).toList();
   }
 
-  /// Handle a chunk of text (most likely a word, not whitespace) that is too long to fit in any line.
   @protected
-  void handleLongWord(List<String> chunks, List<String> currentLine, int currentLength, int width) {}
+  void handleLongWord(List<String> reversedChunks, List<String> currentLine, int currentLength, int width) {
+    final spaceLeft = width < 1 ? 1 : width - currentLength;
 
-  /// Wrap a sequence of text chunks and return a list of lines of length 'self.width' or less.
-  ///
-  /// (If 'break_long_words' is false, some lines may be longer than this.)
-  ///
-  /// Chunks correspond roughly to words and the whitespace between them: each chunk is indivisible
-  /// (modulo 'break_long_words'), but a line break can come between any two chunks.
-  ///
-  /// Chunks should not have internal whitespace; ie. a chunk is either all whitespace or a "word".
-  /// Whitespace chunks will be removed from the beginning and end of lines, but apart from that whitespace is preserved.
+    if (breakLongWords) {
+      final chunk = reversedChunks.last;
+      var end = spaceLeft;
+
+      if (breakOnHyphens && chunk.length > spaceLeft) {
+        final hyphen = chunk.lastIndexOf('-');
+
+        if (hyphen > 0 && chunk.substring(0, hyphen).contains('-')) {
+          end = hyphen + 1;
+        }
+      }
+
+      currentLine.add(chunk.substring(0, end));
+      reversedChunks[reversedChunks.length - 1] = chunk.substring(end);
+    } else if (currentLine.isEmpty) {
+      currentLine.add(reversedChunks.removeLast());
+    }
+  }
+
   @protected
   List<String> wrapChunks(List<String> chunks) {
     if (width < 0) {
@@ -140,22 +215,21 @@ class TextWrapper {
       }
     }
 
-    chunks = List<String>.generate(chunks.length, (index) => chunks[chunks.length - index - 1]);
+    chunks = chunks.reversed.toList();
 
     while (chunks.isNotEmpty) {
-      print('hehe');
-
-      var currentLine = <String>[];
+      final currentLine = <String>[];
       var currentLength = 0;
-      var indent = lines.isNotEmpty ? subsequentIndent : initialIndent;
-      var width = this.width - indent.length;
 
-      if (dropWhitespace && chunks.last.trim() == '' && lines.isNotEmpty) {
+      final indent = lines.isNotEmpty ? subsequentIndent : initialIndent;
+      final width = this.width - indent.length;
+
+      if (dropWhitespace && chunks.last.trim().isEmpty && lines.isNotEmpty) {
         chunks.removeLast();
       }
 
       while (chunks.isNotEmpty) {
-        var length = chunks.last.length;
+        final length = chunks.last.length;
 
         if (currentLength + length <= width) {
           currentLine.add(chunks.removeLast());
@@ -170,7 +244,7 @@ class TextWrapper {
         currentLength = currentLine.fold<int>(0, (sum, line) => sum + line.length);
       }
 
-      if (dropWhitespace && currentLine.isNotEmpty && currentLine.last.trim() == '') {
+      if (dropWhitespace && currentLine.isNotEmpty && currentLine.last.trim().isEmpty) {
         final last = currentLine.removeLast();
         currentLength -= last.length;
       }
@@ -178,7 +252,7 @@ class TextWrapper {
       if (currentLine.isNotEmpty) {
         if (maxLines == -1 ||
             lines.length + 1 < maxLines ||
-            (chunks.isEmpty || dropWhitespace && chunks.length == 1 && chunks[0].trim() == '') && currentLength <= width) {
+            (chunks.isEmpty || dropWhitespace && chunks.length == 1 && chunks.first.trim().isEmpty) && currentLength <= width) {
           lines.add(indent + currentLine.join());
         } else {
           var not = true;
@@ -217,16 +291,18 @@ class TextWrapper {
 
   @protected
   List<String> splitChunks(String text) {
-    text = mungeWhiteSpace(text);
+    text = mungeWhitespace(text);
     return split(text);
   }
 
+  /// Reformat the single paragraph in 'text' so it fits in lines of no more than 'self.width' columns,
+  /// and return a list of wrapped lines.
   List<String> wrap(String text) {
     final chunks = splitChunks(text);
 
     if (fixSentenceEndings) {
       for (var i = 0; i < chunks.length - 1;) {
-        if (chunks[i + 1] == ' ' && chunks[i].contains(sentenceEndRe)) {
+        if (chunks[i + 1] == ' ' && sentenceEndRe.hasMatch(chunks[i])) {
           chunks[i + 1] = '  ';
           i += 2;
         } else {
@@ -237,6 +313,37 @@ class TextWrapper {
 
     return wrapChunks(chunks);
   }
+
+  /// Reformat the single paragraph in 'text' to fit in lines of no more than 'self.width' columns,
+  /// and return a new string containing the entire wrapped paragraph.
+  String fill(String text) {
+    return wrap(text).join('\n');
+  }
+}
+
+extension on Pattern {
+  List<String?> split(String text) {
+    final matches = allMatches(text).toList();
+
+    if (matches.isEmpty) {
+      return <String>[text];
+    }
+
+    final result = <String?>[];
+    final length = matches.length;
+    Match? match;
+
+    for (var i = 0, start = 0; i < length; i += 1, start = match.end) {
+      match = matches[i];
+      result.add(text.substring(start, match.start));
+
+      if (match.groupCount > 0) {
+        result.addAll(match.groups(List<int>.generate(match.groupCount, (index) => index + 1)));
+      }
+    }
+
+    return result;
+  }
 }
 
 extension on String {
@@ -245,7 +352,8 @@ extension on String {
     return replaceAll('\t', spaces);
   }
 
-  String translate(Map<int, int> table) {
-    return String.fromCharCodes(<int>[for (final codeUnit in codeUnits) table.containsKey(codeUnit) ? table[codeUnit]! : codeUnit]);
+  String translate() {
+    const codes = <int>{9, 10, 11, 12, 13};
+    return String.fromCharCodes(<int>[for (final rune in runes) codes.contains(rune) ? 32 : rune]);
   }
 }
