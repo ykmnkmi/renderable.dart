@@ -1,5 +1,7 @@
 import 'package:meta/meta.dart';
 
+import 'utils.dart';
+
 /// Wrap a single paragraph of text.
 List<String> wrap(
   String text, {
@@ -114,10 +116,10 @@ class TextWrapper {
     this.maxLines = -1,
     this.placeholder = ' [...]',
   }) {
-    wordSeparatorRe = RegExp('([\t\n\v\r ]+|(?<=[\w!"\'&.,?]) -{2,} (?=\w)|[^\t\n\v\r ]+?(?:-(?:(?<=[^\d\W]{2}-)|(?<=[^\d\W]-[^\d\W]-))(?=[^\d\W]-?[^\d\W])|'
+    wordSeparatorRe = RegExp('([\t\n\v\r ]+|(?<=[\w!"\'&.,?])-{2,}(?=\w)|[^\t\n\v\r ]+?(?:-(?:(?<=[^\d\W]{2}-)|(?<=[^\d\W]-[^\d\W]-))(?=[^\d\W]-?[^\d\W])|'
         '(?=[\t\n\v\r ]|\Z)|(?<=[\w!"\'&.,?])(?=-{2,}\w)))');
     wordSeparatorSimpleRe = RegExp('([\t\n\v\r\ ])+');
-    sentenceEndRe = RegExp('[a-z][\.\!\?]["\']?\Z');
+    sentenceEndRe = RegExp('[a-z][\.\!\?][\"\']?' /* no \Z (( */);
   }
 
   final int width;
@@ -157,7 +159,7 @@ class TextWrapper {
     }
 
     if (replaceWhitespace) {
-      text = text.translate();
+      text = text.translate(const <int, int>{9: 32, 10: 32, 11: 32, 12: 32, 13: 32});
     }
 
     return text;
@@ -174,6 +176,21 @@ class TextWrapper {
     }
 
     return chunks.whereType<String>().where((chunk) => chunk.isNotEmpty).toList();
+  }
+
+  @protected
+  void fixEndings(List<String> chunks) {
+    for (var i = 0; i < chunks.length - 1;) {
+      final chunk = chunks[i];
+      final length = chunk.length;
+
+      if (chunks[i + 1] == ' ' && sentenceEndRe.hasMatch(length > 2 ? chunk.substring(length - 2) : chunk)) {
+        chunks[i + 1] = '  ';
+        i += 2;
+      } else {
+        i += 1;
+      }
+    }
   }
 
   @protected
@@ -301,14 +318,7 @@ class TextWrapper {
     final chunks = splitChunks(text);
 
     if (fixSentenceEndings) {
-      for (var i = 0; i < chunks.length - 1;) {
-        if (chunks[i + 1] == ' ' && sentenceEndRe.hasMatch(chunks[i])) {
-          chunks[i + 1] = '  ';
-          i += 2;
-        } else {
-          i += 1;
-        }
-      }
+      fixEndings(chunks);
     }
 
     return wrapChunks(chunks);
@@ -318,46 +328,5 @@ class TextWrapper {
   /// and return a new string containing the entire wrapped paragraph.
   String fill(String text) {
     return wrap(text).join('\n');
-  }
-}
-
-extension on Pattern {
-  List<String?> split(String text) {
-    final matches = allMatches(text).toList();
-
-    if (matches.isEmpty) {
-      return <String>[text];
-    }
-
-    final result = <String?>[];
-    final length = matches.length;
-    Match? match;
-
-    for (var i = 0, start = 0; i < length; i += 1, start = match.end) {
-      match = matches[i];
-      result.add(text.substring(start, match.start));
-
-      if (match.groupCount > 0) {
-        result.addAll(match.groups(List<int>.generate(match.groupCount, (index) => index + 1)));
-      }
-    }
-
-    if (match != null) {
-      result.add(text.substring(match.end));
-    }
-
-    return result;
-  }
-}
-
-extension on String {
-  String expandTabs(int tabSize) {
-    final spaces = ' ' * tabSize;
-    return replaceAll('\t', spaces);
-  }
-
-  String translate() {
-    const codes = <int>{9, 10, 11, 12, 13};
-    return String.fromCharCodes(<int>[for (final rune in runes) codes.contains(rune) ? 32 : rune]);
   }
 }

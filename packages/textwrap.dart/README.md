@@ -1,4 +1,4 @@
-Text wrapping and filling. It's a port of [textwrap][textwrap] from Python.
+Text wrapping and filling. It's a pure port of [textwrap][textwrap] from Python.
 
 ## Usage
 
@@ -8,7 +8,9 @@ A simple usage example:
 import 'package:textwrap/textwrap.dart';
 
 void main() {
-  print(fill('Text wrapping and filling.', width: 12));
+  print(fill('Text wrapping and filling.', width: 16));
+  // Text wrapping
+  // and filling.
 }
 ```
 

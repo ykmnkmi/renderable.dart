@@ -1,6 +1,6 @@
 name: textwrap
-description: Text wrapping and filling. It's a port of textwrap from Python.
-version: 1.0.0-dev.1
+description: Text wrapping and filling. It's a pure port of textwrap from Python.
+version: 1.0.0
 # homepage: https://www.example.com
 
 environment:
