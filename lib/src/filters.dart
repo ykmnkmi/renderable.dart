@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:renderable/src/runtime.dart';
+import 'package:textwrap/textwrap.dart';
 
 import 'enirvonment.dart';
 import 'exceptions.dart';
 import 'markup.dart';
+import 'runtime.dart';
 import 'utils.dart';
 
 const List<List<String>> suffixes = [
@@ -295,8 +297,10 @@ String doUpper(String value) {
   return value.toUpperCase();
 }
 
-String doWordWrap(Environment environment, String value, {String? wrapString}) {
-  throw UnimplementedError();
+String doWordWrap(Environment environment, String string, {int width = 79, bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
+  final wrapper = TextWrapper(width: width, expandTabs: false, replaceWhitespace: false, breakLongWords: breakLongWords, breakOnHyphens: breakOnHyphens);
+  wrapString ??= environment.newLine;
+  return const LineSplitter().convert(string).map<String>((line) => wrapper.wrap(line).join(wrapString!)).join(wrapString);
 }
 
 const Map<String, Function> filters = {

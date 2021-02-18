@@ -74,6 +74,7 @@ Status:
   - sum
   - trim
   - upper
+  - wordwrap
 - List of Builtin Tests
   - boolean
   - callable
