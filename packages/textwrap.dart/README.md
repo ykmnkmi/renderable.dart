@@ -1,7 +1,4 @@
-A library for Dart developers.
-
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+Text wrapping and filling. It's a port of [textwrap][textwrap] from Python.
 
 ## Usage
 
@@ -10,8 +7,8 @@ A simple usage example:
 ```dart
 import 'package:textwrap/textwrap.dart';
 
-main() {
-  var awesome = new Awesome();
+void main() {
+  print(fill('Text wrapping and filling.', width: 12));
 }
 ```
 
@@ -19,4 +16,5 @@ main() {
 
 Please file feature requests and bugs at the [issue tracker][tracker].
 
+[textwrap]: https://github.com/python/cpython/blob/master/Lib/textwrap.py
 [tracker]: http://example.com/issues/replaceme
