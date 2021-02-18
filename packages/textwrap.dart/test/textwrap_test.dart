@@ -1,7 +1,5 @@
-// ignore_for_file: inference_failure_on_collection_literal
-
-import 'package:renderable/src/textwrap.dart';
 import 'package:test/test.dart';
+import 'package:textwrap/textwrap.dart';
 
 void main() {
   group('TextWrapper', () {
