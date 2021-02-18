@@ -342,6 +342,10 @@ extension on Pattern {
       }
     }
 
+    if (match != null) {
+      result.add(text.substring(match.end));
+    }
+
     return result;
   }
 }
