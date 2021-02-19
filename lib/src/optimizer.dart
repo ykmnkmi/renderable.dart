@@ -83,144 +83,144 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Assign visitAssign(Assign assign, [Context? context]) {
-    return assign;
+  Assign visitAssign(Assign node, [Context? context]) {
+    return node;
   }
 
   @override
-  AssignBlock visitAssignBlock(AssignBlock assign, [Context? context]) {
-    return assign;
+  AssignBlock visitAssignBlock(AssignBlock node, [Context? context]) {
+    return node;
   }
 
   @override
-  Expression visitAttribute(Attribute attribute, [Context? context]) {
-    attribute.expression = optimize(attribute.expression, context);
-    return constant(attribute, context);
+  Expression visitAttribute(Attribute node, [Context? context]) {
+    node.expression = optimize(node.expression, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitBinary(Binary binary, [Context? context]) {
-    binary.left = optimize(binary.left, context);
-    binary.right = optimize(binary.right, context);
-    return constant(binary, context);
+  Expression visitBinary(Binary node, [Context? context]) {
+    node.left = optimize(node.left, context);
+    node.right = optimize(node.right, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitCall(Call call, [Context? context]) {
-    if (call.expression != null) {
-      call.expression = optimize(call.expression!, context);
+  Expression visitCall(Call node, [Context? context]) {
+    if (node.expression != null) {
+      node.expression = optimize(node.expression!, context);
     }
 
-    if (call.arguments != null) {
-      visitAll(call.arguments!, context);
+    if (node.arguments != null) {
+      visitAll(node.arguments!, context);
     }
 
-    if (call.keywordArguments != null) {
-      visitAll(call.keywordArguments!, context);
+    if (node.keywordArguments != null) {
+      visitAll(node.keywordArguments!, context);
     }
 
-    if (call.dArguments != null) {
-      call.dArguments = optimize(call.dArguments!, context);
+    if (node.dArguments != null) {
+      node.dArguments = optimize(node.dArguments!, context);
     }
 
-    if (call.dKeywordArguments != null) {
-      call.dKeywordArguments = optimize(call.dKeywordArguments!, context);
+    if (node.dKeywordArguments != null) {
+      node.dKeywordArguments = optimize(node.dKeywordArguments!, context);
     }
 
-    return constant(call, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitCompare(Compare compare, [Context? context]) {
-    compare.expression = optimize(compare.expression, context);
-    visitAllNotSafe(compare.operands, context);
-    return constant(compare, context);
+  Expression visitCompare(Compare node, [Context? context]) {
+    node.expression = optimize(node.expression, context);
+    visitAllNotSafe(node.operands, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitConcat(Concat concat, [Context? context]) {
-    visitAllNotSafe(concat.expressions);
-    return constant(concat, context);
+  Expression visitConcat(Concat node, [Context? context]) {
+    visitAllNotSafe(node.expressions);
+    return constant(node, context);
   }
 
   @override
-  Expression visitCondition(Condition condition, [Context? context]) {
-    condition.expression1 = optimize(condition.expression1, context);
+  Expression visitCondition(Condition node, [Context? context]) {
+    node.expression1 = optimize(node.expression1, context);
 
-    if (condition.expression2 != null) {
-      condition.expression2 = optimize(condition.expression2!, context);
+    if (node.expression2 != null) {
+      node.expression2 = optimize(node.expression2!, context);
     }
 
-    condition.test = optimize(condition.test, context);
+    node.test = optimize(node.test, context);
 
-    if (boolean(resolve(condition.test, context))) {
-      return condition.expression1;
+    if (boolean(resolve(node.test, context))) {
+      return node.expression1;
     }
 
-    if (condition.expression2 == null) {
+    if (node.expression2 == null) {
       throw Impossible();
     }
 
-    return condition.expression2!;
+    return node.expression2!;
   }
 
   @override
-  Constant<dynamic> visitConstant(Constant<dynamic> constant, [Context? context]) {
-    return constant;
+  Constant<Object?> visitConstant(Constant<Object?> node, [Context? context]) {
+    return node;
   }
 
   @override
-  Data visitData(Data data, [Context? context]) {
-    return data;
+  Data visitData(Data node, [Context? context]) {
+    return node;
   }
 
   @override
-  Expression visitDictLiteral(DictLiteral dict, [Context? context]) {
-    visitAllNotSafe(dict.pairs, context);
-    return constant(dict, context);
+  Expression visitDictLiteral(DictLiteral node, [Context? context]) {
+    visitAllNotSafe(node.pairs, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitFilter(Filter filter, [Context? context]) {
-    if (filter.name == 'random' || !context!.environment.filters.containsKey(filter.name)) {
+  Expression visitFilter(Filter node, [Context? context]) {
+    if (node.name == 'random' || !context!.environment.filters.containsKey(node.name)) {
       throw Impossible();
     }
 
-    if (filter.expression != null) {
-      filter.expression = optimize(filter.expression!, context);
+    if (node.expression != null) {
+      node.expression = optimize(node.expression!, context);
     }
 
-    if (filter.arguments != null) {
-      visitAll(filter.arguments!, context);
+    if (node.arguments != null) {
+      visitAll(node.arguments!, context);
     }
 
-    if (filter.keywordArguments != null) {
-      visitAll(filter.keywordArguments!, context);
+    if (node.keywordArguments != null) {
+      visitAll(node.keywordArguments!, context);
     }
 
-    if (filter.dArguments != null) {
-      filter.dArguments = optimize(filter.dArguments!, context);
+    if (node.dArguments != null) {
+      node.dArguments = optimize(node.dArguments!, context);
     }
 
-    if (filter.dKeywordArguments != null) {
-      filter.dKeywordArguments = optimize(filter.dKeywordArguments!, context);
+    if (node.dKeywordArguments != null) {
+      node.dKeywordArguments = optimize(node.dKeywordArguments!, context);
     }
 
-    return constant(filter, context);
+    return constant(node, context);
   }
 
   @override
-  Node visitFor(For forNode, [Context? context]) {
-    forNode.iterable = optimizeSafe(forNode.iterable, context);
-    visitAll(forNode.body, context);
-    return forNode;
+  Node visitFor(For node, [Context? context]) {
+    node.iterable = optimizeSafe(node.iterable, context);
+    visitAll(node.body, context);
+    return node;
   }
 
   @override
-  Node visitIf(If ifNode, [Context? context]) {
-    ifNode.test = optimizeSafe(ifNode.test, context);
-    visitAll(ifNode.body, context);
-    var next = ifNode.nextIf;
+  Node visitIf(If node, [Context? context]) {
+    node.test = optimizeSafe(node.test, context);
+    visitAll(node.body, context);
+    var next = node.nextIf;
 
     while (next != null) {
       next.test = optimizeSafe(next.test, context);
@@ -228,125 +228,129 @@ class Optimizer extends Visitor<Context, Node> {
       next = next.nextIf;
     }
 
-    if (ifNode.orElse != null) {
-      visitAll(ifNode.orElse!, context);
+    if (node.orElse != null) {
+      visitAll(node.orElse!, context);
     }
 
-    return ifNode;
+    return node;
   }
 
   @override
-  Expression visitItem(Item item, [Context? context]) {
-    item.key = optimize(item.key, context);
-    item.expression = optimize(item.expression, context);
-    return constant(item, context);
+  Include visitInclude(Include node, [Context? context]) {
+    return node;
   }
 
   @override
-  Keyword visitKeyword(Keyword keyword, [Context? context]) {
-    keyword.value = optimize(keyword.value, context);
-    return keyword;
+  Expression visitItem(Item node, [Context? context]) {
+    node.key = optimize(node.key, context);
+    node.expression = optimize(node.expression, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitListLiteral(ListLiteral list, [Context? context]) {
-    visitAllNotSafe(list.expressions, context);
-    return constant(list, context);
+  Keyword visitKeyword(Keyword node, [Context? context]) {
+    node.value = optimize(node.value, context);
+    return node;
   }
 
   @override
-  Name visitName(Name name, [Context? context]) {
+  Expression visitListLiteral(ListLiteral node, [Context? context]) {
+    visitAllNotSafe(node.expressions, context);
+    return constant(node, context);
+  }
+
+  @override
+  Name visitName(Name node, [Context? context]) {
     throw Impossible();
   }
 
   @override
-  NamespaceReference visitNamespaceReference(NamespaceReference reference, [Context? context]) {
-    return reference;
+  NamespaceReference visitNamespaceReference(NamespaceReference node, [Context? context]) {
+    return node;
   }
 
   @override
-  Operand visitOperand(Operand operand, [Context? context]) {
-    operand.expression = optimize(operand.expression, context);
-    return operand;
+  Operand visitOperand(Operand node, [Context? context]) {
+    node.expression = optimize(node.expression, context);
+    return node;
   }
 
   @override
-  Output visitOutput(Output output, [Context? context]) {
-    visitAll(output.nodes, context);
-    return output;
+  Output visitOutput(Output node, [Context? context]) {
+    visitAll(node.nodes, context);
+    return node;
   }
 
   @override
-  Pair visitPair(Pair pair, [Context? context]) {
-    pair.key = optimize(pair.key, context);
-    pair.value = optimize(pair.value, context);
-    return pair;
+  Pair visitPair(Pair node, [Context? context]) {
+    node.key = optimize(node.key, context);
+    node.value = optimize(node.value, context);
+    return node;
   }
 
   @override
-  Slice visitSlice(Slice slice, [Context? context]) {
-    if (slice.start != null) {
-      slice.start = optimize(slice.start!, context);
+  Slice visitSlice(Slice node, [Context? context]) {
+    if (node.start != null) {
+      node.start = optimize(node.start!, context);
     }
 
-    if (slice.stop != null) {
-      slice.stop = optimize(slice.stop!, context);
+    if (node.stop != null) {
+      node.stop = optimize(node.stop!, context);
     }
 
-    if (slice.step != null) {
-      slice.step = optimize(slice.step!, context);
+    if (node.step != null) {
+      node.step = optimize(node.step!, context);
     }
 
-    return slice;
+    return node;
   }
 
   @override
-  Expression visitTest(Test test, [Context? context]) {
-    if (!context!.environment.tests.containsKey(test.name)) {
+  Expression visitTest(Test node, [Context? context]) {
+    if (!context!.environment.tests.containsKey(node.name)) {
       throw Impossible();
     }
 
-    if (test.expression != null) {
-      test.expression = optimize(test.expression!, context);
+    if (node.expression != null) {
+      node.expression = optimize(node.expression!, context);
     }
 
-    if (test.arguments != null) {
-      visitAll(test.arguments!, context);
+    if (node.arguments != null) {
+      visitAll(node.arguments!, context);
     }
 
-    if (test.keywordArguments != null) {
-      visitAll(test.keywordArguments!, context);
+    if (node.keywordArguments != null) {
+      visitAll(node.keywordArguments!, context);
     }
 
-    if (test.dArguments != null) {
-      test.dArguments = optimize(test.dArguments!, context);
+    if (node.dArguments != null) {
+      node.dArguments = optimize(node.dArguments!, context);
     }
 
-    if (test.dKeywordArguments != null) {
-      test.dKeywordArguments = optimize(test.dKeywordArguments!, context);
+    if (node.dKeywordArguments != null) {
+      node.dKeywordArguments = optimize(node.dKeywordArguments!, context);
     }
 
-    return constant(test, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitTupleLiteral(TupleLiteral tuple, [Context? context]) {
-    visitAllNotSafe(tuple.expressions, context);
-    return constant(tuple, context);
+  Expression visitTupleLiteral(TupleLiteral node, [Context? context]) {
+    visitAllNotSafe(node.expressions, context);
+    return constant(node, context);
   }
 
   @override
-  Expression visitUnary(Unary unary, [Context? context]) {
-    unary.expression = optimize(unary.expression, context);
-    return constant(unary, context);
+  Expression visitUnary(Unary node, [Context? context]) {
+    node.expression = optimize(node.expression, context);
+    return constant(node, context);
   }
 
   @override
-  With visitWith(With wiz, [Context? context]) {
-    // visitAll(wiz.targets, context);
-    visitAll(wiz.values, context);
-    visitAll(wiz.body, context);
-    return wiz;
+  With visitWith(With node, [Context? context]) {
+    visitAll(node.values, context);
+    visitAll(node.body, context);
+    return node;
   }
 
   @protected

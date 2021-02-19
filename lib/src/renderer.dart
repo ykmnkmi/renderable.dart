@@ -197,6 +197,11 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
+  void visitInclude(Include node, [RenderContext? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   void visitOutput(Output output, [RenderContext? context]) {
     context!;
 

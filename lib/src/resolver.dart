@@ -68,27 +68,27 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  void visitAssign(Assign assign, [C? context]) {
+  void visitAssign(Assign node, [C? context]) {
     throw UnimplementedError();
   }
 
   @override
-  void visitAssignBlock(AssignBlock assign, [C? context]) {
+  void visitAssignBlock(AssignBlock node, [C? context]) {
     throw UnimplementedError();
   }
 
   @override
-  Object? visitAttribute(Attribute attribute, [C? context]) {
-    return context!.environment.getAttribute(attribute.expression.accept(this, context)!, attribute.attribute);
+  Object? visitAttribute(Attribute node, [C? context]) {
+    return context!.environment.getAttribute(node.expression.accept(this, context)!, node.attribute);
   }
 
   @override
-  Object? visitBinary(Binary binary, [C? context]) {
-    final dynamic left = binary.left.accept(this, context);
-    final dynamic right = binary.right.accept(this, context);
+  Object? visitBinary(Binary node, [C? context]) {
+    final dynamic left = node.left.accept(this, context);
+    final dynamic right = node.right.accept(this, context);
 
     try {
-      switch (binary.operator) {
+      switch (node.operator) {
         case '**':
           return math.pow(left as num, right as num);
         case '%':
@@ -118,22 +118,22 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitCall(Call call, [C? context]) {
-    dynamic function = call.expression!.accept(this, context)!;
+  Object? visitCall(Call node, [C? context]) {
+    final dynamic function = node.expression!.accept(this, context)!;
 
     Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
       return Function.apply(function.call as Function, positional, named);
     }
 
-    return callable<Object?>(call, context)(callback);
+    return callable<Object?>(node, context)(callback);
   }
 
   @override
-  Object? visitCompare(Compare compare, [C? context]) {
-    var left = compare.expression.accept(this, context);
+  Object? visitCompare(Compare node, [C? context]) {
+    var left = node.expression.accept(this, context);
     var result = true; // is needed?
 
-    for (final operand in compare.operands) {
+    for (final operand in node.operands) {
       final right = operand.expression.accept(this, context);
 
       switch (operand.operator) {
@@ -174,10 +174,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  String visitConcat(Concat concat, [C? context]) {
+  String visitConcat(Concat node, [C? context]) {
     final buffer = StringBuffer();
 
-    for (final expression in concat.expressions) {
+    for (final expression in node.expressions) {
       buffer.write(expression.accept(this, context));
     }
 
@@ -185,12 +185,12 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitCondition(Condition condition, [C? context]) {
-    if (boolean(condition.test.accept(this, context))) {
-      return condition.expression1.accept(this, context);
+  Object? visitCondition(Condition node, [C? context]) {
+    if (boolean(node.test.accept(this, context))) {
+      return node.expression1.accept(this, context);
     }
 
-    final expression = condition.expression2;
+    final expression = node.expression2;
 
     if (expression != null) {
       return expression.accept(this, context);
@@ -200,20 +200,20 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitConstant(Constant<dynamic> constant, [C? context]) {
-    return constant.value;
+  Object? visitConstant(Constant<Object?> node, [C? context]) {
+    return node.value;
   }
 
   @override
-  String visitData(Data data, [C? context]) {
-    return data.data;
+  String visitData(Data node, [C? context]) {
+    return node.data;
   }
 
   @override
-  Map<Object?, Object?> visitDictLiteral(DictLiteral dict, [C? context]) {
+  Map<Object?, Object?> visitDictLiteral(DictLiteral node, [C? context]) {
     final result = <Object?, Object?>{};
 
-    for (final pair in dict.pairs) {
+    for (final pair in node.pairs) {
       result[pair.key.accept(this, context)] = pair.value.accept(this, context);
     }
 
@@ -221,85 +221,90 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitFilter(Filter filter, [C? context]) {
+  Object? visitFilter(Filter node, [C? context]) {
     Object? value;
 
-    if (filter.expression != null) {
-      value = filter.expression!.accept(this, context);
+    if (node.expression != null) {
+      value = node.expression!.accept(this, context);
     }
 
-    return callFilter(filter, value, context);
+    return callFilter(node, value, context);
   }
 
   @override
-  void visitFor(For forNode, [C? context]) {
+  void visitFor(For node, [C? context]) {
     throw UnimplementedError();
   }
 
   @override
-  void visitIf(If ifNode, [C? context]) {
+  void visitIf(If node, [C? context]) {
     throw UnimplementedError();
   }
 
   @override
-  Object? visitItem(Item item, [C? context]) {
-    return context!.environment.getItem(item.expression.accept(this, context)!, item.key.accept(this, context));
+  void visitInclude(Include node, [C? context]) {
+    throw UnimplementedError();
   }
 
   @override
-  MapEntry<Symbol, Object?> visitKeyword(Keyword keyword, [C? context]) {
-    return MapEntry<Symbol, Object?>(Symbol(keyword.key), keyword.value.accept(this, context));
+  Object? visitItem(Item node, [C? context]) {
+    return context!.environment.getItem(node.expression.accept(this, context)!, node.key.accept(this, context));
   }
 
   @override
-  List<Object?> visitListLiteral(ListLiteral list, [C? context]) {
+  MapEntry<Symbol, Object?> visitKeyword(Keyword node, [C? context]) {
+    return MapEntry<Symbol, Object?>(Symbol(node.key), node.value.accept(this, context));
+  }
+
+  @override
+  List<Object?> visitListLiteral(ListLiteral node, [C? context]) {
     final result = <Object?>[];
 
-    for (final node in list.expressions) {
-      result.add(node.accept(this, context));
+    for (final item in node.expressions) {
+      result.add(item.accept(this, context));
     }
 
     return result;
   }
 
   @override
-  Object? visitName(Name name, [C? context]) {
-    switch (name.context) {
+  Object? visitName(Name node, [C? context]) {
+    switch (node.context) {
       case AssignContext.load:
-        return context!.get(name.name);
+        return context!.get(node.name);
       case AssignContext.store:
       case AssignContext.parameter:
-        return name.name;
+        return node.name;
       default:
         throw UnimplementedError();
     }
   }
 
   @override
-  Object? visitNamespaceReference(NamespaceReference reference, [C? context]) {
-    return NSRef(reference.name, reference.attribute);
+  Object? visitNamespaceReference(NamespaceReference node, [C? context]) {
+    return NSRef(node.name, node.attribute);
   }
 
   @override
-  Object? visitOperand(Operand oprand, [C? context]) {
-    return <dynamic>[oprand.operator, oprand.expression.accept(this, context)];
+  Object? visitOperand(Operand node, [C? context]) {
+    return <Object?>[node.operator, node.expression.accept(this, context)];
   }
 
   @override
-  void visitOutput(Output output, [C? context]) {
+  void visitOutput(Output node, [C? context]) {
     throw UnimplementedError();
   }
 
   @override
-  MapEntry<Object?, Object?> visitPair(Pair pair, [C? context]) {
-    return MapEntry<Object?, Object?>(pair.key.accept(this, context), pair.value.accept(this, context));
+  MapEntry<Object?, Object?> visitPair(Pair node, [C? context]) {
+    return MapEntry<Object?, Object?>(node.key.accept(this, context), node.value.accept(this, context));
   }
 
   @override
-  Indices visitSlice(Slice slice, [C? context]) {
-    final sliceStart = slice.start?.accept(this, context) as int?;
-    final sliceStop = slice.stop?.accept(this, context) as int?;
-    final sliceStep = slice.step?.accept(this, context) as int?;
+  Indices visitSlice(Slice node, [C? context]) {
+    final sliceStart = node.start?.accept(this, context) as int?;
+    final sliceStop = node.stop?.accept(this, context) as int?;
+    final sliceStep = node.step?.accept(this, context) as int?;
     return (int stopOrStart, [int? stop, int? step]) {
       if (sliceStep == null) {
         step = 1;
@@ -328,32 +333,32 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  bool visitTest(Test test, [C? context]) {
+  bool visitTest(Test node, [C? context]) {
     Object? value;
 
-    if (test.expression != null) {
-      value = test.expression!.accept(this, context);
+    if (node.expression != null) {
+      value = node.expression!.accept(this, context);
     }
 
-    return callTest(test, value, context);
+    return callTest(node, value, context);
   }
 
   @override
-  List<Object?> visitTupleLiteral(TupleLiteral tuple, [C? context]) {
-    switch (tuple.context) {
+  List<Object?> visitTupleLiteral(TupleLiteral node, [C? context]) {
+    switch (node.context) {
       case AssignContext.load:
         final result = <Object?>[];
 
-        for (final node in tuple.expressions) {
-          result.add(node.accept(this, context));
+        for (final item in node.expressions) {
+          result.add(item.accept(this, context));
         }
 
         return result;
       case AssignContext.store:
         final result = <String>[];
 
-        for (final node in tuple.expressions.cast<Name>()) {
-          result.add(node.name);
+        for (final item in node.expressions.cast<Name>()) {
+          result.add(item.name);
         }
 
         return result;
@@ -363,10 +368,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitUnary(Unary unaru, [C? context]) {
-    final dynamic value = unaru.expression.accept(this, context);
+  Object? visitUnary(Unary node, [C? context]) {
+    final dynamic value = node.expression.accept(this, context);
 
-    switch (unaru.operator) {
+    switch (node.operator) {
       case '+':
         // how i should implement this?
         return value;
@@ -378,7 +383,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  void visitWith(With wiz, [C? context]) {
+  void visitWith(With node, [C? context]) {
     throw UnimplementedError();
   }
 

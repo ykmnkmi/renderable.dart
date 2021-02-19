@@ -2,6 +2,8 @@ import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
 import 'package:meta/meta.dart';
+import 'package:renderable/jinja.dart';
+import 'package:renderable/src/loaders.dart';
 
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
@@ -42,7 +44,8 @@ class Environment {
     this.undefined = defaults.undefined,
     Function finalize = defaults.finalize,
     this.autoEscape = false,
-    Map<String, dynamic>? globals,
+    this.loader,
+    Map<String, Object?>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
     Map<String, Function>? tests,
@@ -55,7 +58,7 @@ class Environment {
             : finalize is ContextFinalizer
                 ? finalize
                 : ((context, value) => finalize(value)),
-        globals = Map<String, dynamic>.of(defaults.globals),
+        globals = Map<String, Object?>.of(defaults.globals),
         filters = Map<String, Function>.of(defaults.filters),
         environmentFilters = HashSet<String>.of(defaults.environmentFilters),
         tests = Map<String, Function>.of(defaults.tests),
@@ -114,7 +117,9 @@ class Environment {
 
   final bool autoEscape;
 
-  final Map<String, dynamic> globals;
+  final Loader? loader;
+
+  final Map<String, Object?> globals;
 
   final Map<String, Function> filters;
 
@@ -145,6 +150,7 @@ class Environment {
     UndefinedFactory? undefined,
     Function? finalize,
     bool? autoEscape,
+    Loader? loader,
     Map<String, dynamic>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
@@ -169,6 +175,7 @@ class Environment {
       undefined: undefined ?? this.undefined,
       finalize: finalize ?? this.finalize,
       autoEscape: autoEscape ?? this.autoEscape,
+      loader: loader ?? this.loader,
       globals: globals ?? this.globals,
       filters: filters ?? this.filters,
       environmentFilters: environmentFilters ?? this.environmentFilters,
@@ -178,26 +185,14 @@ class Environment {
     );
   }
 
-  Object? getAttribute(Object? object, String field) {
-    try {
-      return getField(object, field);
-    } on NoSuchMethodError {
-      try {
-        return (object as dynamic)[field];
-      } on Exception {
-        return undefined(object: object, name: field);
-      }
-    }
-  }
-
   Object? getItem(Object object, Object? key) {
     if (key is Indices) {
-      if (object is List<Object?>) {
-        return slice(object, key);
-      }
-
       if (object is String) {
         return sliceString(object, key);
+      }
+
+      if (object is List<Object?>) {
+        return slice(object, key);
       }
 
       if (object is Iterable<Object?>) {
@@ -205,7 +200,7 @@ class Environment {
       }
     }
 
-    if (key is int && object is List<dynamic>) {
+    if (key is int && object is List<Object?>) {
       if (key < 0) {
         return object[key + object.length];
       }
@@ -228,23 +223,19 @@ class Environment {
     }
   }
 
-  Template fromString(String source, {String? path}) {
-    final nodes = Parser(this).parse(source, path: path);
-
-    if (optimized) {
-      optimizer.visitAll(nodes, Context(this));
+  Object? getAttribute(Object? object, String field) {
+    try {
+      return getField(object, field);
+    } on NoSuchMethodError {
+      try {
+        return (object as dynamic)[field];
+      } on Exception {
+        return undefined(object: object, name: field);
+      }
     }
-
-    final template = Template.parsed(this, nodes, path: path);
-
-    if (path != null) {
-      templates[path] = template;
-    }
-
-    return template;
   }
 
-  dynamic callFilter(String name, dynamic value, {List<dynamic>? positional, Map<Symbol, dynamic>? named}) {
+  Object? callFilter(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named}) {
     Function filter;
 
     if (filters.containsKey(name)) {
@@ -254,18 +245,18 @@ class Environment {
     }
 
     if (environmentFilters.contains(name)) {
-      positional ??= <dynamic>[];
+      positional ??= <Object?>[];
       positional.insert(0, this);
       positional.insert(1, value);
     } else {
-      positional ??= <dynamic>[];
+      positional ??= <Object?>[];
       positional.insert(0, value);
     }
 
     return Function.apply(filter, positional, named);
   }
 
-  bool callTest(String name, dynamic value, {List<dynamic>? positional, Map<Symbol, dynamic>? named}) {
+  bool callTest(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named}) {
     Function test;
 
     if (tests.containsKey(name)) {
@@ -274,10 +265,51 @@ class Environment {
       throw TemplateRuntimeError('test not found: $name');
     }
 
-    positional ??= <dynamic>[];
+    positional ??= <Object?>[];
     positional.insert(0, value);
 
     return Function.apply(test, positional, named) as bool;
+  }
+
+  List<Node> parse(String source, {String? path}) {
+    final nodes = Parser(this).parse(source, path: path);
+
+    if (optimized) {
+      optimizer.visitAll(nodes, Context(this));
+    }
+
+    return nodes;
+  }
+
+  @protected
+  Template loadTemplate(String name) {
+    if (loader == null) {
+      throw UnsupportedError('no loader for this environment specified');
+    }
+
+    if (templates.containsKey(name)) {
+      return templates[name]!;
+    }
+
+    return templates[name] = loader!.load(this, name);
+  }
+
+  Template getTemplate(Object? name) {
+    if (name is Template) {
+      return name;
+    }
+
+    if (name is! String) {
+      throw Exception();
+    }
+
+    return loadTemplate(name);
+  }
+
+  Template fromString(String source, {String? path}) {
+    final nodes = parse(source, path: path);
+    final template = Template.parsed(this, nodes, path: path);
+    return template;
   }
 }
 

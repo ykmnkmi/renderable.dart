@@ -3,8 +3,8 @@ import 'nodes.dart';
 abstract class Visitor<C, R> {
   const Visitor();
 
-  R visitAdd(Add add, [C? context]) {
-    return visitBinary(add, context);
+  R visitAdd(Add node, [C? context]) {
+    return visitBinary(node, context);
   }
 
   void visitAll(List<Node> nodes, [C? context]) {
@@ -13,101 +13,103 @@ abstract class Visitor<C, R> {
     }
   }
 
-  R visitAnd(And and, [C? context]) {
-    return visitBinary(and, context);
+  R visitAnd(And node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitAssign(Assign assign, [C? context]);
+  R visitAssign(Assign node, [C? context]);
 
-  R visitAssignBlock(AssignBlock assign, [C? context]);
+  R visitAssignBlock(AssignBlock node, [C? context]);
 
-  R visitAttribute(Attribute attribute, [C? context]);
+  R visitAttribute(Attribute node, [C? context]);
 
-  R visitBinary(Binary binary, [C? context]);
+  R visitBinary(Binary node, [C? context]);
 
-  R visitCall(Call call, [C? context]);
+  R visitCall(Call node, [C? context]);
 
-  R visitCompare(Compare compare, [C? context]);
+  R visitCompare(Compare node, [C? context]);
 
-  R visitConcat(Concat concat, [C? context]);
+  R visitConcat(Concat node, [C? context]);
 
-  R visitCondition(Condition condition, [C? context]);
+  R visitCondition(Condition node, [C? context]);
 
-  R visitConstant(Constant<Object?> constant, [C? context]);
+  R visitConstant(Constant<Object?> node, [C? context]);
 
-  R visitData(Data data, [C? context]);
+  R visitData(Data node, [C? context]);
 
-  R visitDictLiteral(DictLiteral dict, [C? context]);
+  R visitDictLiteral(DictLiteral node, [C? context]);
 
-  R visitDiv(Div div, [C? context]) {
-    return visitBinary(div, context);
+  R visitDiv(Div node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitFilter(Filter filter, [C? context]);
+  R visitFilter(Filter node, [C? context]);
 
-  R visitFloorDiv(FloorDiv floorDiv, [C? context]) {
-    return visitBinary(floorDiv, context);
+  R visitFloorDiv(FloorDiv node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitFor(For forNode, [C? context]);
+  R visitFor(For node, [C? context]);
 
-  R visitIf(If ifNode, [C? context]);
+  R visitIf(If node, [C? context]);
 
-  R visitItem(Item item, [C? context]);
+  R visitInclude(Include node, [C? context]);
 
-  R visitKeyword(Keyword keyword, [C? context]);
+  R visitItem(Item node, [C? context]);
 
-  R visitListLiteral(ListLiteral list, [C? context]);
+  R visitKeyword(Keyword node, [C? context]);
 
-  R visitMod(Mod mod, [C? context]) {
-    return visitBinary(mod, context);
+  R visitListLiteral(ListLiteral node, [C? context]);
+
+  R visitMod(Mod node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitMul(Mul mul, [C? context]) {
-    return visitBinary(mul, context);
+  R visitMul(Mul node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitName(Name name, [C? context]);
+  R visitName(Name node, [C? context]);
 
-  R visitNamespaceReference(NamespaceReference reference, [C? context]);
+  R visitNamespaceReference(NamespaceReference node, [C? context]);
 
-  R visitNeg(Neg neg, [C? context]) {
-    return visitUnary(neg, context);
+  R visitNeg(Neg node, [C? context]) {
+    return visitUnary(node, context);
   }
 
-  R visitNot(Not not, [C? context]) {
-    return visitUnary(not, context);
+  R visitNot(Not node, [C? context]) {
+    return visitUnary(node, context);
   }
 
-  R visitOperand(Operand operand, [C? context]);
+  R visitOperand(Operand node, [C? context]);
 
-  R visitOr(Or or, [C? context]) {
-    return visitBinary(or, context);
+  R visitOr(Or node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitOutput(Output output, [C? context]);
+  R visitOutput(Output node, [C? context]);
 
-  R visitPair(Pair pair, [C? context]);
+  R visitPair(Pair node, [C? context]);
 
-  R visitPos(Pos pos, [C? context]) {
-    return visitUnary(pos, context);
+  R visitPos(Pos node, [C? context]) {
+    return visitUnary(node, context);
   }
 
-  R visitPow(Pow pow, [C? context]) {
-    return visitBinary(pow, context);
+  R visitPow(Pow node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitSlice(Slice slice, [C? context]);
+  R visitSlice(Slice node, [C? context]);
 
-  R visitSub(Sub sub, [C? context]) {
-    return visitBinary(sub, context);
+  R visitSub(Sub node, [C? context]) {
+    return visitBinary(node, context);
   }
 
-  R visitTest(Test test, [C? context]);
+  R visitTest(Test node, [C? context]);
 
-  R visitTupleLiteral(TupleLiteral tuple, [C? context]);
+  R visitTupleLiteral(TupleLiteral node, [C? context]);
 
-  R visitUnary(Unary unary, [C? context]);
+  R visitUnary(Unary node, [C? context]);
 
-  R visitWith(With wiz, [C? context]);
+  R visitWith(With node, [C? context]);
 }

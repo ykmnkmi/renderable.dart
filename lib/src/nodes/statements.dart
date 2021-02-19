@@ -197,3 +197,20 @@ class With extends Statement {
     return 'With($targets, $values, $body)';
   }
 }
+
+class Include extends Statement {
+  Include();
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitInclude(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {}
+
+  @override
+  String toString() {
+    return 'Include()';
+  }
+}
