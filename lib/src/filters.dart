@@ -1,3 +1,6 @@
+// TODO: test filters with Markup
+library filters;
+
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -8,17 +11,6 @@ import 'exceptions.dart';
 import 'markup.dart';
 import 'runtime.dart';
 import 'utils.dart';
-
-const List<List<String>> suffixes = [
-  [' KiB', ' kB'],
-  [' MiB', ' MB'],
-  [' GiB', ' GB'],
-  [' TiB', ' TB'],
-  [' PiB', ' PB'],
-  [' EiB', ' EB'],
-  [' ZiB', ' ZB'],
-  [' YiB', ' YB'],
-];
 
 List<String> prepareAttributeParts(String attribute) {
   return attribute.split('.');
@@ -119,6 +111,17 @@ Markup doEscape(dynamic value) {
 }
 
 String doFileSizeFormat(dynamic value, [bool binary = false]) {
+  const suffixes = <List<String>>[
+    [' KiB', ' kB'],
+    [' MiB', ' MB'],
+    [' GiB', ' GB'],
+    [' TiB', ' TB'],
+    [' PiB', ' PB'],
+    [' EiB', ' EB'],
+    [' ZiB', ' ZB'],
+    [' YiB', ' YB'],
+  ];
+
   final base = binary ? 1024 : 1000;
 
   double bytes;
@@ -297,7 +300,12 @@ String doUpper(String value) {
   return value.toUpperCase();
 }
 
-String doWordWrap(Environment environment, String string, {int width = 79, bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
+// TODO: *****
+int doWordCount(String string) {
+  return RegExp(r'\w+').allMatches(string).length;
+}
+
+String doWordWrap(Environment environment, String string, int width, {bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
   final wrapper = TextWrapper(width: width, expandTabs: false, replaceWhitespace: false, breakLongWords: breakLongWords, breakOnHyphens: breakOnHyphens);
   wrapString ??= environment.newLine;
   return const LineSplitter().convert(string).map<String>((line) => wrapper.wrap(line).join(wrapString!)).join(wrapString);
@@ -333,6 +341,7 @@ const Map<String, Function> filters = {
   'sum': doSum,
   'trim': doTrim,
   'upper': doUpper,
+  'wordcount': doWordCount,
   'wordwrap': doWordWrap,
 
   // 'dictsort': doDictSort,
@@ -356,8 +365,7 @@ const Map<String, Function> filters = {
   // 'unique': doUnique,
   // 'urlencode': doURLEncode,
   // 'urlize': doURLize,
-  // 'wordcount': doWordCount,
   // 'xmlattr': doXMLAttr,
 };
 
-const Set<String> environmentFilters = {'attr', 'join', 'random', 'sum'};
+const Set<String> environmentFilters = {'attr', 'join', 'random', 'sum', 'wordwrap'};

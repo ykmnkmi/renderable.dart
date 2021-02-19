@@ -279,9 +279,11 @@ void main() {
       throw UnimplementedError('urlize target parameter');
     }, skip: true);
 
-    test('word count', () {
-      throw UnimplementedError('word count');
-    }, skip: true);
+    test('wordcount', () {
+      final environment = Environment();
+      final template = environment.fromString('{{ "foo bar baz" | wordcount }}');
+      expect(template.render(), equals('3'));
+    });
 
     test('block', () {
       throw UnimplementedError('block');
@@ -305,6 +307,12 @@ void main() {
       expect(template.render(), equals('<div>foo</div>'));
       template = environment.fromString('{{ "<div>foo</div>" }}');
       expect(template.render(), equals('&lt;div&gt;foo&lt;/div&gt;'));
+    });
+
+    test('wordwrap', () {
+      final environment = Environment(newLine: '\n');
+      final template = environment.fromString('{{ string | wordwrap(20) }}');
+      expect(template.render({'string': 'Hello!\nThis is Jinja saying something.'}), equals('Hello!\nThis is Jinja saying\nsomething.'));
     });
   });
 }
