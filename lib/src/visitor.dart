@@ -1,3 +1,4 @@
+import 'enirvonment.dart';
 import 'nodes.dart';
 
 abstract class Visitor<C, R> {
@@ -104,6 +105,8 @@ abstract class Visitor<C, R> {
   R visitSub(Sub node, [C? context]) {
     return visitBinary(node, context);
   }
+
+  R visitTemplate(Template template, [C? context]);
 
   R visitTest(Test node, [C? context]);
 

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
 
+import 'enirvonment.dart';
 import 'nodes.dart';
 import 'runtime.dart';
 import 'tests.dart' as tests;
@@ -330,6 +331,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
       return range(start, stop, step);
     };
+  }
+
+  @override
+  void visitTemplate(Template node, [C? context]) {
+    throw UnimplementedError();
   }
 
   @override

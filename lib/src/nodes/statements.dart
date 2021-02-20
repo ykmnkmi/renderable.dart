@@ -199,7 +199,13 @@ class With extends Statement {
 }
 
 class Include extends Statement {
-  Include();
+  Include(this.template, {this.ignoreMissing = false, this.withContext = true});
+
+  Expression template;
+
+  bool ignoreMissing;
+
+  bool withContext;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -211,6 +217,6 @@ class Include extends Statement {
 
   @override
   String toString() {
-    return 'Include()';
+    return 'Include($template${ignoreMissing ? ', ignoreMissing' : ''}${withContext ? ', withContext' : ''})';
   }
 }

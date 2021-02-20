@@ -1,3 +1,4 @@
+import 'src/enirvonment.dart';
 import 'src/nodes.dart';
 import 'src/visitor.dart';
 
@@ -153,6 +154,12 @@ class Compiler extends Visitor<Frame, String> {
   @override
   String visitSlice(Slice node, [Frame? context]) {
     // TODO: implement visitSlice
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitTemplate(Template node, [Frame? context]) {
+    // TODO: implement visitTest
     throw UnimplementedError();
   }
 

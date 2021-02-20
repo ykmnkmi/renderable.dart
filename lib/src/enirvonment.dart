@@ -2,11 +2,10 @@ import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
 import 'package:meta/meta.dart';
-import 'package:renderable/jinja.dart';
-import 'package:renderable/src/loaders.dart';
 
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
+import 'loaders.dart';
 import 'nodes.dart';
 import 'optimizer.dart';
 import 'parser.dart';
@@ -14,9 +13,12 @@ import 'renderable.dart';
 import 'renderer.dart';
 import 'runtime.dart';
 import 'utils.dart';
+import 'visitor.dart';
 
 typedef Finalizer = Object? Function(Object? value);
+
 typedef ContextFinalizer = Object? Function(Context context, Object? value);
+
 typedef EnvironmentFinalizer = Object? Function(Environment environment, Object? value);
 
 typedef Caller = Object? Function(Object object, List<Object?> positional, [Map<Symbol, Object?> named]);
@@ -272,13 +274,7 @@ class Environment {
   }
 
   List<Node> parse(String source, {String? path}) {
-    final nodes = Parser(this).parse(source, path: path);
-
-    if (optimized) {
-      optimizer.visitAll(nodes, Context(this));
-    }
-
-    return nodes;
+    return Parser(this).parse(source, path: path);
   }
 
   @protected
@@ -300,6 +296,7 @@ class Environment {
     }
 
     if (name is! String) {
+      // TODO: update error
       throw Exception();
     }
 
@@ -309,11 +306,16 @@ class Environment {
   Template fromString(String source, {String? path}) {
     final nodes = parse(source, path: path);
     final template = Template.parsed(this, nodes, path: path);
+
+    if (optimized) {
+      template.accept(optimizer, Context(this));
+    }
+
     return template;
   }
 }
 
-class Template implements Renderable {
+class Template extends Node implements Renderable {
   factory Template(
     String source, {
     String? path,
@@ -402,9 +404,8 @@ class Template implements Renderable {
     this.environment,
     List<Node> nodes, {
     String? path,
-    List<NodeVisitor> visitors = const <NodeVisitor>[namespace],
-  })  : renderer = Renderer(environment),
-        nodes = List<Node>.of(nodes),
+    List<NodeVisitor> visitors = const <NodeVisitor>[Namespace.prepare],
+  })  : nodes = List<Node>.of(nodes),
         path = path {
     for (final visitor in visitors) {
       for (final node in nodes) {
@@ -419,47 +420,24 @@ class Template implements Renderable {
 
   final Environment environment;
 
-  final Renderer renderer;
-
   final List<Node> nodes;
 
   final String? path;
 
   @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitTemplate(this, context);
+  }
+
+  @override
   String render([Map<String, Object?>? data]) {
-    return renderer.render(nodes, data);
-  }
-}
-
-void namespace(Node node) {
-  if (node is Call) {
-    if (node.expression is Name && (node.expression as Name).name == 'namespace') {
-      final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
-      node.arguments = null;
-
-      if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
-        final dict = DictLiteral(node.keywordArguments!.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
-        node.keywordArguments = null;
-        arguments.add(dict);
-      }
-
-      if (node.dArguments != null) {
-        arguments.add(node.dArguments!);
-        node.dArguments = null;
-      }
-
-      if (node.dKeywordArguments != null) {
-        arguments.add(node.dKeywordArguments!);
-        node.dKeywordArguments = null;
-      }
-
-      if (arguments.isNotEmpty) {
-        node.arguments = <Expression>[ListLiteral(arguments)];
-      }
-
-      return;
-    }
+    final context = StringBufferRenderContext(environment, data);
+    accept(renderer, context);
+    return context.buffer.toString();
   }
 
-  node.visitChildNodes(namespace);
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    nodes.forEach(visitor);
+  }
 }

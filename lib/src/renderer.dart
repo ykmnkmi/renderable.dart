@@ -8,36 +8,50 @@ import 'resolver.dart';
 import 'runtime.dart';
 import 'utils.dart';
 
-class RenderContext extends Context {
-  RenderContext.from(Environment environment, List<Map<String, Object?>> contexts, this.sink) : super.from(environment, contexts);
+abstract class RenderContext extends Context {
+  RenderContext.from(Context context) : super.from(context);
 
-  RenderContext(Environment environment, this.sink, [Map<String, Object?>? data]) : super(environment, data);
+  RenderContext(Environment environment, [Map<String, Object?>? data]) : super(environment, data);
 
-  final StringSink sink;
+  RenderContext derived();
 
-  RenderContext derived({Environment? environment, List<Map<String, Object?>>? contexts, StringSink? sink}) {
-    return RenderContext.from(environment ?? this.environment, contexts ?? this.contexts, sink ?? this.sink);
+  void write(Object? object);
+
+  void writeFinalized(Object? object);
+}
+
+class StringBufferRenderContext extends RenderContext {
+  StringBufferRenderContext(Environment environment, [Map<String, Object?>? data])
+      : buffer = StringBuffer(),
+        super(environment, data);
+
+  StringBufferRenderContext.from(Context context)
+      : buffer = StringBuffer(),
+        super.from(context);
+
+  final StringBuffer buffer;
+
+  @override
+  RenderContext derived() {
+    return StringBufferRenderContext.from(this);
   }
 
+  @override
   void write(Object? object) {
-    sink.write(object);
+    buffer.write(object);
   }
 
+  @override
   void writeFinalized(Object? object) {
-    sink.write(environment.finalize(this, object));
+    buffer.write(environment.finalize(this, object));
   }
 }
 
+const Renderer renderer = Renderer();
+
 class Renderer extends ExpressionResolver<RenderContext> {
-  const Renderer(this.environment);
-
-  final Environment environment;
-
-  String render(List<Node> nodes, [Map<String, Object?>? data]) {
-    final buffer = StringBuffer();
-    visitAll(nodes, RenderContext(environment, buffer, data));
-    return '$buffer';
-  }
+  @literal
+  const Renderer();
 
   @override
   void visitAll(List<Node> nodes, [RenderContext? context]) {
@@ -54,46 +68,46 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitAssignBlock(AssignBlock assign, [RenderContext? context]) {
+  void visitAssignBlock(AssignBlock node, [RenderContext? context]) {
     context!;
 
-    final target = assign.target.accept(this, context);
-    final buffer = StringBuffer();
-    visitAll(assign.body, context.derived(sink: buffer));
-    dynamic value = '$buffer';
+    final target = node.target.accept(this, context);
+    final derived = StringBufferRenderContext.from(context);
+    visitAll(node.body, derived);
+    Object? value = derived.buffer.toString();
 
-    if (assign.filters == null || assign.filters!.isEmpty) {
-      assignTargetsToContext(context, target, context.environment.autoEscape ? Markup('$value') : value);
+    if (node.filters == null || node.filters!.isEmpty) {
+      assignTargetsToContext(context, target, context.environment.autoEscape ? Markup(value.toString()) : value);
       return;
     }
 
-    final filters = assign.filters!;
+    final filters = node.filters!;
 
     for (final filter in filters) {
       value = callFilter(filter, value, context);
     }
 
-    assignTargetsToContext(context, target, context.environment.autoEscape ? Markup('$value') : value);
+    assignTargetsToContext(context, target, context.environment.autoEscape ? Markup(value.toString()) : value);
   }
 
   @override
-  void visitFor(For forNode, [RenderContext? context]) {
+  void visitFor(For node, [RenderContext? context]) {
     context!;
 
-    final target = forNode.target.accept(this, context);
+    final target = node.target.accept(this, context);
 
-    if (forNode.hasLoop && (target == 'loop' || (target is List<String> && target.contains('loop')) || (target is NSRef && target.name == 'loop'))) {
+    if (node.hasLoop && (target == 'loop' || (target is List<String> && target.contains('loop')) || (target is NSRef && target.name == 'loop'))) {
       throw StateError('can\'t assign to special loop variable in for-loop target');
     }
 
-    final iterable = forNode.iterable.accept(this, context);
-    final orElse = forNode.orElse;
+    final iterable = node.iterable.accept(this, context);
+    final orElse = node.orElse;
 
     if (iterable == null) {
       throw TypeError();
     }
 
-    void loop(dynamic iterable) {
+    void loop(Object? iterable) {
       var values = list(iterable);
 
       if (values.isEmpty) {
@@ -104,12 +118,12 @@ class Renderer extends ExpressionResolver<RenderContext> {
         return;
       }
 
-      Map<String, dynamic> Function(List<dynamic>, int) unpack;
+      Map<String, Object?> Function(List<Object?>, int) unpack;
 
-      if (forNode.hasLoop) {
-        unpack = (List<dynamic> values, int index) {
+      if (node.hasLoop) {
+        unpack = (List<Object?> values, int index) {
           final data = getDataForTargets(target, values[index]);
-          dynamic previous, next;
+          Object? previous, next;
 
           if (index > 0) {
             previous = values[index - 1];
@@ -123,7 +137,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
             next = context.environment.undefined();
           }
 
-          bool changed(dynamic item) {
+          bool changed(Object? item) {
             if (index == 0) {
               return true;
             }
@@ -139,12 +153,12 @@ class Renderer extends ExpressionResolver<RenderContext> {
           return data;
         };
       } else {
-        unpack = (List<dynamic> values, int index) => getDataForTargets(target, values[index]);
+        unpack = (List<Object?> values, int index) => getDataForTargets(target, values[index]);
       }
 
-      if (forNode.test != null) {
-        final test = forNode.test!;
-        final filtered = <dynamic>[];
+      if (node.test != null) {
+        final test = node.test!;
+        final filtered = <Object?>[];
 
         for (var i = 0; i < values.length; i += 1) {
           final data = unpack(values, i);
@@ -163,7 +177,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
       for (var i = 0; i < values.length; i += 1) {
         final data = unpack(values, i);
         context.push(data);
-        visitAll(forNode.body, context);
+        visitAll(node.body, context);
         context.pop();
       }
     }
@@ -172,15 +186,15 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitIf(If ifNode, [RenderContext? context]) {
+  void visitIf(If node, [RenderContext? context]) {
     context!;
 
-    if (boolean(ifNode.test.accept(this, context))) {
-      visitAll(ifNode.body, context);
+    if (boolean(node.test.accept(this, context))) {
+      visitAll(node.body, context);
       return;
     }
 
-    var next = ifNode.nextIf;
+    var next = node.nextIf;
 
     while (next != null) {
       if (boolean(next.test.accept(this, context))) {
@@ -191,28 +205,41 @@ class Renderer extends ExpressionResolver<RenderContext> {
       next = next.nextIf;
     }
 
-    if (ifNode.orElse != null) {
-      visitAll(ifNode.orElse!, context);
+    if (node.orElse != null) {
+      visitAll(node.orElse!, context);
     }
   }
 
   @override
   void visitInclude(Include node, [RenderContext? context]) {
-    throw UnimplementedError();
+    context!;
+
+    var template = node.template.accept(this);
+
+    if (template is String) {
+      template = context.environment.getTemplate(template);
+    }
+
+    if (template is Template) {
+      template.accept(this, context);
+    } else if (!node.ignoreMissing) {
+      // TODO: update error
+      throw Exception();
+    }
   }
 
   @override
-  void visitOutput(Output output, [RenderContext? context]) {
+  void visitOutput(Output node, [RenderContext? context]) {
     context!;
 
-    for (final node in output.nodes) {
-      if (node is Data) {
-        context.write(node.accept(this, context));
+    for (final item in node.nodes) {
+      if (item is Data) {
+        context.write(item.accept(this, context));
       } else {
-        var value = node.accept(this, context);
+        var value = item.accept(this, context);
 
         if (context.environment.autoEscape && value is! Markup) {
-          value = Markup.escape('$value');
+          value = Markup.escape(value.toString());
         }
 
         context.writeFinalized(value);
@@ -221,14 +248,19 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitWith(With wiz, [RenderContext? context]) {
+  void visitTemplate(Template node, [RenderContext? context]) {
+    visitAll(node.nodes, context);
+  }
+
+  @override
+  void visitWith(With node, [RenderContext? context]) {
     context!;
 
-    final targets = wiz.targets.map((target) => target.accept(this, context)).toList();
-    final values = wiz.values.map((value) => value.accept(this, context)).toList();
+    final targets = node.targets.map((target) => target.accept(this, context)).toList();
+    final values = node.values.map((value) => value.accept(this, context)).toList();
 
     context.push(getDataForTargets(targets, values));
-    visitAll(wiz.body, context);
+    visitAll(node.body, context);
     context.pop();
   }
 
@@ -282,14 +314,14 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @protected
-  static Map<String, dynamic> getDataForTargets(dynamic target, dynamic current) {
+  static Map<String, Object?> getDataForTargets(Object? target, Object? current) {
     if (target is String) {
-      return <String, dynamic>{target: current};
+      return <String, Object?>{target: current};
     }
 
     if (target is List) {
       final names = target.cast<String>();
-      List<dynamic> list;
+      List<Object?> list;
 
       if (current is List) {
         list = current;
@@ -309,7 +341,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
         throw StateError('too many values to unpack (expected ${names.length})');
       }
 
-      final data = <String, dynamic>{};
+      final data = <String, Object?>{};
 
       for (var i = 0; i < names.length; i++) {
         data[names[i]] = list[i];

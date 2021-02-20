@@ -15,7 +15,6 @@ abstract class Loader {
 
   Template load(Environment environment, String name) {
     final source = getSource(name);
-    final nodes = environment.parse(source);
-    return Template.parsed(environment, nodes);
+    return environment.fromString(source);
   }
 }

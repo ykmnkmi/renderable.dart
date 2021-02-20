@@ -2,11 +2,14 @@ import 'package:meta/meta.dart';
 import 'package:renderable/src/exceptions.dart';
 
 import 'enirvonment.dart';
+import 'nodes.dart';
 
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
-  Context.from(this.environment, this.contexts);
+  Context.from(Context context)
+      : environment = context.environment,
+        contexts = context.contexts;
 
   Context(this.environment, [Map<String, Object?>? data]) : contexts = <Map<String, Object?>>[environment.globals] {
     if (data != null) {
@@ -237,24 +240,6 @@ class Undefined {
 }
 
 class Namespace {
-  static Namespace factory([List<Object?>? datas]) {
-    if (datas == null) {
-      return Namespace();
-    }
-
-    final context = <String, Object?>{};
-
-    for (final data in datas) {
-      if (data is Map) {
-        context.addAll(data.cast<String, Object?>());
-      } else {
-        throw TypeError();
-      }
-    }
-
-    return Namespace(context);
-  }
-
   Namespace([Map<String, Object?>? context]) : context = <String, Object?>{} {
     if (context != null) {
       this.context.addAll(context);
@@ -278,6 +263,57 @@ class Namespace {
   @override
   String toString() {
     return 'Namespace($context)';
+  }
+
+  static Namespace factory([List<Object?>? datas]) {
+    if (datas == null) {
+      return Namespace();
+    }
+
+    final context = <String, Object?>{};
+
+    for (final data in datas) {
+      if (data is Map) {
+        context.addAll(data.cast<String, Object?>());
+      } else {
+        throw TypeError();
+      }
+    }
+
+    return Namespace(context);
+  }
+
+  static void prepare(Node node) {
+    if (node is Call) {
+      if (node.expression is Name && (node.expression as Name).name == 'namespace') {
+        final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
+        node.arguments = null;
+
+        if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
+          final dict = DictLiteral(node.keywordArguments!.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
+          node.keywordArguments = null;
+          arguments.add(dict);
+        }
+
+        if (node.dArguments != null) {
+          arguments.add(node.dArguments!);
+          node.dArguments = null;
+        }
+
+        if (node.dKeywordArguments != null) {
+          arguments.add(node.dKeywordArguments!);
+          node.dKeywordArguments = null;
+        }
+
+        if (arguments.isNotEmpty) {
+          node.arguments = <Expression>[ListLiteral(arguments)];
+        }
+
+        return;
+      }
+    }
+
+    node.visitChildNodes(prepare);
   }
 }
 

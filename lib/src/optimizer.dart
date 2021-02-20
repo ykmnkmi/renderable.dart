@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+import 'enirvonment.dart';
 import 'nodes.dart';
 import 'resolver.dart';
 import 'runtime.dart';
@@ -302,6 +303,12 @@ class Optimizer extends Visitor<Context, Node> {
       node.step = optimize(node.step!, context);
     }
 
+    return node;
+  }
+
+  @override
+  Template visitTemplate(Template node, [Context? context]) {
+    visitAll(node.nodes, context);
     return node;
   }
 
