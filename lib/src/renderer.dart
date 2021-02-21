@@ -11,7 +11,7 @@ import 'utils.dart';
 abstract class RenderContext extends Context {
   RenderContext.from(Context context) : super.from(context);
 
-  RenderContext(Environment environment, [Map<String, Object?>? data]) : super(environment, data);
+  RenderContext(Environment environment, {Map<String, Object?>? data}) : super(environment, data);
 
   RenderContext derived();
 
@@ -21,19 +21,19 @@ abstract class RenderContext extends Context {
 }
 
 class StringBufferRenderContext extends RenderContext {
-  StringBufferRenderContext(Environment environment, [Map<String, Object?>? data])
-      : buffer = StringBuffer(),
-        super(environment, data);
+  StringBufferRenderContext(Environment environment, {Map<String, Object?>? data, StringBuffer? buffer})
+      : buffer = buffer ?? StringBuffer(),
+        super(environment, data: data);
 
-  StringBufferRenderContext.from(Context context)
-      : buffer = StringBuffer(),
+  StringBufferRenderContext.from(Context context, {StringBuffer? buffer})
+      : buffer = buffer ?? StringBuffer(),
         super.from(context);
 
   final StringBuffer buffer;
 
   @override
   RenderContext derived() {
-    return StringBufferRenderContext.from(this);
+    return StringBufferRenderContext(environment, buffer: buffer);
   }
 
   @override
@@ -214,17 +214,19 @@ class Renderer extends ExpressionResolver<RenderContext> {
   void visitInclude(Include node, [RenderContext? context]) {
     context!;
 
-    var template = node.template.accept(this);
+    try {
+      final name = node.template.accept(this);
+      final template = context.environment.getTemplate(name);
 
-    if (template is String) {
-      template = context.environment.getTemplate(template);
-    }
-
-    if (template is Template) {
-      template.accept(this, context);
-    } else if (!node.ignoreMissing) {
-      // TODO: update error
-      throw Exception();
+      if (node.withContext) {
+        template.accept(this, context);
+      } else {
+        template.accept(this, context.derived());
+      }
+    } on TemplateNotFound {
+      if (!node.ignoreMissing) {
+        rethrow;
+      }
     }
   }
 

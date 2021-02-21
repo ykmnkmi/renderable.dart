@@ -49,10 +49,10 @@ class AssignBlock extends Statement {
     var result = 'AssignBlock($target, $body';
 
     if (filters != null && filters!.isNotEmpty) {
-      result += ', $filters';
+      result = '$result, $filters';
     }
 
-    return result + ')';
+    return '$result)';
   }
 }
 
@@ -91,18 +91,18 @@ class For extends Statement {
     var result = 'For($target, $iterable';
 
     if (body.isNotEmpty) {
-      result += ', $body';
+      result = '$result, $body';
     }
 
     if (orElse != null) {
-      result += ', orElse: $orElse';
+      result = '$result, orElse: $orElse';
     }
 
     if (recursive) {
-      result += ', recursive: $recursive';
+      result = '$result, recursive: $recursive';
     }
 
-    return result + ')';
+    return '$result)';
   }
 }
 
@@ -139,14 +139,14 @@ class If extends Statement {
     var result = 'If($test, $body';
 
     if (nextIf != null) {
-      result += ', next: $nextIf';
+      result = '$result, next: $nextIf';
     }
 
     if (orElse != null) {
-      result += ', orElse: $orElse';
+      result = '$result, orElse: $orElse';
     }
 
-    return result + ')';
+    return '$result)';
   }
 }
 
@@ -224,6 +224,16 @@ class Include extends Statement implements ImportContext {
 
   @override
   String toString() {
-    return 'Include(${ignoreMissing ? 'ignoreMissing, ' : ''}${withContext ? 'withContext, ' : ''}$template)';
+    var result = 'Include(';
+
+    if (ignoreMissing) {
+      result = '${result}ignoreMissing, ';
+    }
+
+    if (withContext) {
+      result = '${result}withContext, ';
+    }
+
+    return '$result$template)';
   }
 }

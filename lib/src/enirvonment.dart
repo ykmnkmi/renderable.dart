@@ -431,7 +431,7 @@ class Template extends Node implements Renderable {
 
   @override
   String render([Map<String, Object?>? data]) {
-    final context = StringBufferRenderContext(environment, data);
+    final context = StringBufferRenderContext(environment, data: data);
     accept(renderer, context);
     return context.buffer.toString();
   }

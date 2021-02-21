@@ -23,7 +23,7 @@ Status:
   - ~~Named Block End-Tags~~
   - ~~Block Nesting and Scope~~
   - ~~Template Objects~~
-- HTML Escaping (working)
+- HTML Escaping
   - Working with Manual Escaping
   - Working with Automatic Escaping
 - List of Control Structures
@@ -36,7 +36,7 @@ Status:
   - Block Assignments
   - ~~Extends~~
   - ~~Blocks~~
-  - ~~Include~~
+  - Include
   - ~~Import~~
 - ~~Import Context Behavior~~
 - Expressions

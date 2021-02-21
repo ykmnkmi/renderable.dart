@@ -1,5 +1,3 @@
-// ignore_for_file: inference_failure_on_collection_literal
-
 import 'package:renderable/jinja.dart';
 import 'package:renderable/reflection.dart';
 import 'package:renderable/src/exceptions.dart';
