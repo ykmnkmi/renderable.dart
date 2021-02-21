@@ -9,7 +9,7 @@ import 'package:renderable/src/runtime.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  final source = '{{ foo() }}';
+  final source = '{% include "head.html" %}';
 
   try {
     final environment = Environment();

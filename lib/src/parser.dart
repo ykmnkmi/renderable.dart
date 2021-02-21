@@ -108,6 +108,8 @@ class Parser {
           return parseIf(reader);
         case 'with':
           return parseWith(reader);
+        case 'include':
+          return parseInclude(reader);
         default:
           tagStack.removeLast();
           popTag = false;
@@ -261,6 +263,32 @@ class Parser {
 
     final body = parseStatements(reader, <String>['name:endwith'], dropNeedle: true);
     return With(targets, values, body);
+  }
+
+  @protected
+  T parseImportContext<T extends ImportContext>(TokenReader reader, T node, [bool defaultValue = true]) {
+    if (reader.current.testAny(['name:with', 'name:without']) && reader.look().test('name', 'context')) {
+      node.withContext = true;
+      reader.skip();
+    } else {
+      node.withContext = defaultValue;
+    }
+
+    return node;
+  }
+
+  @protected
+  Include parseInclude(TokenReader reader) {
+    reader.expect('name', 'include');
+
+    final node = Include(parseExpression(reader));
+
+    if (reader.current.test('name', 'ignore') && reader.look().test('name', 'missing')) {
+      node.ignoreMissing = true;
+      reader.skip(2);
+    }
+
+    return parseImportContext<Include>(reader, node, true);
   }
 
   @protected

@@ -295,12 +295,7 @@ class Environment {
       return name;
     }
 
-    if (name is! String) {
-      // TODO: update error
-      throw Exception();
-    }
-
-    return loadTemplate(name);
+    return loadTemplate(name as String);
   }
 
   Template fromString(String source, {String? path}) {
@@ -427,6 +422,11 @@ class Template extends Node implements Renderable {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitTemplate(this, context);
+  }
+
+  @override
+  Iterable<String> generate([Map<String, Object?>? data]) {
+    throw UnimplementedError();
   }
 
   @override

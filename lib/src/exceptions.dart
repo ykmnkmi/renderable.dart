@@ -14,6 +14,11 @@ abstract class TemplateError implements Exception {
   }
 }
 
+/// Raised if a template does not exist.
+class TemplateNotFound extends TemplateError {
+  TemplateNotFound(String template, [Object? message]) : super(message ?? template);
+}
+
 /// Raised to tell the user that there is a problem with the template.
 class TemplateSyntaxError extends TemplateError {
   TemplateSyntaxError(String message, {this.line, this.name, this.fileName}) : super(message);

@@ -198,13 +198,20 @@ class With extends Statement {
   }
 }
 
-class Include extends Statement {
+abstract class ImportContext {
+  bool get withContext;
+
+  set withContext(bool withContext);
+}
+
+class Include extends Statement implements ImportContext {
   Include(this.template, {this.ignoreMissing = false, this.withContext = true});
 
   Expression template;
 
   bool ignoreMissing;
 
+  @override
   bool withContext;
 
   @override
@@ -217,6 +224,6 @@ class Include extends Statement {
 
   @override
   String toString() {
-    return 'Include($template${ignoreMissing ? ', ignoreMissing' : ''}${withContext ? ', withContext' : ''})';
+    return 'Include(${ignoreMissing ? 'ignoreMissing, ' : ''}${withContext ? 'withContext, ' : ''}$template)';
   }
 }

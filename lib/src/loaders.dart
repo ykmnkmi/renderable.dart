@@ -1,8 +1,9 @@
 import 'enirvonment.dart';
+import 'exceptions.dart';
 
 abstract class Loader {
-  String getSource(String path) {
-    throw Exception('template not found: $path');
+  String getSource(String template) {
+    throw TemplateNotFound(template);
   }
 
   bool get hasSourceAccess {
@@ -16,5 +17,30 @@ abstract class Loader {
   Template load(Environment environment, String name) {
     final source = getSource(name);
     return environment.fromString(source);
+  }
+}
+
+class MapLoader extends Loader {
+  MapLoader(this.mapping);
+
+  final Map<String, String> mapping;
+
+  @override
+  bool get hasSourceAccess {
+    return false;
+  }
+
+  @override
+  List<String> listSources() {
+    return mapping.keys.toList();
+  }
+
+  @override
+  String getSource(String template) {
+    if (mapping.containsKey(template)) {
+      return mapping[template]!;
+    }
+
+    throw TemplateNotFound(template);
   }
 }
