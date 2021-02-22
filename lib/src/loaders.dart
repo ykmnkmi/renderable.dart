@@ -3,7 +3,7 @@ import 'exceptions.dart';
 
 abstract class Loader {
   String getSource(String template) {
-    throw TemplateNotFound(template);
+    throw TemplateNotFound(name: template);
   }
 
   bool get hasSourceAccess {
@@ -41,6 +41,6 @@ class MapLoader extends Loader {
       return mapping[template]!;
     }
 
-    throw TemplateNotFound(template);
+    throw TemplateNotFound(name: template);
   }
 }

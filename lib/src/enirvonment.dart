@@ -298,6 +298,26 @@ class Environment {
     return loadTemplate(name as String);
   }
 
+  Template selectTemplate(List<Object?> names) {
+    if (names.isEmpty) {
+      throw TemplateNotFound(message: 'tried to select from an empty list of templates');
+    }
+
+    for (final name in names) {
+      if (name is Template) {
+        return name;
+      }
+
+      try {
+        return loadTemplate(name as String);
+      } on TemplateNotFound {
+        continue;
+      }
+    }
+
+    throw TemplatesNotFound(names: names);
+  }
+
   Template fromString(String source, {String? path}) {
     final nodes = parse(source, path: path);
     final template = Template.parsed(this, nodes, path: path);

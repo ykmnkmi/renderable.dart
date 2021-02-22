@@ -216,7 +216,13 @@ class Renderer extends ExpressionResolver<RenderContext> {
 
     try {
       final name = node.template.accept(this);
-      final template = context.environment.getTemplate(name);
+      Template template;
+
+      if (name is List) {
+        template = context.environment.selectTemplate(name);
+      } else {
+        template = context.environment.getTemplate(name);
+      }
 
       if (node.withContext) {
         template.accept(this, context);

@@ -24,5 +24,14 @@ void main() {
       template = testEnvironment().fromString('{% include "header" without context %}');
       expect(template.render({'foo': 42}), equals('[|23]'));
     });
+
+    test('choice includes', () {
+      var template = testEnvironment().fromString('{% include ["missing", "header"] %}');
+      expect(template.render({'foo': 42}), equals('[42|23]'));
+      template = testEnvironment().fromString('{% include ["missing", "missing2"] ignore missing %}');
+      expect(template.render({'foo': 42}), equals(''));
+      template = testEnvironment().fromString('{% include ["missing", "missing2"] %}');
+      expect(() => template.render(), throwsA(isA<TemplatesNotFound>()));
+    });
   });
 }
