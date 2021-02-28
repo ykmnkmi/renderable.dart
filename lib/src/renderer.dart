@@ -215,7 +215,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
     context!;
 
     try {
-      final name = node.template.accept(this);
+      final name = node.template.accept(this, context);
       Template template;
 
       if (name is List) {
