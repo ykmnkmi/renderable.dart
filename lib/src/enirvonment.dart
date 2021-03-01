@@ -202,12 +202,8 @@ class Environment {
       }
     }
 
-    if (key is int && object is List<Object?>) {
-      if (key < 0) {
-        return object[key + object.length];
-      }
-
-      return object[key];
+    if (key is int && key < 0) {
+      key = key + ((object as dynamic).length as int);
     }
 
     try {
@@ -323,7 +319,7 @@ class Environment {
     final template = Template.parsed(this, nodes, path: path);
 
     if (optimized) {
-      template.accept(optimizer, Context(this));
+      template.accept(const Optimizer(), Context(this));
     }
 
     return template;
@@ -451,9 +447,15 @@ class Template extends Node implements Renderable {
 
   @override
   String render([Map<String, Object?>? data]) {
-    final context = StringBufferRenderContext(environment, data: data);
-    accept(renderer, context);
-    return context.buffer.toString();
+    final buffer = StringBuffer();
+    final context = StringBufferRenderContext(environment, buffer: buffer, data: data);
+    accept(const Renderer(), context);
+    return buffer.toString();
+  }
+
+  @override
+  Stream<String> stream([Map<String, Object?>? data]) {
+    throw UnimplementedError();
   }
 
   @override

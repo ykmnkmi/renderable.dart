@@ -1,85 +1,36 @@
 import 'package:meta/meta.dart';
-import 'package:renderable/src/exceptions.dart';
 
 import 'enirvonment.dart';
+import 'exceptions.dart';
 import 'nodes.dart';
 
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
+  const Context(this.environment, [this.contexts = const <Map<String, Object?>>[]]);
+
   Context.from(Context context)
-      : environment = context.environment,
-        contexts = context.contexts;
-
-  Context(this.environment, [Map<String, Object?>? data]) : contexts = <Map<String, Object?>>[environment.globals] {
-    if (data != null) {
-      contexts.add(data);
-    }
-
-    minimal = contexts.length;
-  }
+      : contexts = context.contexts,
+        environment = context.environment;
 
   final Environment environment;
 
   final List<Map<String, Object?>> contexts;
 
-  late int minimal;
-
   Object? operator [](String key) {
-    return get(key);
-  }
-
-  void operator []=(String key, Object? value) {
-    set(key, value);
-  }
-
-  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
-    push(data);
-    closure(this as C);
-    pop();
+    throw UnimplementedError();
   }
 
   Object? get(String key) {
-    for (final context in contexts.reversed) {
-      if (context.containsKey(key)) {
-        return context[key];
-      }
-    }
-
-    return environment.undefined(name: key);
+    throw UnimplementedError();
   }
 
   bool has(String name) {
-    return contexts.any((context) => context.containsKey(name));
-  }
-
-  void pop() {
-    if (contexts.length > minimal) {
-      contexts.removeLast();
-    }
-  }
-
-  void push(Map<String, Object?> context) {
-    contexts.add(context);
-  }
-
-  bool remove(String name) {
-    for (final context in contexts.reversed) {
-      if (context.containsKey(name)) {
-        context.remove(name);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  void set(String key, Object? value) {
-    contexts.last[key] = value is Undefined ? null : value;
+    throw UnimplementedError();
   }
 }
 
-// TODO: update
+// TODO: LoopContext: implement iterable
 class LoopContext {
   LoopContext(this.index0, this.length, this.previtem, this.nextitem, this.changed, this.recurse) {
     index = index0 + 1;

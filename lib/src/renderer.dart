@@ -9,21 +9,64 @@ import 'runtime.dart';
 import 'utils.dart';
 
 abstract class RenderContext extends Context {
-  RenderContext.from(Context context) : super.from(context);
+  RenderContext.from(Context context) : super.from(context) {
+    minimal = contexts.length;
+  }
 
-  RenderContext(Environment environment, {Map<String, Object?>? data}) : super(environment, data);
+  RenderContext(Environment environment, [Map<String, Object?>? data]) : super(environment, <Map<String, Object?>>[environment.globals]) {
+    if (data != null) {
+      contexts.add(data);
+    }
+
+    minimal = contexts.length;
+  }
+
+  late int minimal;
+
+  void operator []=(String key, Object? value) {
+    set(key, value);
+  }
+
+  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
+    push(data);
+    closure(this as C);
+    pop();
+  }
 
   RenderContext derived();
 
-  void write(Object? object);
+  Object? finalize(Object? object);
 
-  void writeFinalized(Object? object);
+  void pop() {
+    if (contexts.length > minimal) {
+      contexts.removeLast();
+    }
+  }
+
+  void push(Map<String, Object?> context) {
+    contexts.add(context);
+  }
+
+  bool remove(String name) {
+    for (final context in contexts.reversed) {
+      if (context.containsKey(name)) {
+        context.remove(name);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void set(String key, Object? value) {
+    contexts.last[key] = value is Undefined ? null : value;
+  }
 }
 
 class StringBufferRenderContext extends RenderContext {
   StringBufferRenderContext(Environment environment, {Map<String, Object?>? data, StringBuffer? buffer})
       : buffer = buffer ?? StringBuffer(),
-        super(environment, data: data);
+        super(environment, data);
 
   StringBufferRenderContext.from(Context context, {StringBuffer? buffer})
       : buffer = buffer ?? StringBuffer(),
@@ -37,38 +80,35 @@ class StringBufferRenderContext extends RenderContext {
   }
 
   @override
+  Object? finalize(Object? object) {
+    return environment.finalize(this, object);
+  }
+
   void write(Object? object) {
     buffer.write(object);
   }
-
-  @override
-  void writeFinalized(Object? object) {
-    buffer.write(environment.finalize(this, object));
-  }
 }
 
-const Renderer renderer = Renderer();
-
-class Renderer extends ExpressionResolver<RenderContext> {
+class Renderer extends ExpressionResolver<StringBufferRenderContext> {
   @literal
   const Renderer();
 
   @override
-  void visitAll(List<Node> nodes, [RenderContext? context]) {
+  void visitAll(List<Node> nodes, [StringBufferRenderContext? context]) {
     for (final node in nodes) {
       node.accept(this, context);
     }
   }
 
   @override
-  void visitAssign(Assign assign, [RenderContext? context]) {
+  void visitAssign(Assign assign, [StringBufferRenderContext? context]) {
     final target = assign.target.accept(this, context);
     final values = assign.expression.accept(this, context);
     assignTargetsToContext(context!, target, values);
   }
 
   @override
-  void visitAssignBlock(AssignBlock node, [RenderContext? context]) {
+  void visitAssignBlock(AssignBlock node, [StringBufferRenderContext? context]) {
     context!;
 
     final target = node.target.accept(this, context);
@@ -91,7 +131,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitFor(For node, [RenderContext? context]) {
+  void visitFor(For node, [StringBufferRenderContext? context]) {
     context!;
 
     final target = node.target.accept(this, context);
@@ -186,7 +226,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitIf(If node, [RenderContext? context]) {
+  void visitIf(If node, [StringBufferRenderContext? context]) {
     context!;
 
     if (boolean(node.test.accept(this, context))) {
@@ -211,7 +251,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitInclude(Include node, [RenderContext? context]) {
+  void visitInclude(Include node, [StringBufferRenderContext? context]) {
     context!;
 
     try {
@@ -237,7 +277,7 @@ class Renderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitOutput(Output node, [RenderContext? context]) {
+  void visitOutput(Output node, [StringBufferRenderContext? context]) {
     context!;
 
     for (final item in node.nodes) {
@@ -250,18 +290,18 @@ class Renderer extends ExpressionResolver<RenderContext> {
           value = Markup.escape(value.toString());
         }
 
-        context.writeFinalized(value);
+        context.write(context.finalize(value));
       }
     }
   }
 
   @override
-  void visitTemplate(Template node, [RenderContext? context]) {
+  void visitTemplate(Template node, [StringBufferRenderContext? context]) {
     visitAll(node.nodes, context);
   }
 
   @override
-  void visitWith(With node, [RenderContext? context]) {
+  void visitWith(With node, [StringBufferRenderContext? context]) {
     context!;
 
     final targets = node.targets.map((target) => target.accept(this, context)).toList();

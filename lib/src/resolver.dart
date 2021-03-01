@@ -9,8 +9,6 @@ import 'tests.dart' as tests;
 import 'utils.dart';
 import 'visitor.dart';
 
-const ExpressionResolver resolver = ExpressionResolver();
-
 class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   @literal
   const ExpressionResolver();

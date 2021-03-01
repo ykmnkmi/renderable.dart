@@ -4,4 +4,6 @@ abstract class Renderable {
   Iterable<String> generate();
 
   String render();
+
+  Stream<String> stream([Map<String, Object?>? data]);
 }

@@ -9,8 +9,6 @@ import 'visitor.dart';
 
 class Impossible implements Exception {}
 
-const Optimizer optimizer = Optimizer();
-
 class Optimizer extends Visitor<Context, Node> {
   @literal
   const Optimizer();
@@ -362,6 +360,6 @@ class Optimizer extends Visitor<Context, Node> {
 
   @protected
   static Object? resolve(Expression expression, [Context? context]) {
-    return expression.accept(resolver, context);
+    return expression.accept(const ExpressionResolver(), context);
   }
 }
