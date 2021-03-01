@@ -1,8 +1,7 @@
 Renderable.dart
 ===============
 
-[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) first stable version (1.0.0).
-Will be merged to core repo.
+[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) next stable version (1.0.0) (will be merged).
 
 Status:
 ------
@@ -25,7 +24,7 @@ Status:
   - ~~Template Objects~~
 - HTML Escaping
   - Working with Manual Escaping
-  - Working with Automatic Escaping
+  - _Working with Automatic Escaping_
 - List of Control Structures
   - For
   - If

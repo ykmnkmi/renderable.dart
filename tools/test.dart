@@ -30,7 +30,7 @@ void main(List<String> arguments) {
     print('\nnodes:');
     nodes.forEach(print);
 
-    optimizer.visitAll(nodes, Context(environment));
+    const Optimizer().visitAll(nodes, Context(environment));
 
     final template = Template.parsed(environment, nodes);
     // print('\ntemplate nodes:');
