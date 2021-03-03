@@ -4,9 +4,11 @@ import 'enirvonment.dart';
 import 'exceptions.dart';
 import 'nodes.dart';
 
+@optionalTypeArgs
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
+  // TODO: constant Environment
   const Context(this.environment, [this.contexts = const <Map<String, Object?>>[]]);
 
   Context.from(Context context)
@@ -18,15 +20,21 @@ class Context {
   final List<Map<String, Object?>> contexts;
 
   Object? operator [](String key) {
-    throw UnimplementedError();
+    return get(key);
   }
 
   Object? get(String key) {
-    throw UnimplementedError();
+    for (final context in contexts.reversed) {
+      if (context.containsKey(key)) {
+        return context[key];
+      }
+    }
+
+    return environment.undefined(name: key);
   }
 
   bool has(String name) {
-    throw UnimplementedError();
+    return contexts.any((context) => context.containsKey(name));
   }
 }
 

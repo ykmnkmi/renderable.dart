@@ -1,6 +1,6 @@
 name: renderable
 description: Testing features for Jinja.dart.
-version: 1.0.0-dev+101
+version: 1.0.0-dev+102
 publish_to: none
 
 environment:

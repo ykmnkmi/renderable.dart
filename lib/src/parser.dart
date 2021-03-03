@@ -108,6 +108,8 @@ class Parser {
           return parseIf(reader);
         case 'with':
           return parseWith(reader);
+        case 'autoescape':
+          return parseAutoEscape(reader);
         case 'include':
           return parseInclude(reader);
         default:
@@ -263,6 +265,12 @@ class Parser {
 
     final body = parseStatements(reader, <String>['name:endwith'], dropNeedle: true);
     return With(targets, values, body);
+  }
+
+  @protected
+  With parseAutoEscape(TokenReader reader) {
+    reader.expect('name', 'autoescape');
+    throw UnimplementedError();
   }
 
   @protected

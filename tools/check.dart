@@ -5,7 +5,10 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main() {
   try {
-    final loader = MapLoader({'home.html': '{% include "head.html" %}', 'head.html': 'is head'});
+    final loader = MapLoader({
+      'home.html': '{% include "head.html" %}',
+      'head.html': 'is head',
+    });
     final environment = Environment(loader: loader);
     print(environment.getTemplate('home.html').render());
   } catch (error, trace) {

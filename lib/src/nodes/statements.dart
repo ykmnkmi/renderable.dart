@@ -220,7 +220,9 @@ class Include extends Statement implements ImportContext {
   }
 
   @override
-  void visitChildNodes(NodeVisitor visitor) {}
+  void visitChildNodes(NodeVisitor visitor) {
+    template.visitChildNodes(visitor);
+  }
 
   @override
   String toString() {
@@ -235,5 +237,30 @@ class Include extends Statement implements ImportContext {
     }
 
     return '$result$template)';
+  }
+}
+
+class Scope extends Statement {
+  Scope(this.body, {this.pre = const <ContextCallback>[], this.post = const <ContextCallback>[]});
+
+  List<Node> body;
+
+  List<ContextCallback> pre;
+
+  List<ContextCallback> post;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitScope(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    body.forEach(visitor);
+  }
+
+  @override
+  String toString() {
+    return 'Scope(${body.join(', ')})';
   }
 }

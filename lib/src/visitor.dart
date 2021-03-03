@@ -100,6 +100,8 @@ abstract class Visitor<C, R> {
     return visitBinary(node, context);
   }
 
+  R visitScope(Scope node, [C? context]);
+
   R visitSlice(Slice node, [C? context]);
 
   R visitSub(Sub node, [C? context]) {

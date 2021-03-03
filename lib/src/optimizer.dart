@@ -288,6 +288,12 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
+  Scope visitScope(Scope node, [Context? context]) {
+    visitAll(node.body, context);
+    return node;
+  }
+
+  @override
   Slice visitSlice(Slice node, [Context? context]) {
     if (node.start != null) {
       node.start = optimize(node.start!, context);

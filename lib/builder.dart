@@ -152,6 +152,12 @@ class Compiler extends Visitor<Frame, String> {
   }
 
   @override
+  String visitScope(Scope node, [Frame? context]) {
+    // TODO: implement visitScope
+    throw UnimplementedError();
+  }
+
+  @override
   String visitSlice(Slice node, [Frame? context]) {
     // TODO: implement visitSlice
     throw UnimplementedError();
