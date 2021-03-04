@@ -8,8 +8,7 @@ import 'nodes.dart';
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
-  // TODO: constant Environment
-  const Context(this.environment, [this.contexts = const <Map<String, Object?>>[]]);
+  Context(this.environment, [this.contexts = const <Map<String, Object?>>[]]);
 
   Context.from(Context context)
       : contexts = context.contexts,
@@ -21,6 +20,12 @@ class Context {
 
   Object? operator [](String key) {
     return get(key);
+  }
+
+  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> callback) {
+    contexts.add(data);
+    callback(this as C);
+    contexts.removeLast();
   }
 
   Object? get(String key) {

@@ -268,9 +268,12 @@ class Parser {
   }
 
   @protected
-  With parseAutoEscape(TokenReader reader) {
+  Scope parseAutoEscape(TokenReader reader) {
     reader.expect('name', 'autoescape');
-    throw UnimplementedError();
+
+    final escape = parseExpression(reader);
+    final body = parseStatements(reader, <String>['name:endautoescape'], dropNeedle: true);
+    return Scope(ScopedContextModifier(<String, Object>{'autoEscape': escape}, body));
   }
 
   @protected

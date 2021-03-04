@@ -68,6 +68,12 @@ class Compiler extends Visitor<Frame, String> {
   }
 
   @override
+  String visitContextModifier(ScopedContextModifier node, [Frame? context]) {
+    // TODO: implement visitContextModifier
+    throw UnimplementedError();
+  }
+
+  @override
   String visitData(Data node, [Frame? context]) {
     // TODO: implement visitData
     throw UnimplementedError();

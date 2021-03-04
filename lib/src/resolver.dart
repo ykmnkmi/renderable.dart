@@ -204,6 +204,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
+  void visitContextModifier(ScopedContextModifier node, [C? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   String visitData(Data node, [C? context]) {
     return node.data;
   }

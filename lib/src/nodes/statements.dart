@@ -241,17 +241,38 @@ class Include extends Statement implements ImportContext {
 }
 
 class Scope extends Statement {
-  Scope(this.body, {this.pre = const <ContextCallback>[], this.post = const <ContextCallback>[]});
+  Scope(this.modifier);
 
-  List<Node> body;
-
-  List<ContextCallback> pre;
-
-  List<ContextCallback> post;
+  ContextModifier modifier;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitScope(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    modifier.visitChildNodes(visitor);
+  }
+
+  @override
+  String toString() {
+    return 'Scope($modifier)';
+  }
+}
+
+abstract class ContextModifier extends Statement {}
+
+class ScopedContextModifier implements ContextModifier {
+  ScopedContextModifier(this.options, this.body);
+
+  List<Node> body;
+
+  Map<String, Object> options;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitScopedContextModifier(this, context);
   }
 
   @override
@@ -261,6 +282,6 @@ class Scope extends Statement {
 
   @override
   String toString() {
-    return 'Scope(${body.join(', ')})';
+    return 'ScopedContextModifier($options, $body)';
   }
 }

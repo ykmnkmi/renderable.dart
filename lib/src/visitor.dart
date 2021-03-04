@@ -36,6 +36,8 @@ abstract class Visitor<C, R> {
 
   R visitConstant(Constant<Object?> node, [C? context]);
 
+  R visitContextModifier(ScopedContextModifier node, [C? context]);
+
   R visitData(Data node, [C? context]);
 
   R visitDictLiteral(DictLiteral node, [C? context]);
@@ -101,6 +103,10 @@ abstract class Visitor<C, R> {
   }
 
   R visitScope(Scope node, [C? context]);
+
+  R visitScopedContextModifier(ScopedContextModifier node, [C? context]) {
+    return visitContextModifier(node, context);
+  }
 
   R visitSlice(Slice node, [C? context]);
 

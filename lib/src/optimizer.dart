@@ -169,6 +169,12 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
+  Node visitContextModifier(ScopedContextModifier node, [Context? context]) {
+    visitAll(node.body, context);
+    return node;
+  }
+
+  @override
   Data visitData(Data node, [Context? context]) {
     return node;
   }
@@ -289,8 +295,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Scope visitScope(Scope node, [Context? context]) {
-    visitAll(node.body, context);
-    return node;
+    throw UnimplementedError();
   }
 
   @override

@@ -27,6 +27,7 @@ abstract class RenderContext extends Context {
     set(key, value);
   }
 
+  @override
   void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
     push(data);
     closure(this as C);
