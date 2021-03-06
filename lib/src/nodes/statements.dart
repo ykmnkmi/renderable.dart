@@ -263,12 +263,12 @@ class Scope extends Statement {
 
 abstract class ContextModifier extends Statement {}
 
-class ScopedContextModifier implements ContextModifier {
+class ScopedContextModifier extends ContextModifier {
   ScopedContextModifier(this.options, this.body);
 
   List<Node> body;
 
-  Map<String, Object> options;
+  Map<String, Expression> options;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {

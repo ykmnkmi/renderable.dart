@@ -50,7 +50,11 @@ void main() {
       final environment = Environment(blockBegin: '{%', blockEnd: '%}', variableBegin: '\${', variableEnd: '}');
       final template = environment.fromString(r'''{% for item in seq
             %}${{'foo': item} | string | upper}{% endfor %}''');
-      expect(template.render({'seq': [0, 1, 2]}), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
+      expect(
+          template.render({
+            'seq': [0, 1, 2]
+          }),
+          equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
     });
 
     test('comments', () {
@@ -61,7 +65,11 @@ void main() {
   <li>{item}</li>
 <!--- endfor -->
 </ul>''');
-      expect(template.render({'seq': [0, 1, 2]}), equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
+      expect(
+          template.render({
+            'seq': [0, 1, 2]
+          }),
+          equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
     });
 
     test('string escapes', () {
@@ -308,7 +316,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}(\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  ){% endif %}');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('(\na=1 b=2 \n  )'));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('(\na=1 b=2 \n  )'));
     });
 
     test('lstrip trim blocks outside with new line', () {
@@ -316,7 +331,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}(\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  ){% endif %}');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('(\na=1 b=2   )'));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('(\na=1 b=2   )'));
     });
 
     test('lstrip blocks inside with new line', () {
@@ -324,7 +346,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  ({% if kvs %}\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  {% endif %})');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('  (\na=1 b=2 \n)'));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('  (\na=1 b=2 \n)'));
     });
 
     test('lstrip trim blocks inside with new line', () {
@@ -332,7 +361,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  ({% if kvs %}\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  {% endif %})');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('  (a=1 b=2 )'));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('  (a=1 b=2 )'));
     });
 
     test('lstrip blocks without new line', () {
@@ -340,7 +376,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}'
           '  {% endif %}');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('   a=1 b=2   '));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('   a=1 b=2   '));
     });
 
     test('lstrip trim blocks without new line', () {
@@ -348,7 +391,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs %}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}'
           '  {% endif %}');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('   a=1 b=2   '));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('   a=1 b=2   '));
     });
 
     test('lstrip blocks consume after without new line', () {
@@ -356,7 +406,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {% if kvs -%}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor -%}'
           '  {% endif -%}');
-      expect(template.render({'kvs': [['a', 1], ['b', 2]]}), equals('a=1 b=2 '));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('a=1 b=2 '));
     });
 
     test('lstrip trim blocks consume before without new line', () {
@@ -364,7 +421,14 @@ ${item} ## the rest of the stuff
       final template = environment.fromString('  {%- if kvs %}'
           '   {%- for k, v in kvs %}{{ k }}={{ v }} {% endfor -%}'
           '  {%- endif %}');
-      expect(template.render({'kvs': [['a', 1],['b', 2]]}), equals('a=1 b=2 '));
+      expect(
+          template.render({
+            'kvs': [
+              ['a', 1],
+              ['b', 2]
+            ]
+          }),
+          equals('a=1 b=2 '));
     });
 
     test('lstrip trim blocks comment', () {

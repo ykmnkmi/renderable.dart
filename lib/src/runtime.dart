@@ -8,7 +8,13 @@ import 'nodes.dart';
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
-  Context(this.environment, [this.contexts = const <Map<String, Object?>>[]]);
+  Context(this.environment, [Map<String, Object?>? data]) : contexts = <Map<String, Object?>>[environment.globals] {
+    if (data != null) {
+      contexts.add(data);
+    }
+
+    minimal = contexts.length;
+  }
 
   Context.from(Context context)
       : contexts = context.contexts,
@@ -18,14 +24,26 @@ class Context {
 
   final List<Map<String, Object?>> contexts;
 
+  late int minimal;
+
   Object? operator [](String key) {
     return get(key);
   }
 
-  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> callback) {
-    contexts.add(data);
-    callback(this as C);
-    contexts.removeLast();
+  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
+    push(data);
+    closure(this as C);
+    pop();
+  }
+
+  void pop() {
+    if (contexts.length > minimal) {
+      contexts.removeLast();
+    }
+  }
+
+  void push(Map<String, Object?> context) {
+    contexts.add(context);
   }
 
   Object? get(String key) {

@@ -9,44 +9,17 @@ import 'runtime.dart';
 import 'utils.dart';
 
 abstract class RenderContext extends Context {
-  RenderContext.from(Context context) : super.from(context) {
-    minimal = contexts.length;
-  }
+  RenderContext.from(Context context) : super.from(context);
 
-  RenderContext(Environment environment, [Map<String, Object?>? data]) : super(environment, <Map<String, Object?>>[environment.globals]) {
-    if (data != null) {
-      contexts.add(data);
-    }
-
-    minimal = contexts.length;
-  }
-
-  late int minimal;
+  RenderContext(Environment environment, [Map<String, Object?>? data]) : super(environment, data);
 
   void operator []=(String key, Object? value) {
     set(key, value);
   }
 
-  @override
-  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
-    push(data);
-    closure(this as C);
-    pop();
-  }
-
   RenderContext derived();
 
   Object? finalize(Object? object);
-
-  void pop() {
-    if (contexts.length > minimal) {
-      contexts.removeLast();
-    }
-  }
-
-  void push(Map<String, Object?> context) {
-    contexts.add(context);
-  }
 
   bool remove(String name) {
     for (final context in contexts.reversed) {
@@ -294,6 +267,16 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
         context.write(context.finalize(value));
       }
     }
+  }
+
+  @override
+  void visitScope(Scope node, [StringBufferRenderContext? context]) {
+    node.modifier.accept(this);
+  }
+
+  @override
+  void visitScopedContextModifier(ScopedContextModifier node, [StringBufferRenderContext? context]) {
+    throw UnimplementedError();
   }
 
   @override

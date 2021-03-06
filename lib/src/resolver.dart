@@ -310,6 +310,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
+  void visitScopedContextModifier(ScopedContextModifier node, [C? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   Indices visitSlice(Slice node, [C? context]) {
     final sliceStart = node.start?.accept(this, context) as int?;
     final sliceStop = node.stop?.accept(this, context) as int?;

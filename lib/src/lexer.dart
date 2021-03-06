@@ -126,15 +126,15 @@ class Lexer {
 
     final commentBeginRe = escape(environment.commentBegin);
     final commentEndRe = escape(environment.commentEnd);
-    final commentEnd = compile('(.*?)((?:\\+${commentEndRe}|-${commentEndRe}\\s*|${commentEndRe}${blockSuffixRe}))');
+    final commentEnd = compile('(.*?)((?:\\+$commentEndRe|-$commentEndRe\\s*|$commentEndRe$blockSuffixRe))');
 
     final variableBeginRe = escape(environment.variableBegin);
     final variableEndRe = escape(environment.variableEnd);
-    final variableEnd = compile('-${variableEndRe}\\s*|${variableEndRe}');
+    final variableEnd = compile('-$variableEndRe\\s*|$variableEndRe');
 
     final blockBeginRe = escape(environment.blockBegin);
     final blockEndRe = escape(environment.blockEnd);
-    final blockEnd = compile('(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe})');
+    final blockEnd = compile('(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe)');
 
     final tagRules = <Rule>[
       SingleTokenRule(whitespaceRe, 'whitespace'),
@@ -156,9 +156,9 @@ class Lexer {
 
     rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
 
-    final rawBegin = compile('(?<raw_begin>${blockBeginRe}(-|\\+|)\\s*raw\\s*(?:-${blockEndRe}\\s*|${blockEndRe}))');
-    final rawEnd = compile('(.*?)((?:${blockBeginRe}(-|\\+|))\\s*endraw\\s*'
-        '(?:\\+${blockEndRe}|-${blockEndRe}\\s*|${blockEndRe}${blockSuffixRe}))');
+    final rawBegin = compile('(?<raw_begin>$blockBeginRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))');
+    final rawEnd = compile('(.*?)((?:$blockBeginRe(-|\\+|))\\s*endraw\\s*'
+        '(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe))');
 
     final rootParts = <String>[
       rawBegin.pattern,
@@ -166,7 +166,7 @@ class Lexer {
     ];
 
     final rootPartsRe = rootParts.join('|');
-    final data = compile('(.*?)(?:${rootPartsRe})');
+    final data = compile('(.*?)(?:$rootPartsRe)');
 
     rules = <String, List<Rule>>{
       'root': <Rule>[

@@ -295,7 +295,15 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Scope visitScope(Scope node, [Context? context]) {
-    throw UnimplementedError();
+    node.modifier = node.modifier.accept(this) as ContextModifier;
+    return node;
+  }
+
+  @override
+  ScopedContextModifier visitScopedContextModifier(ScopedContextModifier node, [Context? context]) {
+    node.options.updateAll((option, expression) => optimizeSafe(expression, context));
+    visitAll(node.body, context);
+    return node;
   }
 
   @override

@@ -12,7 +12,7 @@ void main() {
         {% endwith -%}
             {{ a }} = {{ b }}''');
 
-      final lines = LineSplitter().convert(template.render({'a': 1, 'b': 2})).map((line) => line.trim()).toList();
+      final lines = const LineSplitter().convert(template.render({'a': 1, 'b': 2})).map((line) => line.trim()).toList();
       expect(lines[0], equals('42 = 23'));
       expect(lines[1], equals('1 = 2'));
     });

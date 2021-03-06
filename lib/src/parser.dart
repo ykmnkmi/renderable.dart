@@ -46,9 +46,9 @@ class Parser {
 
     if (currentlyLooking != null) {
       if (name != null && expected.contains(name)) {
-        message.add('You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for ${currentlyLooking}.');
+        message.add('You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for $currentlyLooking.');
       } else {
-        message.add('Jinja was looking for the following tags: ${currentlyLooking}.');
+        message.add('Jinja was looking for the following tags: $currentlyLooking.');
       }
     }
 
@@ -273,7 +273,7 @@ class Parser {
 
     final escape = parseExpression(reader);
     final body = parseStatements(reader, <String>['name:endautoescape'], dropNeedle: true);
-    return Scope(ScopedContextModifier(<String, Object>{'autoEscape': escape}, body));
+    return Scope(ScopedContextModifier(<String, Expression>{'autoEscape': escape}, body));
   }
 
   @protected

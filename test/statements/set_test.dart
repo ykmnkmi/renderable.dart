@@ -28,7 +28,7 @@ void main() {
       expect(() => environment.fromString('{% set foo["bar"] = 1 %}'), throwsA(isA<TemplateSyntaxError>()));
       final template = environment.fromString('{% set foo.bar = 1 %}');
       expect(
-        () => template.render({'foo': <dynamic, dynamic>{}}),
+        () => template.render({'foo': <Object?, Object?>{}}),
         throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')),
       );
     });
@@ -37,7 +37,7 @@ void main() {
       final environment = Environment(getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
       expect(
-        () => template.render({'namespace': () => <dynamic, dynamic>{}}),
+        () => template.render({'namespace': () => <Object?, Object?>{}}),
         throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')),
       );
     });
@@ -83,7 +83,7 @@ void main() {
     });
 
     test('block filtered set', () {
-      dynamic myfilter(dynamic value, dynamic arg) {
+      Object? myfilter(Object? value, Object? arg) {
         assert(arg == ' xxx ');
         return value;
       }
