@@ -90,11 +90,11 @@ String doCenter(String string, int width) {
   return pad + string + pad;
 }
 
-int doLength(dynamic items) {
-  return items.length as int;
+int doLength(Object? items) {
+  return (items as dynamic).length as int;
 }
 
-dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool asBoolean = false]) {
+Object? doDefault(Object? value, [Object? defaultValue = '', bool asBoolean = false]) {
   if (value is Undefined || (asBoolean && !boolean(value))) {
     return defaultValue;
   }
@@ -102,7 +102,7 @@ dynamic doDefault(dynamic value, [dynamic defaultValue = '', bool asBoolean = fa
   return value;
 }
 
-Markup doEscape(dynamic value) {
+Markup doEscape(Object? value) {
   if (value is Markup) {
     return value;
   }
@@ -110,7 +110,7 @@ Markup doEscape(dynamic value) {
   return Markup.escape(value.toString());
 }
 
-String doFileSizeFormat(dynamic value, [bool binary = false]) {
+String doFileSizeFormat(Object? value, [bool binary = false]) {
   const suffixes = <List<String>>[
     [' KiB', ' kB'],
     [' MiB', ' MB'],
@@ -161,11 +161,11 @@ String doFileSizeFormat(dynamic value, [bool binary = false]) {
   }
 }
 
-dynamic doFirst(Iterable<dynamic> values) {
+Object? doFirst(Iterable<Object?> values) {
   return values.first;
 }
 
-double doFloat(dynamic value, {double d = 0.0}) {
+double doFloat(Object? value, {double d = 0.0}) {
   if (value is String) {
     try {
       return double.parse(value);
@@ -175,17 +175,17 @@ double doFloat(dynamic value, {double d = 0.0}) {
   }
 
   try {
-    return value.toDouble() as double;
+    return (value as dynamic).toDouble() as double;
   } catch (e) {
     return d;
   }
 }
 
-Markup doForceEscape(dynamic value) {
+Markup doForceEscape(Object? value) {
   return Markup.escape(value.toString());
 }
 
-int doInteger(dynamic value, {int d = 0, int base = 10}) {
+int doInteger(Object? value, {int d = 0, int base = 10}) {
   if (value is String) {
     if (base == 16 && value.startsWith('0x')) {
       value = value.substring(2);
@@ -205,7 +205,7 @@ int doInteger(dynamic value, {int d = 0, int base = 10}) {
   }
 
   try {
-    return value.toInt() as int;
+    return (value as dynamic).toInt() as int;
   } catch (e) {
     return d;
   }
@@ -223,7 +223,7 @@ Object? doJoin(Environment environment, Iterable<Object?> values, [String delimi
   return Markup(values.map<Object>((value) => value is Markup ? value : escape('$value')).join(delimiter));
 }
 
-dynamic doLast(Iterable<dynamic> values) {
+Object? doLast(Iterable<Object?> values) {
   return values.last;
 }
 
@@ -231,17 +231,17 @@ String doLower(String string) {
   return string.toLowerCase();
 }
 
-String doPPrint(dynamic object) {
+String doPPrint(Object? object) {
   return format(object);
 }
 
-dynamic doRandom(Environment environment, dynamic values) {
-  final length = values.length as int;
+Object? doRandom(Environment environment, Object? values) {
+  final length = (values as dynamic).length as int;
   final index = environment.random.nextInt(length);
   return values[index];
 }
 
-dynamic doReplace(dynamic object, String from, String to, [int? count]) {
+Object? doReplace(Object? object, String from, String to, [int? count]) {
   late String string;
   late bool isNotMarkup;
 
@@ -249,10 +249,10 @@ dynamic doReplace(dynamic object, String from, String to, [int? count]) {
     string = object;
     isNotMarkup = true;
   } else if (object is Markup) {
-    string = object.value;
+    string = object.toString();
     isNotMarkup = false;
   } else {
-    string = '$object';
+    string = object.toString();
     isNotMarkup = true;
   }
 
@@ -267,7 +267,7 @@ dynamic doReplace(dynamic object, String from, String to, [int? count]) {
   return isNotMarkup ? string : Markup(string);
 }
 
-dynamic doReverse(dynamic value) {
+Object? doReverse(Object? value) {
   try {
     final values = list(value);
     return values.reversed;
@@ -280,13 +280,13 @@ Markup doMarkSafe(String value) {
   return Markup(value);
 }
 
-String doString(dynamic value) {
+String doString(Object? value) {
   return value.toString();
 }
 
-num doSum(Environment environment, Iterable<dynamic> values, {String? attribute, num start = 0}) {
+num doSum(Environment environment, Iterable<Object?> values, {String? attribute, num start = 0}) {
   if (attribute != null) {
-    values = values.map<dynamic>(makeAttributeGetter(environment, attribute));
+    values = values.map<Object?>(makeAttributeGetter(environment, attribute));
   }
 
   return values.cast<num>().fold(start, (s, n) => s + n);

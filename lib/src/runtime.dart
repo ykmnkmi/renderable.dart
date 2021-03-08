@@ -2,32 +2,55 @@ import 'package:meta/meta.dart';
 
 import 'enirvonment.dart';
 import 'exceptions.dart';
+import 'markup.dart';
 import 'nodes.dart';
+import 'utils.dart';
 
 @optionalTypeArgs
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
-  Context(this.environment, [Map<String, Object?>? data]) : contexts = <Map<String, Object?>>[environment.globals] {
+  Context(this.environment, [Map<String, Object?>? data])
+      : contexts = <Map<String, Object?>>[environment.globals],
+        minimal = 2 {
     if (data != null) {
-      contexts.add(data);
-    }
+      data = Map<String, Object?>.of(data);
 
-    minimal = contexts.length;
+      if (!data.containsKey('autoescape')) {
+        data['autoescape'] = environment.autoEscape;
+      }
+
+      contexts.add(data);
+    } else {
+      contexts.add(<String, Object?>{'autoescape': environment.autoEscape});
+    }
   }
 
   Context.from(Context context)
       : contexts = context.contexts,
-        environment = context.environment;
+        environment = context.environment,
+        minimal = context.contexts.length;
 
   final Environment environment;
 
   final List<Map<String, Object?>> contexts;
 
-  late int minimal;
+  int minimal;
 
   Object? operator [](String key) {
-    return get(key);
+    return resolve(key);
+  }
+
+  @protected
+  void pop() {
+    if (contexts.length > minimal) {
+      contexts.removeLast();
+    }
+  }
+
+  @protected
+  void push(Map<String, Object?> context) {
+    contexts.add(context);
   }
 
   void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
@@ -36,14 +59,8 @@ class Context {
     pop();
   }
 
-  void pop() {
-    if (contexts.length > minimal) {
-      contexts.removeLast();
-    }
-  }
-
-  void push(Map<String, Object?> context) {
-    contexts.add(context);
+  Object? escape(Object? value) {
+    return get('autoescape') == true ? Markup(value) : value;
   }
 
   Object? get(String key) {
@@ -53,16 +70,25 @@ class Context {
       }
     }
 
-    return environment.undefined(name: key);
+    return missing;
   }
 
   bool has(String name) {
     return contexts.any((context) => context.containsKey(name));
   }
+
+  Object? resolve(String key) {
+    final result = get(key);
+
+    if (result == missing) {
+      return environment.undefined(name: key);
+    }
+
+    return result;
+  }
 }
 
-// TODO: LoopContext: implement iterable
-class LoopContext {
+class LoopContext /* implement Iterable? */ {
   LoopContext(this.index0, this.length, this.previtem, this.nextitem, this.changed, this.recurse) {
     index = index0 + 1;
     first = index0 == 0;

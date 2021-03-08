@@ -275,7 +275,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   Object? visitName(Name node, [C? context]) {
     switch (node.context) {
       case AssignContext.load:
-        return context!.get(node.name);
+        return context!.resolve(node.name);
       case AssignContext.store:
       case AssignContext.parameter:
         return node.name;

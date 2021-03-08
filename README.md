@@ -24,7 +24,7 @@ Status:
   - ~~Template Objects~~
 - HTML Escaping
   - Working with Manual Escaping
-  - _Working with Automatic Escaping_
+  - Working with Automatic Escaping (not tested)
 - List of Control Structures
   - For
   - If

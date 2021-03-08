@@ -91,7 +91,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
     Object? value = derived.buffer.toString();
 
     if (node.filters == null || node.filters!.isEmpty) {
-      assignTargetsToContext(context, target, context.environment.autoEscape ? Markup(value.toString()) : value);
+      assignTargetsToContext(context, target, context.escape(value));
       return;
     }
 
@@ -101,7 +101,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
       value = callFilter(filter, value, context);
     }
 
-    assignTargetsToContext(context, target, context.environment.autoEscape ? Markup(value.toString()) : value);
+    assignTargetsToContext(context, target, context.escape(value));
   }
 
   @override
@@ -271,12 +271,17 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
 
   @override
   void visitScope(Scope node, [StringBufferRenderContext? context]) {
-    node.modifier.accept(this);
+    node.modifier.accept(this, context);
   }
 
   @override
   void visitScopedContextModifier(ScopedContextModifier node, [StringBufferRenderContext? context]) {
-    throw UnimplementedError();
+    context!;
+
+    final data = {for (final key in node.options.keys) key: node.options[key]!.accept(this)};
+    context.apply<StringBufferRenderContext>(data, (context) {
+      visitAll(node.body, context);
+    });
   }
 
   @override

@@ -9,7 +9,7 @@ class Markup {
     return Markup(escape(value));
   }
 
-  final String value;
+  final Object? value;
 
   @override
   int get hashCode {
@@ -17,12 +17,12 @@ class Markup {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object? other) {
     return other is Markup && value == other.value;
   }
 
   @override
   String toString() {
-    return value;
+    return value.toString();
   }
 }

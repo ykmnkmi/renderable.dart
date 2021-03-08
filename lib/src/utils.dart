@@ -1,10 +1,82 @@
 library utils;
 
+import 'package:meta/meta.dart';
+import 'package:renderable/runtime.dart';
+
 import 'runtime.dart';
 
 // import 'package:dart_style/dart_style.dart';
 
 typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
+
+const Missing missing = Missing();
+
+class Cycler extends Iterable<Object?> {
+  Cycler(List<Object?> values)
+      : values = List<dynamic>.of(values),
+        length = values.length,
+        index = 0;
+
+  final List<Object?> values;
+
+  @override
+  final int length;
+
+  int index;
+
+  Object? get current {
+    return values[index];
+  }
+
+  @override
+  Iterator<Object?> get iterator {
+    return CyclerIterator(this);
+  }
+
+  Object? next() {
+    final result = current;
+    index = (index + 1) % length;
+    return result;
+  }
+
+  void reset() {
+    index = 0;
+  }
+}
+
+class CyclerIterator extends Iterator<Object?> {
+  CyclerIterator(this.cycler);
+
+  final Cycler cycler;
+
+  Object? last;
+
+  @override
+  Object? get current {
+    return last;
+  }
+
+  @override
+  bool moveNext() {
+    last = cycler.next();
+    return true;
+  }
+}
+
+class Missing {
+  @literal
+  const Missing();
+
+  @override
+  int get hashCode {
+    return 2010;
+  }
+
+  @override
+  bool operator ==(Object? other) {
+    return other is Missing;
+  }
+}
 
 bool boolean(Object? value) {
   if (value == null || value is Undefined) {
@@ -141,55 +213,3 @@ String sliceString(String string, Indices indices) {
 //   // ignore: return_of_invalid_type
 //   return object;
 // }
-
-class Cycler extends Iterable<Object?> {
-  Cycler(List<Object?> values)
-      : values = List<dynamic>.of(values),
-        length = values.length,
-        index = 0;
-
-  final List<Object?> values;
-
-  @override
-  final int length;
-
-  int index;
-
-  Object? get current {
-    return values[index];
-  }
-
-  @override
-  Iterator<Object?> get iterator {
-    return CyclerIterator(this);
-  }
-
-  Object? next() {
-    final result = current;
-    index = (index + 1) % length;
-    return result;
-  }
-
-  void reset() {
-    index = 0;
-  }
-}
-
-class CyclerIterator extends Iterator<Object?> {
-  CyclerIterator(this.cycler);
-
-  final Cycler cycler;
-
-  Object? last;
-
-  @override
-  Object? get current {
-    return last;
-  }
-
-  @override
-  bool moveNext() {
-    last = cycler.next();
-    return true;
-  }
-}
