@@ -49,7 +49,7 @@ class StringBufferRenderContext extends RenderContext {
   final StringBuffer buffer;
 
   @override
-  RenderContext derived() {
+  StringBufferRenderContext derived() {
     return StringBufferRenderContext(environment, buffer: buffer);
   }
 
@@ -86,22 +86,20 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
     context!;
 
     final target = node.target.accept(this, context);
-    final derived = StringBufferRenderContext.from(context);
-    visitAll(node.body, derived);
-    Object? value = derived.buffer.toString();
+    final blockContext = StringBufferRenderContext.from(context);
+    visitAll(node.body, blockContext);
+    Object? value = blockContext.buffer.toString();
 
     if (node.filters == null || node.filters!.isEmpty) {
-      assignTargetsToContext(context, target, context.escape(value));
+      assignTargetsToContext(context, target, context.escaped(value));
       return;
     }
 
-    final filters = node.filters!;
-
-    for (final filter in filters) {
+    for (final filter in node.filters!) {
       value = callFilter(filter, value, context);
     }
 
-    assignTargetsToContext(context, target, context.escape(value));
+    assignTargetsToContext(context, target, context.escaped(value));
   }
 
   @override
@@ -259,12 +257,9 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
         context.write(item.accept(this, context));
       } else {
         var value = item.accept(this, context);
-
-        if (context.environment.autoEscape && value is! Markup) {
-          value = Markup.escape(value.toString());
-        }
-
-        context.write(context.finalize(value));
+        value = context.escape(value);
+        value = context.finalize(value);
+        context.write(value);
       }
     }
   }

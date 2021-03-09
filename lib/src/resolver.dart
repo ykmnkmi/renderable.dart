@@ -46,7 +46,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   @protected
   Object? callFilter(Filter filter, [Object? value, C? context]) {
     Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      return context!.environment.callFilter(filter.name, value, positional: positional, named: named);
+      return context!.environment.callFilter(filter.name, value, positional: positional, named: named, context: context);
     }
 
     return callable<Object?>(filter, context)(callback);

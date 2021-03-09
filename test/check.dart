@@ -5,8 +5,10 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main() {
   try {
-    final environment = Environment();
-    print(environment.fromString('{% autoescape false %}Autoescaping is inactive within this block{% endautoescape %}').render());
+    final environment = Environment(autoEscape: true);
+    final template = environment.fromString('{{ ["<foo>", "<span>foo</span>" | safe] | join }}');
+    print('&lt;foo&gt;<span>foo</span>');
+    print(template.render());
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

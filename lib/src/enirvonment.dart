@@ -50,6 +50,7 @@ class Environment {
     Map<String, Object?>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
+    Set<String>? contextFilters,
     Map<String, Function>? tests,
     Map<String, Template>? templates,
     Random? random,
@@ -63,6 +64,7 @@ class Environment {
         globals = Map<String, Object?>.of(defaults.globals),
         filters = Map<String, Function>.of(defaults.filters),
         environmentFilters = HashSet<String>.of(defaults.environmentFilters),
+        contextFilters = HashSet<String>.of(defaults.contextFilters),
         tests = Map<String, Function>.of(defaults.tests),
         templates = HashMap<String, Template>(),
         random = random ?? Random() {
@@ -127,6 +129,8 @@ class Environment {
 
   final Set<String> environmentFilters;
 
+  final Set<String> contextFilters;
+
   final Map<String, Function> tests;
 
   final Map<String, Template> templates;
@@ -156,6 +160,7 @@ class Environment {
     Map<String, dynamic>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
+    Set<String>? contextFilters,
     Map<String, Function>? tests,
     Random? random,
     FieldGetter? getField,
@@ -181,6 +186,7 @@ class Environment {
       globals: globals ?? this.globals,
       filters: filters ?? this.filters,
       environmentFilters: environmentFilters ?? this.environmentFilters,
+      contextFilters: contextFilters ?? this.contextFilters,
       tests: tests ?? this.tests,
       random: random ?? this.random,
       getField: getField ?? this.getField,
@@ -233,7 +239,7 @@ class Environment {
     }
   }
 
-  Object? callFilter(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named}) {
+  Object? callFilter(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named, Context? context}) {
     Function filter;
 
     if (filters.containsKey(name)) {
@@ -242,7 +248,11 @@ class Environment {
       throw TemplateRuntimeError('filter not found: $name');
     }
 
-    if (environmentFilters.contains(name)) {
+    if (contextFilters.contains(name)) {
+      positional ??= <Object?>[];
+      positional.insert(0, /* TODO: error message */ context!);
+      positional.insert(1, value);
+    } else if (environmentFilters.contains(name)) {
       positional ??= <Object?>[];
       positional.insert(0, this);
       positional.insert(1, value);

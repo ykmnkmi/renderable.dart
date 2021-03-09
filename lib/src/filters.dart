@@ -107,7 +107,7 @@ Markup doEscape(Object? value) {
     return value;
   }
 
-  return Markup.escape(value.toString());
+  return Markup(value);
 }
 
 String doFileSizeFormat(Object? value, [bool binary = false]) {
@@ -182,7 +182,7 @@ double doFloat(Object? value, {double d = 0.0}) {
 }
 
 Markup doForceEscape(Object? value) {
-  return Markup.escape(value.toString());
+  return Markup(value);
 }
 
 int doInteger(Object? value, {int d = 0, int base = 10}) {
@@ -211,16 +211,16 @@ int doInteger(Object? value, {int d = 0, int base = 10}) {
   }
 }
 
-Object? doJoin(Environment environment, Iterable<Object?> values, [String delimiter = '', String? attribute]) {
+Object? doJoin(Context context, Iterable<Object?> values, [String delimiter = '', String? attribute]) {
   if (attribute != null) {
-    values = values.map<Object?>(makeAttributeGetter(environment, attribute));
+    values = values.map<Object?>(makeAttributeGetter(context.environment, attribute));
   }
 
-  if (!environment.autoEscape) {
+  if (!boolean(context.get('autoescape'))) {
     return values.join(delimiter);
   }
 
-  return Markup(values.map<Object>((value) => value is Markup ? value : escape('$value')).join(delimiter));
+  return context.escaped(values.map<Object?>((value) => context.escape(value)).join(delimiter));
 }
 
 Object? doLast(Iterable<Object?> values) {
@@ -277,7 +277,7 @@ Object? doReverse(Object? value) {
 }
 
 Markup doMarkSafe(String value) {
-  return Markup(value);
+  return Markup.safe(value);
 }
 
 String doString(Object? value) {
@@ -368,4 +368,6 @@ const Map<String, Function> filters = {
   // 'xmlattr': doXMLAttr,
 };
 
-const Set<String> environmentFilters = {'attr', 'join', 'random', 'sum', 'wordwrap'};
+const Set<String> contextFilters = {'join'};
+
+const Set<String> environmentFilters = {'attr', 'random', 'sum', 'wordwrap'};

@@ -41,18 +41,6 @@ class Context {
     return resolve(key);
   }
 
-  @protected
-  void pop() {
-    if (contexts.length > minimal) {
-      contexts.removeLast();
-    }
-  }
-
-  @protected
-  void push(Map<String, Object?> context) {
-    contexts.add(context);
-  }
-
   void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
     push(data);
     closure(this as C);
@@ -60,7 +48,11 @@ class Context {
   }
 
   Object? escape(Object? value) {
-    return get('autoescape') == true ? Markup(value) : value;
+    return boolean(get('autoescape')) && value is! Markup ? Markup(value) : value;
+  }
+
+  Object? escaped(Object? value) {
+    return boolean(get('autoescape')) && value is! Markup ? Markup.safe(value) : value;
   }
 
   Object? get(String key) {
@@ -75,6 +67,16 @@ class Context {
 
   bool has(String name) {
     return contexts.any((context) => context.containsKey(name));
+  }
+
+  void pop() {
+    if (contexts.length > minimal) {
+      contexts.removeLast();
+    }
+  }
+
+  void push(Map<String, Object?> context) {
+    contexts.add(context);
   }
 
   Object? resolve(String key) {
