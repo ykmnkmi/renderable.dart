@@ -91,58 +91,67 @@ class Context {
 }
 
 class LoopContext /* implement Iterable? */ {
-  LoopContext(this.index0, this.length, this.previtem, this.nextitem, this.changed, this.recurse) {
-    index = index0 + 1;
+  LoopContext(this.length, this.index0, this.previtem, this.nextitem, this.changed, {this.depth0 = 0, this.recurse}) {
+    index = index0! + 1;
+    depth = depth0! + 1;
+    revindex = length! - index0!;
+    revindex0 = revindex! - 1;
     first = index0 == 0;
     last = index == length;
-    revindex = length - index0;
-    revindex0 = revindex - 1;
   }
 
-  final int index0;
+  int? length;
 
-  final int length;
+  int? index0;
 
-  final Object? previtem;
+  int? index;
 
-  final Object? nextitem;
+  int? revindex;
 
-  final bool Function(Object?) changed;
+  int? revindex0;
 
-  final String Function(Object? data) recurse;
+  int? depth;
 
-  late int index;
+  int? depth0;
 
-  late bool first;
+  Object? previtem;
 
-  late bool last;
+  Object? nextitem;
 
-  late int revindex;
+  bool? first;
 
-  late int revindex0;
+  bool? last;
+
+  bool Function(Object?)? changed;
+
+  String Function(Object? data, [int depth])? recurse;
 
   Object? operator [](String key) {
     switch (key) {
-      case 'index0':
-        return index0;
       case 'length':
         return length;
-      case 'previtem':
-        return previtem;
-      case 'nextitem':
-        return nextitem;
-      case 'changed':
-        return changed;
+      case 'index0':
+        return index0;
       case 'index':
         return index;
-      case 'first':
-        return first;
-      case 'last':
-        return last;
       case 'revindex':
         return revindex;
       case 'revindex0':
         return revindex0;
+      case 'depth0':
+        return depth0;
+      case 'depth':
+        return depth;
+      case 'previtem':
+        return previtem;
+      case 'nextitem':
+        return nextitem;
+      case 'first':
+        return first;
+      case 'last':
+        return last;
+      case 'changed':
+        return changed;
       case 'cycle':
         return cycle;
       default:
@@ -151,19 +160,17 @@ class LoopContext /* implement Iterable? */ {
   }
 
   String call(Object? data) {
-    return recurse(data);
+    if (recurse == null) {
+      throw TypeError(/* the loop must have the 'recursive' marker to be called recursively. */);
+    }
+
+    return recurse!(data, depth!);
   }
 
   Object cycle([
     Object? arg01 = missing,
     Object? arg02 = missing,
     Object? arg03 = missing,
-    Object? arg04 = missing,
-    Object? arg05 = missing,
-    Object? arg06 = missing,
-    Object? arg07 = missing,
-    Object? arg08 = missing,
-    Object? arg09 = missing,
   ]) {
     final values = <Object>[];
 
@@ -175,32 +182,6 @@ class LoopContext /* implement Iterable? */ {
 
         if (arg03 != missing) {
           values.add(arg03!);
-
-          if (arg04 != missing) {
-            values.add(arg04!);
-
-            if (arg05 != missing) {
-              values.add(arg05!);
-
-              if (arg06 != missing) {
-                values.add(arg06!);
-
-                if (arg07 != missing) {
-                  values.add(arg07!);
-
-                  if (arg08 != missing) {
-                    values.add(arg08!);
-
-                    if (arg09 != missing) {
-                      values.add(arg09!);
-
-                      // look at this https://api.flutter.dev/flutter/dart-ui/hashValues.html
-                    }
-                  }
-                }
-              }
-            }
-          }
         }
       }
     }
@@ -209,7 +190,7 @@ class LoopContext /* implement Iterable? */ {
       throw TypeError(/* no items for cycling given */);
     }
 
-    return values[index0 % values.length];
+    return values[index0! % values.length];
   }
 }
 

@@ -118,7 +118,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
       throw TypeError();
     }
 
-    String loop(Object? iterable) {
+    String loop(Object? iterable, [int depth = 0]) {
       var values = list(iterable);
 
       if (values.isEmpty) {
@@ -160,7 +160,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
             return true;
           }
 
-          data['loop'] = LoopContext(index, values.length, previous, next, changed, loop);
+          data['loop'] = LoopContext(values.length, index, previous, next, changed, depth0: depth, recurse: loop);
           return data;
         };
       } else {

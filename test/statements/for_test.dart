@@ -177,8 +177,65 @@ void main() {
       expect(template.render({'seq': seq}), equals('[x.1.2<[x.1.2][1.2.x]>][1.2.3<[x.1.2][1.2.x]>][2.3.x<[x.a.x]>]'));
     });
 
-    // TODO: add test: recursive depth0
-    // TODO: add test: recursive depth
+    test('recursive depth0', () {
+      final environment = Environment();
+      final template = environment.fromString('''{% for item in seq recursive -%}
+        [{{ loop.depth0 }}:{{ item.a }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
+        {%- endfor %}''');
+      final seq = [
+        {
+          'a': 1,
+          'b': [
+            {'a': 1},
+            {'a': 2}
+          ]
+        },
+        {
+          'a': 2,
+          'b': [
+            {'a': 1},
+            {'a': 2}
+          ]
+        },
+        {
+          'a': 3,
+          'b': [
+            {'a': 'a'}
+          ]
+        },
+      ];
+      expect(template.render({'seq': seq}), equals('[0:1<[1:1][1:2]>][0:2<[1:1][1:2]>][0:3<[1:a]>]'));
+    });
+
+    test('recursive depth', () {
+      final environment = Environment();
+      final template = environment.fromString('''{% for item in seq recursive -%}
+        [{{ loop.depth }}:{{ item.a }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
+        {%- endfor %}''');
+      final seq = [
+        {
+          'a': 1,
+          'b': [
+            {'a': 1},
+            {'a': 2}
+          ]
+        },
+        {
+          'a': 2,
+          'b': [
+            {'a': 1},
+            {'a': 2}
+          ]
+        },
+        {
+          'a': 3,
+          'b': [
+            {'a': 'a'}
+          ]
+        },
+      ];
+      expect(template.render({'seq': seq}), equals('[1:1<[2:1][2:2]>][1:2<[2:1][2:2]>][1:3<[2:a]>]'));
+    });
 
     test('looploop', () {
       final environment = Environment();
@@ -201,12 +258,14 @@ void main() {
       expect(template.render({'items': items}), equals('1,2,3'));
     });
 
-    // TODO: check Error
-    // test('loop errors', () {
-    //   final template = environment.fromString('''{% for item in [1] if loop.index
-    //                                   == 0 %}...{% endfor %}''');
-    //   expect(() => template.render(), throwsA(isA<UndefinedError>()));
-    // });
+    
+    test('loop errors', () {
+      final environment = Environment();
+      var template = environment.fromString('{% for item in [1] if loop.index == 0 %}...{% endfor %}');
+      expect(() => template.render(), throwsA(isA<UndefinedError>()));
+      template = environment.fromString('{% for item in [] %}...{% else %}{{ loop }}{% endfor %}');
+      expect(template.render(), equals(''));
+    });
 
     test('loop filter', () {
       final environment = Environment();
