@@ -5,10 +5,33 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main() {
   try {
-    final environment = Environment(autoEscape: true);
-    final template = environment.fromString('{{ ["<foo>", "<span>foo</span>" | safe] | join }}');
-    print('&lt;foo&gt;<span>foo</span>');
-    print(template.render());
+    final environment = Environment();
+    final template = environment.fromString('''{% for item in seq recursive -%}
+            [{{ item.a }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
+        {%- endfor %}''');
+    final seq = [
+      {
+        'a': 1,
+        'b': [
+          {'a': 1},
+          {'a': 2},
+        ]
+      },
+      // {
+      //   'a': 2,
+      //   'b': [
+      //     {'a': 1},
+      //     {'a': 2}
+      //   ]
+      // },
+      // {
+      //   'a': 3,
+      //   'b': [
+      //     {'a': 'a'}
+      //   ]
+      // },
+    ];
+    print(template.render({'seq': seq}));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));

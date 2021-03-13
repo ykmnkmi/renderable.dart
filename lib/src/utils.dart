@@ -79,7 +79,7 @@ class Missing {
 }
 
 bool boolean(Object? value) {
-  if (value == null || value is Undefined) {
+  if (value == null || value == missing || value is Undefined) {
     return false;
   }
 

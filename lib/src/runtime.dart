@@ -48,11 +48,11 @@ class Context {
   }
 
   Object? escape(Object? value) {
-    return boolean(get('autoescape')) && value is! Markup ? Markup(value) : value;
+    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup(value) : value;
   }
 
   Object? escaped(Object? value) {
-    return boolean(get('autoescape')) && value is! Markup ? Markup.safe(value) : value;
+    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup.safe(value) : value;
   }
 
   Object? get(String key) {
@@ -109,7 +109,7 @@ class LoopContext /* implement Iterable? */ {
 
   final bool Function(Object?) changed;
 
-  final void Function(Object? data) recurse;
+  final String Function(Object? data) recurse;
 
   late int index;
 
@@ -121,7 +121,7 @@ class LoopContext /* implement Iterable? */ {
 
   late int revindex0;
 
-  dynamic operator [](String key) {
+  Object? operator [](String key) {
     switch (key) {
       case 'index0':
         return index0;
@@ -150,39 +150,49 @@ class LoopContext /* implement Iterable? */ {
     }
   }
 
-  void call(Object? data) {
-    recurse(data);
+  String call(Object? data) {
+    return recurse(data);
   }
 
-  Object cycle([Object? arg01, Object? arg02, Object? arg03, Object? arg04, Object? arg05, Object? arg06, Object? arg07, Object? arg08, Object? arg09]) {
+  Object cycle([
+    Object? arg01 = missing,
+    Object? arg02 = missing,
+    Object? arg03 = missing,
+    Object? arg04 = missing,
+    Object? arg05 = missing,
+    Object? arg06 = missing,
+    Object? arg07 = missing,
+    Object? arg08 = missing,
+    Object? arg09 = missing,
+  ]) {
     final values = <Object>[];
 
-    if (arg01 != null) {
-      values.add(arg01);
+    if (arg01 != missing) {
+      values.add(arg01!);
 
-      if (arg02 != null) {
-        values.add(arg02);
+      if (arg02 != missing) {
+        values.add(arg02!);
 
-        if (arg03 != null) {
-          values.add(arg03);
+        if (arg03 != missing) {
+          values.add(arg03!);
 
-          if (arg04 != null) {
-            values.add(arg04);
+          if (arg04 != missing) {
+            values.add(arg04!);
 
-            if (arg05 != null) {
-              values.add(arg05);
+            if (arg05 != missing) {
+              values.add(arg05!);
 
-              if (arg06 != null) {
-                values.add(arg06);
+              if (arg06 != missing) {
+                values.add(arg06!);
 
-                if (arg07 != null) {
-                  values.add(arg07);
+                if (arg07 != missing) {
+                  values.add(arg07!);
 
-                  if (arg08 != null) {
-                    values.add(arg08);
+                  if (arg08 != missing) {
+                    values.add(arg08!);
 
-                    if (arg09 != null) {
-                      values.add(arg09);
+                    if (arg09 != missing) {
+                      values.add(arg09!);
 
                       // look at this https://api.flutter.dev/flutter/dart-ui/hashValues.html
                     }
@@ -256,7 +266,7 @@ class Namespace {
     }
   }
 
-  final Map<String, dynamic> context;
+  final Map<String, Object?> context;
 
   Iterable<MapEntry<String, Object?>> get entries {
     return context.entries;

@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 
 import 'enirvonment.dart';
 import 'exceptions.dart';
-import 'markup.dart';
 import 'nodes.dart';
 import 'resolver.dart';
 import 'runtime.dart';
@@ -119,7 +118,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
       throw TypeError();
     }
 
-    void loop(Object? iterable) {
+    String loop(Object? iterable) {
       var values = list(iterable);
 
       if (values.isEmpty) {
@@ -127,7 +126,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
           visitAll(orElse, context);
         }
 
-        return;
+        return '';
       }
 
       Map<String, Object?> Function(List<Object?>, int) unpack;
@@ -192,6 +191,8 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
         visitAll(node.body, context);
         context.pop();
       }
+
+      return '';
     }
 
     loop(iterable);

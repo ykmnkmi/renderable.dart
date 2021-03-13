@@ -300,9 +300,9 @@ String doUpper(String value) {
   return value.toUpperCase();
 }
 
-// TODO: *****
 int doWordCount(String string) {
-  return RegExp(r'\w+').allMatches(string).length;
+  final matches = RegExp(r'\w+').allMatches(string);
+  return matches.length;
 }
 
 String doWordWrap(Environment environment, String string, int width, {bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
