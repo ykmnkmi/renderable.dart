@@ -88,7 +88,17 @@ class For extends Statement {
 
   @override
   String toString() {
-    var result = 'For($target, $iterable';
+    var result = 'For';
+
+    if (recursive) {
+      result = '$result.recursive';
+    }
+
+    result = '$result$target, $iterable';
+
+    if (test != null) {
+      result = '$result, $test';
+    }
 
     if (body.isNotEmpty) {
       result = '$result, $body';
@@ -96,10 +106,6 @@ class For extends Statement {
 
     if (orElse != null) {
       result = '$result, orElse: $orElse';
-    }
-
-    if (recursive) {
-      result = '$result, recursive: $recursive';
     }
 
     return '$result)';

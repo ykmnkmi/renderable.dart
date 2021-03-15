@@ -2,6 +2,31 @@ import 'package:renderable/jinja.dart';
 import 'package:renderable/runtime.dart';
 import 'package:test/test.dart';
 
+const Map<String, List<Map<String, Object>>> recursiveData = <String, List<Map<String, Object>>>{
+  'seq': <Map<String, Object>>[
+    {
+      'a': 1,
+      'b': [
+        {'a': 1},
+        {'a': 2}
+      ]
+    },
+    {
+      'a': 2,
+      'b': [
+        {'a': 1},
+        {'a': 2}
+      ]
+    },
+    {
+      'a': 3,
+      'b': [
+        {'a': 'a'}
+      ]
+    },
+  ]
+};
+
 void main() {
   group('For', () {
     test('simple', () {
@@ -152,29 +177,7 @@ void main() {
             item.a }}.{{ loop.nextitem.a if loop.nextitem is defined else 'x'
             }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
         {%- endfor %}''');
-      final seq = [
-        {
-          'a': 1,
-          'b': [
-            {'a': 1},
-            {'a': 2}
-          ]
-        },
-        {
-          'a': 2,
-          'b': [
-            {'a': 1},
-            {'a': 2}
-          ]
-        },
-        {
-          'a': 3,
-          'b': [
-            {'a': 'a'}
-          ]
-        },
-      ];
-      expect(template.render({'seq': seq}), equals('[x.1.2<[x.1.2][1.2.x]>][1.2.3<[x.1.2][1.2.x]>][2.3.x<[x.a.x]>]'));
+      expect(template.render(recursiveData), equals('[x.1.2<[x.1.2][1.2.x]>][1.2.3<[x.1.2][1.2.x]>][2.3.x<[x.a.x]>]'));
     });
 
     test('recursive depth0', () {
@@ -182,29 +185,7 @@ void main() {
       final template = environment.fromString('''{% for item in seq recursive -%}
         [{{ loop.depth0 }}:{{ item.a }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
         {%- endfor %}''');
-      final seq = [
-        {
-          'a': 1,
-          'b': [
-            {'a': 1},
-            {'a': 2}
-          ]
-        },
-        {
-          'a': 2,
-          'b': [
-            {'a': 1},
-            {'a': 2}
-          ]
-        },
-        {
-          'a': 3,
-          'b': [
-            {'a': 'a'}
-          ]
-        },
-      ];
-      expect(template.render({'seq': seq}), equals('[0:1<[1:1][1:2]>][0:2<[1:1][1:2]>][0:3<[1:a]>]'));
+      expect(template.render(recursiveData), equals('[0:1<[1:1][1:2]>][0:2<[1:1][1:2]>][0:3<[1:a]>]'));
     });
 
     test('recursive depth', () {
@@ -212,29 +193,7 @@ void main() {
       final template = environment.fromString('''{% for item in seq recursive -%}
         [{{ loop.depth }}:{{ item.a }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
         {%- endfor %}''');
-      final seq = [
-        {
-          'a': 1,
-          'b': [
-            {'a': 1},
-            {'a': 2}
-          ]
-        },
-        {
-          'a': 2,
-          'b': [
-            {'a': 1},
-            {'a': 2}
-          ]
-        },
-        {
-          'a': 3,
-          'b': [
-            {'a': 'a'}
-          ]
-        },
-      ];
-      expect(template.render({'seq': seq}), equals('[1:1<[2:1][2:2]>][1:2<[2:1][2:2]>][1:3<[2:a]>]'));
+      expect(template.render(recursiveData), equals('[1:1<[2:1][2:2]>][1:2<[2:1][2:2]>][1:3<[2:a]>]'));
     });
 
     test('looploop', () {
@@ -258,7 +217,6 @@ void main() {
       expect(template.render({'items': items}), equals('1,2,3'));
     });
 
-    
     test('loop errors', () {
       final environment = Environment();
       var template = environment.fromString('{% for item in [1] if loop.index == 0 %}...{% endfor %}');
@@ -278,7 +236,10 @@ void main() {
       expect(template.render(), equals('[1:0][2:2][3:4][4:6][5:8]'));
     });
 
-    // TODO: add test: loop unassignable
+    test('loop unassignable', () {
+      final environment = Environment();
+      expect(() => environment.fromString('{% for loop in seq %}...{% endfor %}'), throwsA(isA<TemplateSyntaxError>()));
+    });
 
     test('scoped special var', () {
       final environment = Environment();
@@ -298,9 +259,16 @@ void main() {
       expect(template.render({'seq': 'ab'}), equals('truefalsetruefalse'));
     });
 
-    // TODO: add test: recursive empty loop iter
-    // TODO: add test: call in loop
-    // TODO: add test: scoping bug
+    test('recursive empty loop iter', () {
+      final environment = Environment();
+      final template = environment.fromString('''
+        {%- for item in foo recursive -%}{%- endfor -%}
+        ''');
+      expect(template.render(), equals(''));
+    });
+
+    // TODO: after macro call: add test: call in loop
+    // TODO: after macro: add test: scoping bug
 
     test('unpacking', () {
       final environment = Environment();

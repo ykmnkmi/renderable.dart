@@ -3,6 +3,8 @@ import 'package:renderable/reflection.dart';
 import 'package:renderable/src/exceptions.dart';
 import 'package:test/test.dart';
 
+const Map<Object?, Object?> emptyMap = <Object?, Object?>{};
+
 void main() {
   group('Set', () {
     test('normal', () {
@@ -27,19 +29,14 @@ void main() {
       final environment = Environment(getField: getField, trimBlocks: true);
       expect(() => environment.fromString('{% set foo["bar"] = 1 %}'), throwsA(isA<TemplateSyntaxError>()));
       final template = environment.fromString('{% set foo.bar = 1 %}');
-      expect(
-        () => template.render({'foo': <Object?, Object?>{}}),
-        throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')),
-      );
+      expect(() => template.render({'foo': emptyMap}), throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
     });
 
     test('namespace redefined', () {
       final environment = Environment(getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
-      expect(
-        () => template.render({'namespace': () => <Object?, Object?>{}}),
-        throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')),
-      );
+      expect(() => template.render({'namespace': () => emptyMap}),
+          throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
     });
 
     test('namespace', () {
@@ -57,7 +54,10 @@ void main() {
     test('init namespace', () {
       final environment = Environment(getField: getField, trimBlocks: true);
       final template = environment.fromString('{% set ns = namespace(d, self=37) %}{% set ns.b = 42 %}{{ ns.a }}|{{ ns.self }}|{{ ns.b }}');
-      expect(template.render({'d': {'a': 13}}), equals('13|37|42'));
+      final data = {
+        'd': {'a': 13}
+      };
+      expect(template.render(data), equals('13|37|42'));
     });
 
     test('namespace loop', () {
@@ -68,7 +68,7 @@ void main() {
       expect(template.render({'v': 4}), equals('false'));
     });
 
-    // TODO: namespace macro
+    // TODO: after macro: add test: namespace macro
 
     test('block escapeing filtered', () {
       final environment = Environment(autoEscape: true);

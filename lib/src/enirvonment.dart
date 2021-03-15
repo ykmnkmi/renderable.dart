@@ -218,7 +218,7 @@ class Environment {
       if (key is String) {
         try {
           return getField(object, key);
-        } on Exception {
+        } on NoSuchMethodError {
           // do nothing.
         }
       }
@@ -233,7 +233,7 @@ class Environment {
     } on NoSuchMethodError {
       try {
         return (object as dynamic)[field];
-      } on Exception {
+      } on NoSuchMethodError {
         return undefined(object: object, name: field);
       }
     }

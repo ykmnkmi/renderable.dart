@@ -175,6 +175,11 @@ class Parser {
   For parseFor(TokenReader reader) {
     reader.expect('name', 'for');
     final target = parseAssignTarget(reader, extraEndRules: <String>['name:in']);
+
+    if (target is Name && target.name == 'loop') {
+      fail('can\'t assign to special loop variable in for-loop target');
+    }
+
     reader.expect('name', 'in');
     final iterable = parseTuple(reader, withCondition: false);
     var hasLoop = false;
@@ -628,7 +633,7 @@ class Parser {
       }
 
       if (!explicitParentheses) {
-        fail('Expected an expression, got ${describeToken(reader.current)}');
+        fail('expected an expression, got ${describeToken(reader.current)}');
       }
     }
 

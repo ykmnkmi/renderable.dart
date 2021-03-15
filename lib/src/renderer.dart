@@ -172,7 +172,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
         final filtered = <Object?>[];
 
         for (var i = 0; i < values.length; i += 1) {
-          final data = unpack(values, i);
+          final data = getDataForTargets(target, values[i]);
           context.push(data);
 
           if (test.accept(this, context) as bool) {

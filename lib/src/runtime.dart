@@ -230,7 +230,8 @@ class Undefined {
     return other is Undefined;
   }
 
-  Object? noSuchMethodError(Invocation invocation) {
+  @override
+  Object? noSuchMethod(Invocation invocation) {
     throw UndefinedError(undefinedMessage);
   }
 
