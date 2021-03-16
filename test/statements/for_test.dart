@@ -267,7 +267,7 @@ void main() {
       expect(template.render(), equals(''));
     });
 
-    // TODO: after macro call: add test: call in loop
+    // TODO: after macro: add test: call in loop
     // TODO: after macro: add test: scoping bug
 
     test('unpacking', () {

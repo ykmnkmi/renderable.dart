@@ -5,11 +5,15 @@ String escape(String text) {
 class Markup {
   const Markup(this.value);
 
-  factory Markup.safe(Object? value) {
-    return value is Markup ? value : Escaped(value);
+  factory Markup.from(Object? value) {
+    return value is Markup ? value : Markup(value as String);
   }
 
-  final Object? value;
+  factory Markup.escaped(Object? value) {
+    return value is Markup ? value : Escaped(value as String);
+  }
+
+  final String value;
 
   @override
   int get hashCode {
@@ -23,7 +27,7 @@ class Markup {
 
   @override
   String toString() {
-    return escape(value.toString());
+    return escape(value);
   }
 }
 
@@ -31,7 +35,7 @@ class Escaped implements Markup {
   Escaped(this.value);
 
   @override
-  final Object? value;
+  final String value;
 
   @override
   int get hashCode {

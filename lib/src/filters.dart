@@ -1,4 +1,3 @@
-// TODO: test filters with Markup
 library filters;
 
 import 'dart:convert';
@@ -107,7 +106,7 @@ Markup doEscape(Object? value) {
     return value;
   }
 
-  return Markup(value);
+  return Markup(value as String);
 }
 
 String doFileSizeFormat(Object? value, [bool binary = false]) {
@@ -182,7 +181,7 @@ double doFloat(Object? value, {double d = 0.0}) {
 }
 
 Markup doForceEscape(Object? value) {
-  return Markup(value);
+  return Markup(value.toString());
 }
 
 int doInteger(Object? value, {int d = 0, int base = 10}) {
@@ -277,7 +276,7 @@ Object? doReverse(Object? value) {
 }
 
 Markup doMarkSafe(String value) {
-  return Markup.safe(value);
+  return Markup.escaped(value);
 }
 
 String doString(Object? value) {

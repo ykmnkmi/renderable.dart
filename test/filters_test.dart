@@ -298,7 +298,7 @@ void main() {
     test('force escape', () {
       final environment = Environment();
       final template = environment.fromString('{{ x | forceescape }}');
-      expect(template.render({'x': Markup.safe('<div />')}), equals('&lt;div /&gt;'));
+      expect(template.render({'x': Markup.escaped('<div />')}), equals('&lt;div /&gt;'));
     });
 
     test('safe', () {

@@ -48,11 +48,11 @@ class Context {
   }
 
   Object? escape(Object? value) {
-    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup(value) : value;
+    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup(value as String) : value;
   }
 
   Object? escaped(Object? value) {
-    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup.safe(value) : value;
+    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup.escaped(value) : value;
   }
 
   Object? get(String key) {
@@ -230,9 +230,13 @@ class Undefined {
     return other is Undefined;
   }
 
+  Never fail() {
+    throw UndefinedError(undefinedMessage);
+  }
+
   @override
   Object? noSuchMethod(Invocation invocation) {
-    throw UndefinedError(undefinedMessage);
+    fail();
   }
 
   @override

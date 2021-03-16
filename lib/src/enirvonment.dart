@@ -2,6 +2,7 @@ import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
 import 'package:meta/meta.dart';
+import 'package:renderable/jinja.dart';
 
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
@@ -249,8 +250,12 @@ class Environment {
     }
 
     if (contextFilters.contains(name)) {
+      if (context == null) {
+        throw TemplateRuntimeError('attempted to invoke context filter without context');
+      }
+
       positional ??= <Object?>[];
-      positional.insert(0, /* TODO: error message */ context!);
+      positional.insert(0, context);
       positional.insert(1, value);
     } else if (environmentFilters.contains(name)) {
       positional ??= <Object?>[];
@@ -275,7 +280,6 @@ class Environment {
 
     positional ??= <Object?>[];
     positional.insert(0, value);
-
     return Function.apply(test, positional, named) as bool;
   }
 
@@ -304,7 +308,15 @@ class Environment {
     return loadTemplate(name as String);
   }
 
-  Template selectTemplate(List<Object?> names) {
+  Template selectTemplate(Object? names) {
+    if (names is Undefined) {
+      throw names.fail();
+    }
+
+    if (names is! List<Object?>) {
+      throw TypeError();
+    }
+
     if (names.isEmpty) {
       throw TemplateNotFound(message: 'tried to select from an empty list of templates');
     }
@@ -314,14 +326,30 @@ class Environment {
         return name;
       }
 
+      if (name is! String) {
+        throw TypeError();
+      }
+
       try {
-        return loadTemplate(name as String);
+        return loadTemplate(name);
       } on TemplateNotFound {
         continue;
       }
     }
 
     throw TemplatesNotFound(names: names);
+  }
+
+  Template getOrSelectTemplate(Object? templateNameOrList) {
+    if (templateNameOrList is String) {
+      return getTemplate(templateNameOrList);
+    }
+
+    if (templateNameOrList is Template) {
+      return templateNameOrList;
+    }
+
+    return selectTemplate(templateNameOrList);
   }
 
   Template fromString(String source, {String? path}) {

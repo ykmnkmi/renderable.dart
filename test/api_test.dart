@@ -8,13 +8,21 @@ void main() {
     test('item and attribute', () {
       final environment = Environment(getField: getField);
       final template = environment.fromString('{{ foo["items"] }}');
-      expect(template.render({'foo': {'items': 42}}), equals('42'));
+      expect(
+          template.render({
+            'foo': {'items': 42}
+          }),
+          equals('42'));
     });
 
     test('finalize', () {
       final environment = Environment(finalize: (dynamic obj) => obj ?? '');
       final template = environment.fromString('{% for item in seq %}|{{ item }}{% endfor %}');
-      expect(template.render({'seq': [null, 1, 'foo']}), equals('||1|foo'));
+      expect(
+          template.render({
+            'seq': [null, 1, 'foo']
+          }),
+          equals('||1|foo'));
     });
 
     test('finalize constant expression', () {
@@ -31,7 +39,7 @@ void main() {
     });
 
     test('context finalize', () {
-      dynamic finalize(Context context, dynamic value) {
+      Object? finalize(Context context, dynamic value) {
         return value * context['scale'];
       }
 
@@ -41,7 +49,7 @@ void main() {
     });
 
     test('env autoescape', () {
-      dynamic finalize(Environment environment, dynamic value) {
+      Object? finalize(Environment environment, dynamic value) {
         return '${environment.variableBegin} ${represent(value)} ${environment.variableEnd}';
       }
 
@@ -67,12 +75,13 @@ void main() {
       expect(cycler.current, equals(1));
     });
 
-    // TODO: compileExpression test
-
-    // TODO: getTemplate test
-
-    // TODO: getTemplate test
-
-    // TODO: autoEscapeMatcher test
+    test('template passthrough', () {
+      final environment = Environment();
+      final template = Template('content');
+      expect(environment.getTemplate(template), equals(template));
+      expect(environment.selectTemplate([template]), equals(template));
+      expect(environment.getOrSelectTemplate([template]), equals(template));
+      expect(environment.getOrSelectTemplate(template), equals(template));
+    });
   });
 }
