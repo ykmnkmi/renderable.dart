@@ -1,6 +1,7 @@
 library utils;
 
 import 'package:meta/meta.dart';
+import 'package:path/path.dart';
 import 'package:renderable/runtime.dart';
 
 import 'runtime.dart';
@@ -163,29 +164,56 @@ Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
 }
 
 String represent(Object? object) {
-  if (object is Iterable<Object?>) {
-    final buffer = StringBuffer('[')
-      ..writeAll(object.map<String>(represent), ', ')
-      ..write(']');
-    return buffer.toString();
-  } else if (object is Map<Object?, Object?>) {
-    final buffer = StringBuffer('{');
-    final pairs = <Object>[];
+  final buffer = StringBuffer();
+  representTo(object, buffer);
+  return buffer.toString();
+}
 
-    object.forEach((key, value) {
-      pairs.add('${represent(key)}: ${represent(value)}');
-    });
-
-    buffer
-      ..writeAll(pairs, ', ')
-      ..write('}');
-    return buffer.toString();
-  } else if (object is String) {
-    final string = object.replaceAll('\'', r"\'").replaceAll('\r', r'\\r').replaceAll('\n', r'\\n');
-    return "'$string'";
-  } else {
-    return object.toString();
+void representTo(Object? object, StringBuffer buffer) {
+  if (object == null) {
+    buffer.write('null');
+    return;
   }
+
+  if (object is List<Object?>) {
+    buffer.write('[');
+
+    for (var i = 0; i < object.length; i += 1) {
+      if (i > 0) {
+        buffer.write(', ');
+      }
+
+      representTo(object[i], buffer);
+    }
+
+    buffer.write(']');
+    return;
+  }
+
+  if (object is Map<Object?, Object?>) {
+    final keys = object.keys.toList();
+    buffer.write('{');
+
+    for (var i = 0; i < keys.length; i += 1) {
+      if (i > 0) {
+        buffer.write(', ');
+      }
+
+      representTo(keys[i], buffer);
+      buffer.write(': ');
+      representTo(object[keys[i]], buffer);
+    }
+
+    buffer.write('}');
+    return;
+  }
+
+  if (object is String) {
+    buffer.write("'${object.replaceAll('\'', r"\'").replaceAll('\r', r'\\r').replaceAll('\n', r'\\n')}'");
+    return;
+  }
+
+  buffer.write(object);
 }
 
 List<T> slice<T>(List<T> list, Indices indices) {
