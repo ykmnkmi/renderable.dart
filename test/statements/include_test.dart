@@ -66,8 +66,6 @@ void main() {
       expect(environment.getTemplate('main').render(), equals('123'));
     });
 
-    // TODO: after macro: add tests
-    // https://github.com/pallets/jinja/blob/2.11.3/tests/test_imports.py#L155
-    // https://github.com/pallets/jinja/blob/2.11.3/tests/test_imports.py#L169
+    // TODO: after macro: add tests: unoptimized_scopes, import_from_with_context
   });
 }

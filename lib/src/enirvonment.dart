@@ -301,16 +301,24 @@ class Environment {
   }
 
   Template getTemplate(Object? name) {
+    if (name is Undefined) {
+      name.fail();
+    }
+
     if (name is Template) {
       return name;
     }
 
-    return loadTemplate(name as String);
+    if (name is String) {
+      return loadTemplate(name);
+    }
+
+    throw TypeError();
   }
 
   Template selectTemplate(Object? names) {
     if (names is Undefined) {
-      throw names.fail();
+      names.fail();
     }
 
     if (names is! List<Object?>) {
@@ -326,8 +334,8 @@ class Environment {
         return name;
       }
 
-      if (name is! String) {
-        throw TypeError();
+      if (name is Undefined || name is! String) {
+        continue;
       }
 
       try {

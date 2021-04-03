@@ -92,17 +92,25 @@ class Context {
 
 class LoopContext /* implement Iterable? */ {
   LoopContext(this.length, this.index0, this.previtem, this.nextitem, this.changed, {this.depth0 = 0, this.recurse}) {
-    index = index0! + 1;
-    depth = depth0! + 1;
-    revindex = length! - index0!;
+    index = index0 + 1;
+    depth = depth0 + 1;
+    revindex = length - index0;
     revindex0 = revindex! - 1;
     first = index0 == 0;
     last = index == length;
   }
 
-  int? length;
+  int length;
 
-  int? index0;
+  int index0;
+
+  Object? previtem;
+
+  Object? nextitem;
+
+  bool Function(Object?) changed;
+
+  int depth0;
 
   int? index;
 
@@ -112,17 +120,9 @@ class LoopContext /* implement Iterable? */ {
 
   int? depth;
 
-  int? depth0;
-
-  Object? previtem;
-
-  Object? nextitem;
-
   bool? first;
 
   bool? last;
-
-  bool Function(Object?)? changed;
 
   String Function(Object? data, [int depth])? recurse;
 
@@ -190,7 +190,7 @@ class LoopContext /* implement Iterable? */ {
       throw TypeError(/* no items for cycling given */);
     }
 
-    return values[index0! % values.length];
+    return values[index0 % values.length];
   }
 }
 

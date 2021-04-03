@@ -8,21 +8,15 @@ void main() {
     test('item and attribute', () {
       final environment = Environment(getField: getField);
       final template = environment.fromString('{{ foo["items"] }}');
-      expect(
-          template.render({
-            'foo': {'items': 42}
-          }),
-          equals('42'));
+      final foo = {'items': 42};
+      expect(template.render({'foo': foo}), equals('42'));
     });
 
     test('finalize', () {
       final environment = Environment(finalize: (dynamic obj) => obj ?? '');
       final template = environment.fromString('{% for item in seq %}|{{ item }}{% endfor %}');
-      expect(
-          template.render({
-            'seq': [null, 1, 'foo']
-          }),
-          equals('||1|foo'));
+      final seq = [null, 1, 'foo'];
+      expect(template.render({'seq': seq}), equals('||1|foo'));
     });
 
     test('finalize constant expression', () {
@@ -83,5 +77,16 @@ void main() {
       expect(environment.getOrSelectTemplate([template]), equals(template));
       expect(environment.getOrSelectTemplate(template), equals(template));
     });
+
+    test('get template undefined', () {
+      final environment = Environment(loader: MapLoader({}));
+      final template = Undefined(name: 'no-name-1');
+      expect(() => environment.getTemplate(template), throwsA(isA<UndefinedError>()));
+      expect(() => environment.getOrSelectTemplate(template), throwsA(isA<UndefinedError>()));
+      expect(() => environment.selectTemplate(template), throwsA(isA<UndefinedError>()));
+      expect(() => environment.selectTemplate([template, 'no-name-2']), throwsA(isA<TemplatesNotFound>()));
+    });
+
+    // TODO: add test: autoescape autoselect
   });
 }
