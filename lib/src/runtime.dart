@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:meta/meta.dart';
 
 import 'enirvonment.dart';
@@ -14,7 +16,7 @@ class Context {
       : contexts = <Map<String, Object?>>[environment.globals],
         minimal = 2 {
     if (data != null) {
-      data = Map<String, Object?>.of(data);
+      data = HashMap<String, Object?>.of(data);
 
       if (!data.containsKey('autoescape')) {
         data['autoescape'] = environment.autoEscape;
@@ -22,8 +24,15 @@ class Context {
 
       contexts.add(data);
     } else {
-      contexts.add(<String, Object?>{'autoescape': environment.autoEscape});
+      data = <String, Object?>{'autoescape': environment.autoEscape};
+      contexts.add(data);
     }
+
+    data
+      ..['context'] = this
+      ..['ctx'] = this
+      ..['environment'] = this
+      ..['env'] = this;
   }
 
   Context.from(Context context)
@@ -45,6 +54,18 @@ class Context {
     push(data);
     closure(this as C);
     pop();
+  }
+
+  Object? call(Object? object, [List<Object?>? positional, Map<Symbol, Object?>? named]) {
+    positional ??= <Object?>[];
+
+    if (object is! Function) {
+      object = environment.getAttribute(object, 'call');
+    }
+
+    if (object is Function) {
+      return Function.apply(object, positional, named);
+    }
   }
 
   Object? escape(Object? value) {

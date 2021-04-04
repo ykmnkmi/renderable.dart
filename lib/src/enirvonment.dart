@@ -22,8 +22,6 @@ typedef ContextFinalizer = Object? Function(Context context, Object? value);
 
 typedef EnvironmentFinalizer = Object? Function(Environment environment, Object? value);
 
-typedef Caller = Object? Function(Object object, List<Object?> positional, [Map<Symbol, Object?> named]);
-
 typedef FieldGetter = Object? Function(Object? object, String field);
 
 typedef UndefinedFactory = Undefined Function({String? hint, Object? object, String? name});

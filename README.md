@@ -4,8 +4,70 @@ Renderable.dart
 [Jinja.dart](https://github.com/ykmnkmi/jinja.dart) next stable version (1.0.0), will be merged to jinja.dart repo.
 After merging this package will be simplified to object based context and divided to annotations and generator.
 
+Differences:
+- no context and environment function decorators, use `context`/`ctx` or `environment`/`env` variables: `{{ function(ctx/env, ...) }}`
+- ...
+
 Status:
 ------
+
+API:
+- Environment
+  - constructor
+    - ~~extensions~~
+    - ~~selectAutoescape~~
+    - ~~autoReload~~
+  - ~~shared~~
+  - filters
+  - tests
+  - globals
+  - undefined
+  - ~~addExtension~~
+  - ~~compileExpression~~
+  - fromString
+  - getOrSelectTemplate
+  - getTemplate
+  - ~~listTemplates~~
+  - selectTemplate
+- Template
+  - path (name)
+  - render
+  - ~~generate~~
+  - ~~stream~~
+- Undefined Types
+  - Undefined
+    - undefinedMessage
+    - fail
+- Context
+  - ~~parent~~
+  - environment
+  - ~~name~~
+  - ~~blocks~~
+  - call
+  - resolve
+- Loaders
+  - Loader
+    - hasSourceAccess
+    - getSource
+    - listSources
+    - load
+  - MapLoader (DictLoader)
+  - ~~FileSystemLoader~~
+- Utilities
+  - escape
+  - isUndefined
+  - Markup
+- Exceptions
+  - TemplateError
+  - UndefinedError
+  - TemplateNotFound
+  - TemplatesNotFound
+  - TemplateSyntaxError
+  - TemplateRuntimeError
+  - ~~TemplateAssertionError~~
+- ...
+
+Templates:
 - Variables `[a-zA-Z$_][a-zA-Z0-9$_]*`
 - Filters
 - Tests
@@ -25,7 +87,7 @@ Status:
   - ~~Template Objects~~
 - HTML Escaping
   - Working with Manual Escaping
-  - Working with Automatic Escaping (not tested)
+  - Working with Automatic Escaping
 - List of Control Structures
   - For
   - If

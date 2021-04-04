@@ -112,6 +112,10 @@ String format(Object? object) {
   // return DartFormatter().formatStatement(source);
 }
 
+bool isUndefined(Object? value) {
+  return value is Undefined;
+}
+
 List<Object?> list(Object? iterable) {
   if (iterable is Undefined) {
     return const <Object?>[];

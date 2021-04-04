@@ -13,8 +13,9 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   @literal
   const ExpressionResolver();
 
-  @protected // update
-  T Function(T Function(List<Object?>, Map<Symbol, Object?>)) callable<T>(Callable callable, [C? context]) {
+  // TODO: update calling
+  @protected
+  T Function(T Function(List<Object?>, Map<Symbol, Object?>)) callable<T>(Callable callable, C context) {
     final positional = <Object?>[];
 
     if (callable.arguments != null) {
@@ -45,8 +46,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @protected
   Object? callFilter(Filter filter, [Object? value, C? context]) {
+    context!;
+
     Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      return context!.environment.callFilter(filter.name, value, positional: positional, named: named, context: context);
+      return context.environment.callFilter(filter.name, value, positional: positional, named: named, context: context);
     }
 
     return callable<Object?>(filter, context)(callback);
@@ -54,8 +57,10 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @protected
   bool callTest(Test test, [Object? value, C? context]) {
+    context!;
+
     bool callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      return context!.environment.callTest(test.name, value, positional: positional, named: named);
+      return context.environment.callTest(test.name, value, positional: positional, named: named);
     }
 
     return callable<bool>(test, context)(callback);
@@ -118,10 +123,12 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @override
   Object? visitCall(Call node, [C? context]) {
+    context!;
+
     final dynamic function = node.expression!.accept(this, context)!;
 
     Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      return Function.apply(function.call as Function, positional, named);
+      return context(function, positional, named);
     }
 
     return callable<Object?>(node, context)(callback);

@@ -1,16 +1,17 @@
 import 'package:renderable/src/runtime.dart';
 
 import 'markup.dart';
+import 'utils.dart';
 
-bool isBoolean(dynamic object) {
+bool isBoolean(Object? object) {
   return object is bool;
 }
 
-bool isCallable(dynamic object) {
+bool isCallable(Object? object) {
   return object is Function;
 }
 
-bool isDefined(dynamic value) {
+bool isDefined(Object? value) {
   return value is! Undefined;
 }
 
@@ -18,11 +19,11 @@ bool isDivisibleBy(num value, num divider) {
   return divider == 0 ? false : value % divider == 0;
 }
 
-bool isEqual(dynamic value, dynamic other) {
+bool isEqual(Object? value, Object? other) {
   return value == other;
 }
 
-bool isEscaped(dynamic value) {
+bool isEscaped(Object? value) {
   if (value is Markup) {
     return true;
   }
@@ -34,23 +35,23 @@ bool isEven(int value) {
   return value.isEven;
 }
 
-bool isFalse(dynamic value) {
+bool isFalse(Object? value) {
   return value == false;
 }
 
-bool isFloat(dynamic value) {
+bool isFloat(Object? value) {
   return value is double;
 }
 
-bool isGreaterThanOrEqual(dynamic value, dynamic other) {
-  return (value >= other) as bool;
+bool isGreaterThanOrEqual(Object? value, Object? other) {
+  return (value as dynamic >= other) as bool;
 }
 
-bool isGreaterThan(dynamic value, dynamic other) {
-  return (value > other) as bool;
+bool isGreaterThan(Object? value, Object? other) {
+  return (value as dynamic > other) as bool;
 }
 
-bool isIn(dynamic value, dynamic values) {
+bool isIn(Object? value, Object? values) {
   if (values is String) {
     if (value is Pattern) {
       return values.contains(value);
@@ -67,14 +68,14 @@ bool isIn(dynamic value, dynamic values) {
     return values.containsKey(value);
   }
 
-  return values.contains(value) as bool;
+  return (values as dynamic).contains(value) as bool;
 }
 
-bool isInteger(dynamic value) {
+bool isInteger(Object? value) {
   return value is int;
 }
 
-bool isIterable(dynamic value) {
+bool isIterable(Object? value) {
   if (value is Iterable) {
     return true;
   }
@@ -82,19 +83,19 @@ bool isIterable(dynamic value) {
   return false;
 }
 
-bool isLessThanOrEqual(dynamic value, dynamic other) {
-  return (value <= other) as bool;
+bool isLessThanOrEqual(Object? value, Object? other) {
+  return (value as dynamic <= other) as bool;
 }
 
-bool isLessThan(dynamic value, dynamic other) {
-  return (value < other) as bool;
+bool isLessThan(Object? value, Object? other) {
+  return (value as dynamic < other) as bool;
 }
 
 bool isLower(String value) {
   return value == value.toLowerCase();
 }
 
-bool isMapping(dynamic value) {
+bool isMapping(Object? value) {
   if (value is Map) {
     return true;
   }
@@ -102,7 +103,7 @@ bool isMapping(dynamic value) {
   return false;
 }
 
-bool isNone(dynamic value) {
+bool isNone(Object? value) {
   if (value == null) {
     return true;
   }
@@ -110,11 +111,11 @@ bool isNone(dynamic value) {
   return false;
 }
 
-bool isNotEqual(dynamic value, dynamic other) {
+bool isNotEqual(Object? value, Object? other) {
   return value != other;
 }
 
-bool isNumber(dynamic object) {
+bool isNumber(Object? object) {
   return object is num;
 }
 
@@ -122,14 +123,14 @@ bool isOdd(int value) {
   return value.isOdd;
 }
 
-bool isSameAs(dynamic value, dynamic other) {
+bool isSameAs(Object? value, Object? other) {
   return identical(value, other);
 }
 
-bool isSequence(dynamic value) {
+bool isSequence(Object? value) {
   try {
-    value.length;
-    value[0];
+    (value as dynamic).length;
+    (value as dynamic)[0];
     return true;
   } on RangeError {
     return true;
@@ -138,16 +139,12 @@ bool isSequence(dynamic value) {
   }
 }
 
-bool isString(dynamic object) {
+bool isString(Object? object) {
   return object is String;
 }
 
-bool isTrue(dynamic value) {
+bool isTrue(Object? value) {
   return value == true;
-}
-
-bool isUndefined(dynamic value) {
-  return value is Undefined;
 }
 
 bool isUpper(String value) {
