@@ -94,7 +94,7 @@ class For extends Statement {
       result = '$result.recursive';
     }
 
-    result = '$result$target, $iterable';
+    result = '$result($target, $iterable';
 
     if (test != null) {
       result = '$result, $test';

@@ -12,6 +12,7 @@ Status:
 ------
 
 API:
+----
 - Environment
   - constructor
     - ~~extensions~~
@@ -68,6 +69,7 @@ API:
 - ...
 
 Templates:
+----------
 - Variables `[a-zA-Z$_][a-zA-Z0-9$_]*`
 - Filters
 - Tests

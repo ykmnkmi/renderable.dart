@@ -193,6 +193,7 @@ class Environment {
   }
 
   Object? getItem(Object object, Object? key) {
+    // TODO: update slices
     if (key is Indices) {
       if (object is String) {
         return sliceString(object, key);

@@ -175,6 +175,8 @@ class LoopContext /* implement Iterable? */ {
         return changed;
       case 'cycle':
         return cycle;
+      case 'call':
+        return call;
       default:
         throw NoSuchMethodError.withInvocation(this, Invocation.getter(Symbol(key)));
     }
