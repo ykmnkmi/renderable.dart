@@ -162,7 +162,7 @@ class LoopContext extends Iterable<Object?> {
 
   Object? get nextitem {
     if (!last) {
-      return values[index + 1];
+      return values[index0 + 1];
     }
 
     return undefined(hint: 'there is no next item');

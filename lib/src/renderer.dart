@@ -107,7 +107,7 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
 
     final targets = node.target.accept(this, context);
 
-    assert(node.hasLoop && (targets == 'loop' || (targets is List<String> && targets.contains('loop')) || (targets is NSRef && targets.name == 'loop')),
+    assert(!node.hasLoop || (targets != 'loop' || (targets is List<String> && !targets.contains('loop')) || (targets is NSRef && targets.name != 'loop')),
         'can\'t assign to special loop variable in for-loop target');
 
     final iterable = node.iterable.accept(this, context);
@@ -117,44 +117,59 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
       throw TypeError();
     }
 
-    final values = list(iterable);
+    String recurse(Object? iterable, [int depth = 0]) {
+      var values = list(iterable);
 
-    if (values.isEmpty) {
-      if (orElse != null) {
-        visitAll(orElse, context);
-      }
-
-      return;
-    }
-
-    final LoopContext loop;
-
-    if (node.test == null) {
-      loop = LoopContext(values, context.environment.undefined);
-    } else {
-      final test = node.test!;
-      final filtered = <Object?>[];
-
-      for (final value in values) {
-        final data = getDataForTargets(targets, value);
-        context.push(data);
-
-        if (test.accept(this, context) as bool) {
-          filtered.add(value);
+      if (values.isEmpty) {
+        if (orElse != null) {
+          visitAll(orElse, context);
         }
 
+        return '';
+      }
+
+      if (node.test != null) {
+        final test = node.test!;
+        final filtered = <Object?>[];
+
+        for (final value in values) {
+          final data = getDataForTargets(targets, value);
+          context.push(data);
+
+          if (test.accept(this, context) as bool) {
+            filtered.add(value);
+          }
+
+          context.pop();
+        }
+
+        values = filtered;
+      }
+
+      final loop = LoopContext(values, context.environment.undefined, depth0: depth, recurse: node.recursive ? recurse : null);
+      Map<String, Object?> Function(Object?, Object?) unpack;
+
+      if (node.hasLoop) {
+        unpack = (Object? target, Object? value) {
+          final data = getDataForTargets(target, value);
+          data['loop'] = loop;
+          return data;
+        };
+      } else {
+        unpack = getDataForTargets;
+      }
+
+      for (final value in loop) {
+        final data = unpack(targets, value);
+        context.push(data);
+        visitAll(node.body, context);
         context.pop();
       }
 
-      loop = LoopContext(filtered, context.environment.undefined);
+      return '';
     }
 
-    for (final value in loop) {
-      final data = getDataForTargets(targets, value);
-      context.push(data);
-      visitAll(node.body, context);
-      context.pop();
-    }
+    recurse(iterable);
   }
 
   @override
