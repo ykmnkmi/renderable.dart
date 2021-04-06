@@ -111,75 +111,69 @@ class Context {
   }
 }
 
-class LoopContext /* implement Iterable? */ {
-  LoopContext(this.length, this.index0, this.previtem, this.nextitem, this.changed, {this.depth0 = 0, this.recurse}) {
-    index = index0 + 1;
-    depth = depth0 + 1;
-    revindex = length - index0;
-    revindex0 = revindex! - 1;
-    first = index0 == 0;
-    last = index == length;
-  }
+class LoopContext extends Iterable<Object?> {
+  LoopContext(this.values, this.undefined, {this.depth0 = 0, this.recurse})
+      : length = values.length,
+        index0 = -1;
 
-  int length;
+  final List<Object?> values;
+
+  @override
+  final int length;
+
+  final UndefinedFactory undefined;
+
+  final String Function(Object? data, [int depth])? recurse;
 
   int index0;
 
-  Object? previtem;
-
-  Object? nextitem;
-
-  bool Function(Object?) changed;
-
   int depth0;
 
-  int? index;
+  @override
+  LoopIterator get iterator {
+    return LoopIterator(this);
+  }
 
-  int? revindex;
+  int get index {
+    return index0 + 1;
+  }
 
-  int? revindex0;
+  int get depth {
+    return depth0 + 1;
+  }
 
-  int? depth;
+  int get revindex0 {
+    return length - index;
+  }
 
-  bool? first;
+  int get revindex {
+    return length - index0;
+  }
 
-  bool? last;
+  @override
+  bool get first {
+    return index0 == 0;
+  }
 
-  String Function(Object? data, [int depth])? recurse;
+  @override
+  bool get last {
+    return index == length;
+  }
 
-  Object? operator [](String key) {
-    switch (key) {
-      case 'length':
-        return length;
-      case 'index0':
-        return index0;
-      case 'index':
-        return index;
-      case 'revindex':
-        return revindex;
-      case 'revindex0':
-        return revindex0;
-      case 'depth0':
-        return depth0;
-      case 'depth':
-        return depth;
-      case 'previtem':
-        return previtem;
-      case 'nextitem':
-        return nextitem;
-      case 'first':
-        return first;
-      case 'last':
-        return last;
-      case 'changed':
-        return changed;
-      case 'cycle':
-        return cycle;
-      case 'call':
-        return call;
-      default:
-        throw NoSuchMethodError.withInvocation(this, Invocation.getter(Symbol(key)));
+  Object? get nextitem {
+    if (!last) {
+      return values[index + 1];
     }
+
+    return undefined(hint: 'there is no next item');
+  }
+
+  Object? get previtem {
+    if (first) {
+      return undefined(hint: 'there is no previous item');
+    }
+
+    return values[index0 - 1];
   }
 
   String call(Object? data) {
@@ -187,14 +181,10 @@ class LoopContext /* implement Iterable? */ {
       throw TypeError(/* the loop must have the 'recursive' marker to be called recursively. */);
     }
 
-    return recurse!(data, depth!);
+    return recurse!(data, depth);
   }
 
-  Object cycle([
-    Object? arg01 = missing,
-    Object? arg02 = missing,
-    Object? arg03 = missing,
-  ]) {
+  Object cycle([Object? arg01 = missing, Object? arg02 = missing, Object? arg03 = missing]) {
     final values = <Object>[];
 
     if (arg01 != missing) {
@@ -214,6 +204,74 @@ class LoopContext /* implement Iterable? */ {
     }
 
     return values[index0 % values.length];
+  }
+
+  bool changed(Object? item) {
+    if (index0 == 0) {
+      return true;
+    }
+
+    if (item == previtem) {
+      return false;
+    }
+
+    return true;
+  }
+
+  Object? operator [](String key) {
+    switch (key) {
+      case 'length':
+        return length;
+      case 'index0':
+        return index0;
+      case 'depth0':
+        return depth0;
+      case 'index':
+        return index;
+      case 'depth':
+        return depth;
+      case 'revindex0':
+        return revindex0;
+      case 'revindex':
+        return revindex;
+      case 'first':
+        return first;
+      case 'last':
+        return last;
+      case 'previtem':
+        return previtem;
+      case 'nextitem':
+        return nextitem;
+      case 'call':
+        return call;
+      case 'cycle':
+        return cycle;
+      case 'changed':
+        return changed;
+      default:
+        throw NoSuchMethodError.withInvocation(this, Invocation.getter(Symbol(key)));
+    }
+  }
+}
+
+class LoopIterator extends Iterator<Object?> {
+  LoopIterator(this.context);
+
+  final LoopContext context;
+
+  @override
+  Object? get current {
+    return context.values[context.index0];
+  }
+
+  @override
+  bool moveNext() {
+    if (context.index < context.length) {
+      context.index0 += 1;
+      return true;
+    }
+
+    return false;
   }
 }
 

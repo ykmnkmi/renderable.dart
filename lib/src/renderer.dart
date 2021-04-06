@@ -105,11 +105,10 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
   void visitFor(For node, [StringBufferRenderContext? context]) {
     context!;
 
-    final target = node.target.accept(this, context);
+    final targets = node.target.accept(this, context);
 
-    if (node.hasLoop && (target == 'loop' || (target is List<String> && target.contains('loop')) || (target is NSRef && target.name == 'loop'))) {
-      throw StateError('can\'t assign to special loop variable in for-loop target');
-    }
+    assert(node.hasLoop && (targets == 'loop' || (targets is List<String> && targets.contains('loop')) || (targets is NSRef && targets.name == 'loop')),
+        'can\'t assign to special loop variable in for-loop target');
 
     final iterable = node.iterable.accept(this, context);
     final orElse = node.orElse;
@@ -118,84 +117,44 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
       throw TypeError();
     }
 
-    String loop(Object? iterable, [int depth = 0]) {
-      var values = list(iterable);
+    final values = list(iterable);
 
-      if (values.isEmpty) {
-        if (orElse != null) {
-          visitAll(orElse, context);
-        }
-
-        return '';
+    if (values.isEmpty) {
+      if (orElse != null) {
+        visitAll(orElse, context);
       }
 
-      Map<String, Object?> Function(List<Object?>, int) unpack;
+      return;
+    }
 
-      if (node.hasLoop) {
-        unpack = (List<Object?> values, int index) {
-          final data = getDataForTargets(target, values[index]);
-          Object? previous, next;
+    final LoopContext loop;
 
-          if (index > 0) {
-            previous = values[index - 1];
-          } else {
-            previous = context.environment.undefined();
-          }
+    if (node.test == null) {
+      loop = LoopContext(values, context.environment.undefined);
+    } else {
+      final test = node.test!;
+      final filtered = <Object?>[];
 
-          if (index < values.length - 1) {
-            next = values[index + 1];
-          } else {
-            next = context.environment.undefined();
-          }
-
-          bool changed(Object? item) {
-            if (index == 0) {
-              return true;
-            }
-
-            if (item == previous) {
-              return false;
-            }
-
-            return true;
-          }
-
-          data['loop'] = LoopContext(values.length, index, previous, next, changed, depth0: depth, recurse: loop);
-          return data;
-        };
-      } else {
-        unpack = (List<Object?> values, int index) => getDataForTargets(target, values[index]);
-      }
-
-      if (node.test != null) {
-        final test = node.test!;
-        final filtered = <Object?>[];
-
-        for (var i = 0; i < values.length; i += 1) {
-          final data = getDataForTargets(target, values[i]);
-          context.push(data);
-
-          if (test.accept(this, context) as bool) {
-            filtered.add(values[i]);
-          }
-
-          context.pop();
-        }
-
-        values = filtered;
-      }
-
-      for (var i = 0; i < values.length; i += 1) {
-        final data = unpack(values, i);
+      for (final value in values) {
+        final data = getDataForTargets(targets, value);
         context.push(data);
-        visitAll(node.body, context);
+
+        if (test.accept(this, context) as bool) {
+          filtered.add(value);
+        }
+
         context.pop();
       }
 
-      return '';
+      loop = LoopContext(filtered, context.environment.undefined);
     }
 
-    loop(iterable);
+    for (final value in loop) {
+      final data = getDataForTargets(targets, value);
+      context.push(data);
+      visitAll(node.body, context);
+      context.pop();
+    }
   }
 
   @override

@@ -6,33 +6,9 @@ import 'package:stack_trace/stack_trace.dart';
 void main() {
   try {
     final environment = Environment();
-    final template = environment.fromString('''{% for item in seq recursive -%}
-            [{{ item.a }}{% if item.b %}<{{ loop(item.b) }}>{% endif %}]
-        {%- endfor %}''');
+    final template = environment.fromString('{% for item in [1, 2, 3] %}{{ item }}{% endfor %}');
     print(template.nodes);
-    final seq = [
-      {
-        'a': 1,
-        'b': [
-          {'a': 1},
-          {'a': 2}
-        ]
-      },
-      {
-        'a': 2,
-        'b': [
-          {'a': 1},
-          {'a': 2}
-        ]
-      },
-      {
-        'a': 3,
-        'b': [
-          {'a': 'a'}
-        ]
-      },
-    ];
-    print(template.render({'seq': seq}));
+    print(template.render());
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));
