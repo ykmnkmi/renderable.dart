@@ -1,5 +1,3 @@
-library nodes;
-
 import 'exceptions.dart';
 import 'utils.dart';
 import 'visitor.dart';

@@ -1,0 +1,11 @@
+{% extends "layouts/base.html" %}
+{% block title -%}
+  {{ super() }}: users, {{ now() }}
+{%- endblock %}
+{% block content %}
+  {% for user in users %}
+    <p>{{ user.fullname }}, email: {{ user.email }}</p>
+  {% else %}
+    No users
+  {% endfor %}
+{% endblock %}

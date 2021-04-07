@@ -1,12 +1,13 @@
 Renderable.dart
 ===============
 
-[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) next stable version (1.0.0), will be merged to jinja.dart repo.
+[Jinja.dart](https://github.com/ykmnkmi/jinja.dart) next stable version, will be merged to jinja.dart repo.
 After merging this package will be simplified to object based context and divided to annotations and generator.
 
 Differences:
-- no context and environment function decorators, use `context`/`ctx` or `environment`/`env` variables: `{{ function(ctx/env, ...) }}`
-- ...
+- no context and environment function decorators, use `context`/`ctx` or `environment`/`env` variables: `{{ function(ctx/env, ...) }}` and 
+  `Environment(contextFilters: {...}, environmentFilters: {...})` parameters for filters.
+- ... working
 
 Status:
 ------
@@ -66,7 +67,7 @@ API:
   - TemplateSyntaxError
   - TemplateRuntimeError
   - ~~TemplateAssertionError~~
-- ...
+- ... working
 
 Templates:
 ----------
@@ -178,4 +179,4 @@ Templates:
   - ~~Expression Statement~~
   - ~~Loop Controls~~
   - ~~Debug Statement~~
-- ~~Autoescape Overrides~~
+- Autoescape Overrides

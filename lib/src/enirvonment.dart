@@ -46,6 +46,7 @@ class Environment {
     Function finalize = defaults.finalize,
     this.autoEscape = false,
     this.loader,
+    this.autoReload = true,
     Map<String, Object?>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
@@ -122,6 +123,8 @@ class Environment {
 
   final Loader? loader;
 
+  final bool autoReload;
+
   final Map<String, Object?> globals;
 
   final Map<String, Function> filters;
@@ -156,6 +159,7 @@ class Environment {
     Function? finalize,
     bool? autoEscape,
     Loader? loader,
+    bool? autoReload,
     Map<String, dynamic>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
@@ -182,6 +186,7 @@ class Environment {
       finalize: finalize ?? this.finalize,
       autoEscape: autoEscape ?? this.autoEscape,
       loader: loader ?? this.loader,
+      autoReload: autoReload ?? this.autoReload,
       globals: globals ?? this.globals,
       filters: filters ?? this.filters,
       environmentFilters: environmentFilters ?? this.environmentFilters,
@@ -359,9 +364,9 @@ class Environment {
     return selectTemplate(templateNameOrList);
   }
 
-  Template fromString(String source, {String? path}) {
-    final nodes = parse(source, path: path);
-    final template = Template.parsed(this, nodes, path: path);
+  Template fromString(String source) {
+    final nodes = parse(source);
+    final template = Template.parsed(this, nodes);
 
     if (optimized) {
       template.accept(const Optimizer(), Context(this));
@@ -419,6 +424,7 @@ class Template extends Node implements Renderable {
         undefined: undefined,
         finalize: finalize,
         autoEscape: autoEscape,
+        autoReload: false,
         globals: globals,
         filters: filters,
         environmentFilters: environmentFilters,
@@ -444,6 +450,7 @@ class Template extends Node implements Renderable {
         undefined: undefined,
         finalize: finalize,
         autoEscape: autoEscape,
+        autoReload: false,
         globals: globals,
         filters: filters,
         environmentFilters: environmentFilters,
@@ -453,7 +460,7 @@ class Template extends Node implements Renderable {
       );
     }
 
-    return environment.fromString(source, path: path);
+    return environment.fromString(source);
   }
 
   Template.parsed(

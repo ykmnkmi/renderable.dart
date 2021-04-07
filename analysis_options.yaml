@@ -1,8 +1,8 @@
 include: package:pedantic/analysis_options.yaml
 
 analyzer:
-  exclude:
-    - example/**
+  # exclude:
+  #   - example/**
   language:
     strict-inference: true
     strict-raw-types: true
