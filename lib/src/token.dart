@@ -103,9 +103,7 @@ abstract class _BaseToken implements Token {
 
   @override
   bool test(String type, [String? value]) {
-    if (type.contains(':')) {
-      throw AssertionError();
-    }
+    assert(!type.contains(':'));
 
     if (value == null) {
       return type == this.type;

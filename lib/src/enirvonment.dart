@@ -1,7 +1,6 @@
 import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
-import 'package:meta/meta.dart';
 import 'package:renderable/jinja.dart';
 
 import 'defaults.dart' as defaults;
@@ -26,7 +25,6 @@ typedef FieldGetter = Object? Function(Object? object, String field);
 
 typedef UndefinedFactory = Undefined Function({String? hint, Object? object, String? name});
 
-@immutable
 class Environment {
   Environment({
     this.commentBegin = defaults.commentBegin,
@@ -53,6 +51,7 @@ class Environment {
     Set<String>? contextFilters,
     Map<String, Function>? tests,
     Map<String, Template>? templates,
+    List<NodeVisitor>? modifiers,
     Random? random,
     this.getField = defaults.getField,
   })  : assert(finalize is Finalizer || finalize is ContextFinalizer || finalize is EnvironmentFinalizer),
@@ -67,6 +66,7 @@ class Environment {
         contextFilters = HashSet<String>.of(defaults.contextFilters),
         tests = Map<String, Function>.of(defaults.tests),
         templates = HashMap<String, Template>(),
+        modifiers = List<NodeVisitor>.of(defaults.modifiers),
         random = random ?? Random() {
     if (globals != null) {
       this.globals.addAll(globals);
@@ -86,6 +86,10 @@ class Environment {
 
     if (templates != null) {
       this.templates.addAll(templates);
+    }
+
+    if (modifiers != null) {
+      this.modifiers.addAll(modifiers);
     }
   }
 
@@ -137,6 +141,8 @@ class Environment {
 
   final Map<String, Template> templates;
 
+  final List<NodeVisitor> modifiers;
+
   final Random random;
 
   final FieldGetter getField;
@@ -165,6 +171,7 @@ class Environment {
     Set<String>? environmentFilters,
     Set<String>? contextFilters,
     Map<String, Function>? tests,
+    List<NodeVisitor>? modifiers,
     Random? random,
     FieldGetter? getField,
   }) {
@@ -192,6 +199,7 @@ class Environment {
       environmentFilters: environmentFilters ?? this.environmentFilters,
       contextFilters: contextFilters ?? this.contextFilters,
       tests: tests ?? this.tests,
+      modifiers: modifiers ?? this.modifiers,
       random: random ?? this.random,
       getField: getField ?? this.getField,
     );
@@ -291,13 +299,12 @@ class Environment {
     return Parser(this).parse(source, path: path);
   }
 
-  @protected
   Template loadTemplate(String name) {
     if (loader == null) {
       throw UnsupportedError('no loader for this environment specified');
     }
 
-    if (templates.containsKey(name)) {
+    if (!autoReload && templates.containsKey(name)) {
       return templates[name]!;
     }
 
@@ -366,6 +373,13 @@ class Environment {
 
   Template fromString(String source) {
     final nodes = parse(source);
+
+    for (final modifier in modifiers) {
+      for (final node in nodes) {
+        modifier(node);
+      }
+    }
+
     final template = Template.parsed(this, nodes);
 
     if (optimized) {
@@ -401,12 +415,14 @@ class Template extends Node implements Renderable {
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
     Map<String, Function>? tests,
+    List<NodeVisitor>? modifiers,
     Random? random,
     FieldGetter getField = defaults.getField,
   }) {
     Environment environment;
 
     if (parent != null) {
+      // TODO: update copying
       environment = parent.copy(
         commentBegin: commentBegin,
         commentEnd: commentEnd,
@@ -429,6 +445,7 @@ class Template extends Node implements Renderable {
         filters: filters,
         environmentFilters: environmentFilters,
         tests: tests,
+        modifiers: modifiers,
         random: random,
         getField: getField,
       );
@@ -455,6 +472,7 @@ class Template extends Node implements Renderable {
         filters: filters,
         environmentFilters: environmentFilters,
         tests: tests,
+        modifiers: modifiers,
         random: random,
         getField: getField,
       );
@@ -467,25 +485,14 @@ class Template extends Node implements Renderable {
     this.environment,
     List<Node> nodes, {
     String? path,
-    List<NodeVisitor> visitors = const <NodeVisitor>[Namespace.prepare],
   })  : nodes = List<Node>.of(nodes),
-        path = path {
-    for (final visitor in visitors) {
-      for (final node in nodes) {
-        visitor(node);
-      }
-    }
-
-    if (path != null) {
-      environment.templates[path] = this;
-    }
-  }
+        path = path;
 
   final Environment environment;
 
-  final List<Node> nodes;
-
   final String? path;
+
+  List<Node> nodes;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -509,6 +516,8 @@ class Template extends Node implements Renderable {
   Stream<String> stream([Map<String, Object?>? data]) {
     throw UnimplementedError();
   }
+
+  void setNodes(List<Node> nodes) {}
 
   @override
   void visitChildNodes(NodeVisitor visitor) {

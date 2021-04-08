@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
 import 'enirvonment.dart';
@@ -73,7 +73,23 @@ class FileSystemLoader extends Loader {
 
   final Encoding encoding;
 
-  @protected
+  StreamSubscription<ProcessSignal>? subscription;
+
+  List<StreamSubscription<void>>? subscriptions;
+
+  File? findFile(String path) {
+    final pieces = path.split('/');
+
+    for (final path in paths) {
+      final templatePath = p.joinAll(<String>[path, ...pieces]);
+      final templateFile = File(templatePath);
+
+      if (templateFile.existsSync()) {
+        return templateFile;
+      }
+    }
+  }
+
   bool isTemplate(String path, [String? from]) {
     final template = p.relative(path, from: from);
     var ext = p.extension(template);
@@ -87,22 +103,13 @@ class FileSystemLoader extends Loader {
 
   @override
   String getSource(String template) {
-    final pieces = template.split('/');
+    final file = findFile(template);
 
-    for (final path in paths) {
-      final templatePath = Function.apply(p.join, <String>[path, ...pieces]) as String;
-      final templateFile = File(templatePath);
-
-      if (templateFile.existsSync()) {
-        try {
-          return templateFile.readAsStringSync(encoding: encoding);
-        } finally {
-          // pass
-        }
-      }
+    if (file == null) {
+      throw TemplateNotFound(name: template);
     }
 
-    throw TemplateNotFound(name: template);
+    return file.readAsStringSync(encoding: encoding);
   }
 
   @override
@@ -133,28 +140,26 @@ class FileSystemLoader extends Loader {
 
   @override
   Template load(Environment environment, String name) {
-    final source = getSource(name);
-    final nodes = environment.parse(source, path: name);
+    final file = findFile(name);
+
+    if (file == null) {
+      throw TemplateNotFound(name: name);
+    }
+
+    var source = file.readAsStringSync(encoding: encoding);
+    var nodes = environment.parse(source, path: name);
+
+    for (final modifier in environment.modifiers) {
+      for (final node in nodes) {
+        modifier(node);
+      }
+    }
+
+    const optimizer = Optimizer();
     final template = Template.parsed(environment, nodes, path: name);
 
     if (environment.optimized) {
-      template.accept(const Optimizer(), Context(environment));
-    }
-
-    if (environment.autoReload) {
-      // for (final path in paths) {
-      //   Directory(path).watch(recursive: true).where((event) => isTemplate(event.path, path)).listen((event) {
-      //     switch (event.type) {
-      //       case FileSystemEvent.create:
-      //       case FileSystemEvent.modify:
-      //         final template = p.relative(event.path, from: path);
-      //         final source = getSource(template);
-      //         environment.fromString(source);
-      //         break;
-      //       default:
-      //     }
-      //   });
-      // }
+      template.accept(optimizer, Context(environment));
     }
 
     return template;

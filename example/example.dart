@@ -20,12 +20,15 @@ void main() {
     trimBlocks: true,
   );
 
-  stdin.listen((event) {
-    stdout.write(env.getTemplate('users.html').render({
-      'users': [
-        {'fullname': 'Jhon Doe', 'email': 'jhondoe@dev.py'},
-        {'fullname': 'Jane Doe', 'email': 'janedoe@dev.py'},
-      ],
-    }));
-  });
+  final index = env.getTemplate('index.html');
+  print(index.render({'name': 'world'}));
+
+  // stdin.listen((event) {
+  //   stdout.write(env.getTemplate('users.html').render({
+  //     'users': [
+  //       {'fullname': 'Jhon Doe', 'email': 'jhondoe@dev.py'},
+  //       {'fullname': 'Jane Doe', 'email': 'janedoe@dev.py'},
+  //     ],
+  //   }));
+  // });
 }
