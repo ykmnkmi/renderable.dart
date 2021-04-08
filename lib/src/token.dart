@@ -60,7 +60,7 @@ abstract class Token {
 
   Token change({int line, String type, String value});
 
-  bool test(String expressionOrType, [String? value]);
+  bool test(String type, [String? value]);
 
   bool testAny(Iterable<String> expressions);
 
@@ -102,27 +102,32 @@ abstract class _BaseToken implements Token {
   }
 
   @override
-  bool test(String expressionOrType, [String? value]) {
-    if (value == null) {
-      if (expressionOrType == type) {
-        return true;
-      }
-
-      if (expressionOrType.contains(':')) {
-        var parts = expressionOrType.split(':');
-        return type == parts.first && this.value == parts.last;
-      }
-
-      return false;
+  bool test(String type, [String? value]) {
+    if (type.contains(':')) {
+      throw AssertionError();
     }
 
-    return expressionOrType == type && value == this.value;
+    if (value == null) {
+      return type == this.type;
+    }
+
+    return type == this.type && value == this.value;
   }
 
   @override
   bool testAny(Iterable<String> expressions) {
-    for (var expression in expressions) {
-      if (test(expression)) {
+    for (final expression in expressions) {
+      if (!expression.contains(':')) {
+        if (test(expression)) {
+          return true;
+        }
+
+        continue;
+      }
+
+      final parts = expression.split(':');
+
+      if (test(parts[0], parts[1])) {
         return true;
       }
     }

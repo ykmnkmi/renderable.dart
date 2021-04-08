@@ -283,7 +283,7 @@ class Parser {
 
   @protected
   T parseImportContext<T extends ImportContext>(TokenReader reader, T node, [bool defaultValue = true]) {
-    if (reader.current.testAny(['name:with', 'name:without']) && reader.look().test('name', 'context')) {
+    if (reader.current.testAny(<String>['name:with', 'name:without']) && reader.look().test('name', 'context')) {
       node.withContext = reader.current.value == 'with';
       reader.skip(2);
     } else {
