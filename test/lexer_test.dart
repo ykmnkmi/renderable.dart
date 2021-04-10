@@ -24,7 +24,8 @@ void main() {
   group('Lexer', () {
     test('raw', () {
       final environment = Environment();
-      final template = environment.fromString('{% raw %}foo{% endraw %}|{%raw%}{{ bar }}|{% baz %}{%       endraw    %}');
+      final template =
+          environment.fromString('{% raw %}foo{% endraw %}|{%raw%}{{ bar }}|{% baz %}{%       endraw    %}');
       expect(template.render(), equals('foo|{{ bar }}|{% baz %}'));
     });
 
@@ -672,8 +673,14 @@ ${item} ## the rest of the stuff
     });
 
     test('no trim php syntax', () {
-      final environment =
-          Environment(blockBegin: '<?', blockEnd: '?>', variableBegin: r'<?=', variableEnd: '?>', commentBegin: '<!--', commentEnd: '-->', trimBlocks: true);
+      final environment = Environment(
+          blockBegin: '<?',
+          blockEnd: '?>',
+          variableBegin: r'<?=',
+          variableEnd: '?>',
+          commentBegin: '<!--',
+          commentEnd: '-->',
+          trimBlocks: true);
       var template = environment.fromString('    <? if True +?>\n\n    <? endif ?>');
       expect(template.render(), equals('    \n\n    '));
       template = environment.fromString('    <!-- comment +-->\n\n    ');

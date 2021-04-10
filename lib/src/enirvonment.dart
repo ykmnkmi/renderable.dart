@@ -252,7 +252,8 @@ class Environment {
     }
   }
 
-  Object? callFilter(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named, Context? context}) {
+  Object? callFilter(String name, Object? value,
+      {List<Object?>? positional, Map<Symbol, Object?>? named, Context? context}) {
     Function filter;
 
     if (filters.containsKey(name)) {

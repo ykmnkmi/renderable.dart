@@ -17,7 +17,9 @@ void main() {
     });
 
     test('elif deep', () {
-      final source = '{% if a == 0 %}0' + List.generate(999, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() + '{% else %}x{% endif %}';
+      final source = '{% if a == 0 %}0' +
+          List.generate(999, (int i) => '{% elif a == ${i + 1} %}${i + 1}').join() +
+          '{% else %}x{% endif %}';
       final environment = Environment();
       final template = environment.fromString(source);
       expect(template.render({'a': 0}), equals('0'));

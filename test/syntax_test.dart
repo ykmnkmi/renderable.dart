@@ -21,13 +21,21 @@ void main() {
     test('attr', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo.bar }}|{{ foo["bar"] }}');
-      expect(template.render({'foo': {'bar': 42}}), equals('42|42'));
+      expect(
+          template.render({
+            'foo': {'bar': 42}
+          }),
+          equals('42|42'));
     });
 
     test('subscript', () {
       final environment = Environment();
       final template = environment.fromString('{{ foo[0] }}|{{ foo[-1] }}');
-      expect(template.render({'foo': [0, 1, 2]}), equals('0|2'));
+      expect(
+          template.render({
+            'foo': [0, 1, 2]
+          }),
+          equals('0|2'));
     });
 
     test('tuple', () {
@@ -62,7 +70,14 @@ void main() {
 
     test('compare', () {
       final environment = Environment();
-      final matches = {'>': [1, 0], '>=': [1, 1], '<': [2, 3], '<=': [3, 4], '==': [4, 4], '!=': [4, 5]};
+      final matches = {
+        '>': [1, 0],
+        '>=': [1, 1],
+        '<': [2, 3],
+        '<=': [3, 4],
+        '==': [4, 4],
+        '!=': [4, 5]
+      };
 
       matches.forEach((operation, pair) {
         final template = environment.fromString('{{ ${pair.first} $operation ${pair.last} }}');
@@ -235,7 +250,8 @@ void main() {
 
       for (final constant in [true, false, null]) {
         final string = constant.toString();
-        final template = environment.fromString('{{ $string }}|{{ ${string.toLowerCase()} }}|{{ ${string.toUpperCase()} }}');
+        final template =
+            environment.fromString('{{ $string }}|{{ ${string.toLowerCase()} }}|{{ ${string.toUpperCase()} }}');
         expect(template.render(), equals('$constant|$constant|'));
       }
     });
@@ -274,7 +290,8 @@ void main() {
 
     test('const', () {
       final environment = Environment();
-      final template = environment.fromString('{{ true }}|{{ false }}|{{ none }}|{{ none is defined }}|{{ missing is defined }}');
+      final template =
+          environment.fromString('{{ true }}|{{ false }}|{{ none }}|{{ none is defined }}|{{ missing is defined }}');
       expect(template.render(), equals('true|false|null|true|false'));
     });
 
@@ -295,16 +312,25 @@ void main() {
 
     test('localset', () {
       final environment = Environment();
-      final template = environment.fromString('{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}{% endfor %}{{ foo }}');
+      final template =
+          environment.fromString('{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}{% endfor %}{{ foo }}');
       expect(template.render(), equals('0'));
     });
 
     test('parse unary', () {
       final environment = Environment();
       var template = environment.fromString('{{ -foo["bar"] }}');
-      expect(template.render({'foo': {'bar': 42}}), equals('-42'));
+      expect(
+          template.render({
+            'foo': {'bar': 42}
+          }),
+          equals('-42'));
       template = environment.fromString('{{ foo["bar"] }}');
-      expect(template.render({'foo': {'bar': 42}}), equals('42'));
+      expect(
+          template.render({
+            'foo': {'bar': 42}
+          }),
+          equals('42'));
     });
   });
 }

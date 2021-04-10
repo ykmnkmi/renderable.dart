@@ -42,7 +42,9 @@ void main() {
       template = testEnvironment().fromString('{% include ["missing", "header"] %}');
       testIncludes(template);
       template = testEnvironment().fromString('{% include x %}');
-      testIncludes(template, {'x': ['missing', 'header']});
+      testIncludes(template, {
+        'x': ['missing', 'header']
+      });
       template = testEnvironment().fromString('{% include [x, "header"] %}');
       testIncludes(template, {'x': 'missing'});
       template = testEnvironment().fromString('{% include x %}');
@@ -62,7 +64,9 @@ void main() {
     });
 
     test('context include with overrides', () {
-      final environment = Environment(loader: MapLoader({'main': '{% for item in [1, 2, 3] %}{% include "item" %}{% endfor %}', 'item': '{{ item }}'}));
+      final environment = Environment(
+          loader:
+              MapLoader({'main': '{% for item in [1, 2, 3] %}{% include "item" %}{% endfor %}', 'item': '{{ item }}'}));
       expect(environment.getTemplate('main').render(), equals('123'));
     });
 

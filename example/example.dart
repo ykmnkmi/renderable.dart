@@ -16,19 +16,19 @@ void main() {
       },
     },
     loader: FileSystemLoader(path: path),
-    lStripBlocks : true,
+    lStripBlocks: true,
     trimBlocks: true,
   );
 
   final index = env.getTemplate('index.html');
-  print(index.render({'name': 'world'}));
 
-  // stdin.listen((event) {
-  //   stdout.write(env.getTemplate('users.html').render({
-  //     'users': [
-  //       {'fullname': 'Jhon Doe', 'email': 'jhondoe@dev.py'},
-  //       {'fullname': 'Jane Doe', 'email': 'janedoe@dev.py'},
-  //     ],
-  //   }));
-  // });
+  stdin.listen((event) {
+    print(index.render({'name': 'world'}));
+    // stdout.write(env.getTemplate('users.html').render({
+    //     'users': [
+    //       {'fullname': 'Jhon Doe', 'email': 'jhondoe@dev.py'},
+    //       {'fullname': 'Jane Doe', 'email': 'janedoe@dev.py'},
+    //     ],
+    //   }));
+  });
 }

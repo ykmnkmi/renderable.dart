@@ -234,7 +234,8 @@ void main() {
       }
 
       final environment = Environment(tests: {'matching': matching});
-      final template = environment.fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
+      final template = environment.fromString(
+          '{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
       expect(template.render(), equals('false'));
       expect(items[0], equals(['us-west-1', '(us-east-1|ap-northeast-1)']));
       expect(items[1], equals(['stage', '(dev|stage)']));

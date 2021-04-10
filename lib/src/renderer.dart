@@ -107,7 +107,11 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
 
     final targets = node.target.accept(this, context);
 
-    assert(!node.hasLoop || (targets != 'loop' || (targets is List<String> && !targets.contains('loop')) || (targets is NSRef && targets.name != 'loop')),
+    assert(
+        !node.hasLoop ||
+            (targets != 'loop' ||
+                (targets is List<String> && !targets.contains('loop')) ||
+                (targets is NSRef && targets.name != 'loop')),
         'can\'t assign to special loop variable in for-loop target');
 
     final iterable = node.iterable.accept(this, context);
@@ -146,7 +150,8 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
         values = filtered;
       }
 
-      final loop = LoopContext(values, context.environment.undefined, depth0: depth, recurse: node.recursive ? recurse : null);
+      final loop =
+          LoopContext(values, context.environment.undefined, depth0: depth, recurse: node.recursive ? recurse : null);
       Map<String, Object?> Function(Object?, Object?) unpack;
 
       if (node.hasLoop) {

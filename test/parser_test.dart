@@ -5,7 +5,13 @@ import 'package:test/test.dart';
 void main() {
   group('Parser', () {
     test('php syntax', () {
-      final environment = Environment(blockBegin: '<?', blockEnd: '?>', variableBegin: '<?=', variableEnd: '?>', commentBegin: '<!--', commentEnd: '-->');
+      final environment = Environment(
+          blockBegin: '<?',
+          blockEnd: '?>',
+          variableBegin: '<?=',
+          variableEnd: '?>',
+          commentBegin: '<!--',
+          commentEnd: '-->');
       final template = environment.fromString('''<!-- I'm a comment, I'm not interesting --><? for item in seq -?>
     <?= item ?>
 <?- endfor ?>''');
@@ -13,7 +19,13 @@ void main() {
     });
 
     test('erb syntax', () {
-      final environment = Environment(blockBegin: '<%', blockEnd: '%>', variableBegin: '<%=', variableEnd: '%>', commentBegin: '<%#', commentEnd: '%>');
+      final environment = Environment(
+          blockBegin: '<%',
+          blockEnd: '%>',
+          variableBegin: '<%=',
+          variableEnd: '%>',
+          commentBegin: '<%#',
+          commentEnd: '%>');
       final template = environment.fromString('''<%# I'm a comment, I'm not interesting %><% for item in seq -%>
     <%= item %>
 <%- endfor %>''');
@@ -21,7 +33,13 @@ void main() {
     });
 
     test('comment syntax', () {
-      final environment = Environment(blockBegin: '<!--', blockEnd: '-->', variableBegin: '\${', variableEnd: '}', commentBegin: '<!--#', commentEnd: '-->');
+      final environment = Environment(
+          blockBegin: '<!--',
+          blockEnd: '-->',
+          variableBegin: '\${',
+          variableEnd: '}',
+          commentBegin: '<!--#',
+          commentEnd: '-->');
       final template = environment.fromString(r'''<!--# I'm a comment, I'm not interesting --><!-- for item in seq --->
     ${item}
 <!--- endfor -->''');
@@ -69,28 +87,47 @@ and bar comment #}
     });
 
     test('line syntax priority', () {
-      var environment =
-          Environment(variableBegin: '\${', variableEnd: '}', commentBegin: '/*', commentEnd: '*/', lineCommentPrefix: '#', lineStatementPrefix: '##');
+      var environment = Environment(
+          variableBegin: '\${',
+          variableEnd: '}',
+          commentBegin: '/*',
+          commentEnd: '*/',
+          lineCommentPrefix: '#',
+          lineStatementPrefix: '##');
       var template = environment.fromString(r'''/* ignore me.
    I'm a multiline comment */
 ## for item in seq:
 * ${item}          # this is just extra stuff
 ## endfor''');
-      expect(template.render({'seq': [1, 2]}).trim(), equals('* 1\n* 2'));
-      environment =
-          Environment(variableBegin: '\${', variableEnd: '}', commentBegin: '/*', commentEnd: '*/', lineCommentPrefix: '##', lineStatementPrefix: '#');
+      expect(
+          template.render({
+            'seq': [1, 2]
+          }).trim(),
+          equals('* 1\n* 2'));
+      environment = Environment(
+          variableBegin: '\${',
+          variableEnd: '}',
+          commentBegin: '/*',
+          commentEnd: '*/',
+          lineCommentPrefix: '##',
+          lineStatementPrefix: '#');
       template = environment.fromString(r'''/* ignore me.
    I'm a multiline comment */
 # for item in seq:
 * ${item}          ## this is just extra stuff
     ## extra stuff i just want to ignore
 # endfor''');
-      expect(template.render({'seq': [1, 2]}).trim(), equals('* 1\n\n* 2'));
+      expect(
+          template.render({
+            'seq': [1, 2]
+          }).trim(),
+          equals('* 1\n\n* 2'));
     });
 
     test('error messages', () {
       void assertError(String source, String expekted) {
-        expect(() => Template(source), throwsA(predicate((error) => error is TemplateSyntaxError && error.message == expekted)));
+        expect(() => Template(source),
+            throwsA(predicate((error) => error is TemplateSyntaxError && error.message == expekted)));
       }
 
       assertError(

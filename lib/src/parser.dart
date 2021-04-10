@@ -42,11 +42,14 @@ class Parser {
       currentlyLooking = endTokensStack.last.map<String>(describeExpression).map<String>(represent).join(' or ');
     }
 
-    final message = name == null ? <String>['Unexpected end of template.'] : <String>['Encountered unknown tag ${represent(name)}.'];
+    final message = name == null
+        ? <String>['Unexpected end of template.']
+        : <String>['Encountered unknown tag ${represent(name)}.'];
 
     if (currentlyLooking != null) {
       if (name != null && expected.contains(name)) {
-        message.add('You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for $currentlyLooking.');
+        message.add(
+            'You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for $currentlyLooking.');
       } else {
         message.add('Jinja was looking for the following tags: $currentlyLooking.');
       }
@@ -308,7 +311,8 @@ class Parser {
   }
 
   @protected
-  Expression parseAssignTarget(TokenReader reader, {List<String>? extraEndRules, bool nameOnly = false, bool withNamespace = false, bool withTuple = true}) {
+  Expression parseAssignTarget(TokenReader reader,
+      {List<String>? extraEndRules, bool nameOnly = false, bool withNamespace = false, bool withTuple = true}) {
     final line = reader.current.line;
     Expression target;
 
@@ -596,7 +600,10 @@ class Parser {
 
   @protected
   Expression parseTuple(TokenReader reader,
-      {bool simplified = false, bool withCondition = true, List<String>? extraEndRules, bool explicitParentheses = false}) {
+      {bool simplified = false,
+      bool withCondition = true,
+      List<String>? extraEndRules,
+      bool explicitParentheses = false}) {
     Expression Function(TokenReader) parse;
     if (simplified) {
       parse = parsePrimary;
@@ -844,7 +851,12 @@ class Parser {
     }
 
     reader.expect('rparen');
-    return Call(expression: expression, arguments: arguments, keywordArguments: keywordArguments, dArguments: dArguments, dKeywordArguments: dKeywordArguments);
+    return Call(
+        expression: expression,
+        arguments: arguments,
+        keywordArguments: keywordArguments,
+        dArguments: dArguments,
+        dKeywordArguments: dKeywordArguments);
   }
 
   @protected // wtf filter!

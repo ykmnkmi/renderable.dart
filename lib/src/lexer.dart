@@ -150,8 +150,13 @@ class Lexer {
       ['variable_begin', environment.variableBegin, variableBeginRe],
       ['block_begin', environment.blockBegin, blockBeginRe],
       if (environment.lineCommentPrefix != null)
-        ['linecomment_begin', environment.lineCommentPrefix!, '(?:^|(?<=\\S))[^\\S\r\n]*' + environment.lineCommentPrefix!],
-      if (environment.lineStatementPrefix != null) ['linestatement_begin', environment.lineStatementPrefix!, '^[ \t\v]*' + environment.lineStatementPrefix!],
+        [
+          'linecomment_begin',
+          environment.lineCommentPrefix!,
+          '(?:^|(?<=\\S))[^\\S\r\n]*' + environment.lineCommentPrefix!
+        ],
+      if (environment.lineStatementPrefix != null)
+        ['linestatement_begin', environment.lineStatementPrefix!, '^[ \t\v]*' + environment.lineStatementPrefix!],
     ];
 
     rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
@@ -273,7 +278,10 @@ class Lexer {
 
             if (stripSign == '-') {
               final stripped = text.trimRight();
-              newLinesStripped = text.substring(stripped.length).split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+              newLinesStripped = text
+                  .substring(stripped.length)
+                  .split('')
+                  .fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
               groups[0] = stripped;
             } else if (stripSign != '+' &&
                 lStripUnlessRe != null &&
@@ -319,7 +327,8 @@ class Lexer {
                   tokens.add(Token(line, token, data));
                 }
 
-                line += data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count) + newLinesStripped;
+                line +=
+                    data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count) + newLinesStripped;
                 newLinesStripped = 0;
               }
             }

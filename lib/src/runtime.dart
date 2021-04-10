@@ -377,7 +377,9 @@ class Namespace {
         node.arguments = null;
 
         if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
-          final dict = DictLiteral(node.keywordArguments!.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
+          final dict = DictLiteral(node.keywordArguments!
+              .map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value))
+              .toList());
           node.keywordArguments = null;
           arguments.add(dict);
         }

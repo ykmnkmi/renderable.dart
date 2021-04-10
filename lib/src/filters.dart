@@ -304,10 +304,19 @@ int doWordCount(String string) {
   return matches.length;
 }
 
-String doWordWrap(Environment environment, String string, int width, {bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
-  final wrapper = TextWrapper(width: width, expandTabs: false, replaceWhitespace: false, breakLongWords: breakLongWords, breakOnHyphens: breakOnHyphens);
+String doWordWrap(Environment environment, String string, int width,
+    {bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
+  final wrapper = TextWrapper(
+      width: width,
+      expandTabs: false,
+      replaceWhitespace: false,
+      breakLongWords: breakLongWords,
+      breakOnHyphens: breakOnHyphens);
   wrapString ??= environment.newLine;
-  return const LineSplitter().convert(string).map<String>((line) => wrapper.wrap(line).join(wrapString!)).join(wrapString);
+  return const LineSplitter()
+      .convert(string)
+      .map<String>((line) => wrapper.wrap(line).join(wrapString!))
+      .join(wrapString);
 }
 
 const Map<String, Function> filters = {
