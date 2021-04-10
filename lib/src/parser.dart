@@ -113,6 +113,10 @@ class Parser {
           return parseWith(reader);
         case 'autoescape':
           return parseAutoEscape(reader);
+        case 'block':
+          return parseBlock(reader);
+        case 'extends':
+          return parseExtends(reader);
         case 'include':
           return parseInclude(reader);
         default:
@@ -294,6 +298,20 @@ class Parser {
     }
 
     return node;
+  }
+
+  @protected
+  Include parseBlock(TokenReader reader) {
+    reader.expect('name', 'block');
+
+    throw UnimplementedError('block not implemented');
+  }
+
+  @protected
+  Include parseExtends(TokenReader reader) {
+    reader.expect('name', 'extends');
+
+    throw UnimplementedError('extends not implemented');
   }
 
   @protected
