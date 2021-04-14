@@ -132,9 +132,11 @@ class Parser {
   }
 
   @protected
-  List<Node> parseStatements(TokenReader reader, List<String> endTokens, {bool dropNeedle = false}) {
+  List<Node> parseStatements(TokenReader reader, List<String> endTokens, [bool dropNeedle = false]) {
     reader.skipIf('colon');
+
     reader.expect('block_end');
+
     final nodes = subParse(reader, endTokens: endTokens);
 
     if (reader.current.test('eof')) {
@@ -151,6 +153,7 @@ class Parser {
   @protected
   Statement parseSet(TokenReader reader) {
     reader.expect('name', 'set');
+
     final target = parseAssignTarget(reader, withNamespace: true);
 
     if (reader.skipIf('assign')) {
@@ -159,7 +162,7 @@ class Parser {
     }
 
     final filter = parseFilter(reader);
-    final body = parseStatements(reader, <String>['name:endset'], dropNeedle: true);
+    final body = parseStatements(reader, <String>['name:endset'], true);
 
     if (filter is Filter) {
       final filters = <Filter>[];
@@ -181,6 +184,7 @@ class Parser {
   @protected
   For parseFor(TokenReader reader) {
     reader.expect('name', 'for');
+
     final target = parseAssignTarget(reader, extraEndRules: <String>['name:in']);
 
     if (target is Name && target.name == 'loop') {
@@ -221,7 +225,7 @@ class Parser {
     List<Node>? orElse;
 
     if (reader.next().test('name', 'else')) {
-      orElse = parseStatements(reader, <String>['name:endfor'], dropNeedle: true);
+      orElse = parseStatements(reader, <String>['name:endfor'], true);
     }
 
     return For(target, iterable, body, hasLoop: hasLoop, orElse: orElse, test: test, recursive: recursive);
@@ -230,6 +234,7 @@ class Parser {
   @protected
   If parseIf(TokenReader reader) {
     reader.expect('name', 'if');
+
     final test = parseTuple(reader, withCondition: false);
     final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
     final root = If(test, body);
@@ -247,7 +252,7 @@ class Parser {
       }
 
       if (tag.test('name', 'else')) {
-        root.orElse = parseStatements(reader, <String>['name:endif'], dropNeedle: true);
+        root.orElse = parseStatements(reader, <String>['name:endif'], true);
       }
 
       break;
@@ -271,11 +276,13 @@ class Parser {
       final target = parseAssignTarget(reader);
       (target as CanAssign).context = AssignContext.parameter;
       targets.add(target);
+
       reader.expect('assign');
+
       values.add(parseExpression(reader));
     }
 
-    final body = parseStatements(reader, <String>['name:endwith'], dropNeedle: true);
+    final body = parseStatements(reader, <String>['name:endwith'], true);
     return With(targets, values, body);
   }
 
@@ -284,8 +291,22 @@ class Parser {
     reader.expect('name', 'autoescape');
 
     final escape = parseExpression(reader);
-    final body = parseStatements(reader, <String>['name:endautoescape'], dropNeedle: true);
+    final body = parseStatements(reader, <String>['name:endautoescape'], true);
     return Scope(ScopedContextModifier(<String, Expression>{'autoEscape': escape}, body));
+  }
+
+  @protected
+  Block parseBlock(TokenReader reader) {
+    reader.expect('name', 'block');
+
+    throw UnimplementedError('block not implemented');
+  }
+
+  @protected
+  Extends parseExtends(TokenReader reader) {
+    reader.expect('name', 'extends');
+
+    throw UnimplementedError('extends not implemented');
   }
 
   @protected
@@ -298,20 +319,6 @@ class Parser {
     }
 
     return node;
-  }
-
-  @protected
-  Include parseBlock(TokenReader reader) {
-    reader.expect('name', 'block');
-
-    throw UnimplementedError('block not implemented');
-  }
-
-  @protected
-  Include parseExtends(TokenReader reader) {
-    reader.expect('name', 'extends');
-
-    throw UnimplementedError('extends not implemented');
   }
 
   @protected
@@ -329,8 +336,13 @@ class Parser {
   }
 
   @protected
-  Expression parseAssignTarget(TokenReader reader,
-      {List<String>? extraEndRules, bool nameOnly = false, bool withNamespace = false, bool withTuple = true}) {
+  Expression parseAssignTarget(
+    TokenReader reader, {
+    List<String>? extraEndRules,
+    bool nameOnly = false,
+    bool withNamespace = false,
+    bool withTuple = true,
+  }) {
     final line = reader.current.line;
     Expression target;
 
@@ -338,9 +350,11 @@ class Parser {
       final namespace = reader.expect('name');
       reader.next(); // skip dot
       final attribute = reader.expect('name');
+
       target = NamespaceReference(namespace.value, attribute.value);
     } else if (nameOnly) {
       final name = reader.expect('name');
+
       target = Name(name.value, context: AssignContext.store);
     } else {
       if (withTuple) {
@@ -584,7 +598,6 @@ class Parser {
 
         while (reader.current.test('string')) {
           buffer.write(reader.current.value);
-
           reader.next();
         }
 
@@ -617,11 +630,13 @@ class Parser {
   }
 
   @protected
-  Expression parseTuple(TokenReader reader,
-      {bool simplified = false,
-      bool withCondition = true,
-      List<String>? extraEndRules,
-      bool explicitParentheses = false}) {
+  Expression parseTuple(
+    TokenReader reader, {
+    bool simplified = false,
+    bool withCondition = true,
+    List<String>? extraEndRules,
+    bool explicitParentheses = false,
+  }) {
     Expression Function(TokenReader) parse;
     if (simplified) {
       parse = parsePrimary;
@@ -668,6 +683,7 @@ class Parser {
   @protected
   Expression parseList(TokenReader reader) {
     reader.expect('lbracket');
+
     final values = <Expression>[];
 
     while (!reader.current.test('rbracket')) {
@@ -683,12 +699,14 @@ class Parser {
     }
 
     reader.expect('rbracket');
+
     return ListLiteral(values);
   }
 
   @protected
   Expression parseDict(TokenReader reader) {
     reader.expect('lbrace');
+
     final pairs = <Pair>[];
 
     while (!reader.current.test('rbrace')) {
@@ -701,12 +719,15 @@ class Parser {
       }
 
       final key = parseExpression(reader);
+
       reader.expect('colon');
+
       final value = parseExpression(reader);
       pairs.add(Pair(key, value));
     }
 
     reader.expect('rbrace');
+
     return DictLiteral(pairs);
   }
 
@@ -823,6 +844,7 @@ class Parser {
   @protected
   Call parseCall(TokenReader reader, [Expression? expression]) {
     final token = reader.expect('lparen');
+
     final arguments = <Expression>[];
     final keywordArguments = <Keyword>[];
     Expression? dArguments, dKeywordArguments;
@@ -846,21 +868,25 @@ class Parser {
 
       if (reader.current.test('pow')) {
         ensure(dKeywordArguments == null);
+
         reader.next();
         dKeywordArguments = parseExpression(reader);
       } else if (reader.current.test('mul')) {
         ensure(dArguments == null && dKeywordArguments == null);
+
         reader.next();
         dArguments = parseExpression(reader);
       } else {
         if (reader.current.test('name') && reader.look().test('assign')) {
           ensure(dKeywordArguments == null);
+
           final key = reader.current.value;
           reader.skip(2);
           final value = parseExpression(reader);
           keywordArguments.add(Keyword(key, value));
         } else {
           ensure(dArguments == null && dKeywordArguments == null && keywordArguments.isEmpty);
+
           arguments.add(parseExpression(reader));
         }
       }
@@ -869,12 +895,14 @@ class Parser {
     }
 
     reader.expect('rparen');
+
     return Call(
-        expression: expression,
-        arguments: arguments,
-        keywordArguments: keywordArguments,
-        dArguments: dArguments,
-        dKeywordArguments: dKeywordArguments);
+      expression: expression,
+      arguments: arguments,
+      keywordArguments: keywordArguments,
+      dArguments: dArguments,
+      dKeywordArguments: dKeywordArguments,
+    );
   }
 
   @protected // wtf filter!
@@ -885,11 +913,14 @@ class Parser {
       }
 
       var token = reader.expect('name');
+
       var name = token.value;
 
       while (reader.current.test('dot')) {
         reader.next();
+
         token = reader.expect('name');
+
         name = '$name.${token.value}';
       }
 
@@ -900,12 +931,14 @@ class Parser {
       }
 
       if (call != null) {
-        expression = Filter(name,
-            expression: expression,
-            arguments: call.arguments,
-            keywordArguments: call.keywordArguments,
-            dArguments: call.dArguments,
-            dKeywordArguments: call.dKeywordArguments);
+        expression = Filter(
+          name,
+          expression: expression,
+          arguments: call.arguments,
+          keywordArguments: call.keywordArguments,
+          dArguments: call.dArguments,
+          dKeywordArguments: call.dKeywordArguments,
+        );
       } else {
         expression = Filter(name, expression: expression);
       }
@@ -919,6 +952,7 @@ class Parser {
   @protected
   Expression parseTest(TokenReader reader, Expression expression) {
     reader.expect('name', 'is');
+
     var negated = false;
 
     if (reader.current.test('name', 'not')) {
@@ -927,6 +961,7 @@ class Parser {
     }
 
     var token = reader.expect('name');
+
     var name = token.value;
 
     while (reader.current.test('dot')) {
@@ -951,12 +986,14 @@ class Parser {
     }
 
     if (call != null) {
-      expression = Test(name,
-          expression: expression,
-          arguments: call.arguments,
-          keywordArguments: call.keywordArguments,
-          dArguments: call.dArguments,
-          dKeywordArguments: call.dKeywordArguments);
+      expression = Test(
+        name,
+        expression: expression,
+        arguments: call.arguments,
+        keywordArguments: call.keywordArguments,
+        dArguments: call.dArguments,
+        dKeywordArguments: call.dKeywordArguments,
+      );
     } else {
       expression = Test(name, expression: expression);
     }
@@ -1000,7 +1037,9 @@ class Parser {
           case 'variable_begin':
             reader.next();
             buffer.add(parseTuple(reader));
+
             reader.expect('variable_end');
+
             break;
           case 'block_begin':
             flushData();
@@ -1011,7 +1050,9 @@ class Parser {
             }
 
             nodes.add(parseStatement(reader));
+
             reader.expect('block_end');
+
             break;
           default:
             throw AssertionError('internal parsing error');

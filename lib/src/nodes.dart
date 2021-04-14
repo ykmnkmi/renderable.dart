@@ -8,6 +8,12 @@ part 'nodes/statements.dart';
 
 typedef NodeVisitor = void Function(Node node);
 
+abstract class ImportContext {
+  bool get withContext;
+
+  set withContext(bool withContext);
+}
+
 abstract class Node {
   const Node();
 
@@ -19,5 +25,7 @@ abstract class Node {
 abstract class Expression extends Node {}
 
 abstract class Statement extends Node {}
+
+abstract class ContextModifier extends Statement {}
 
 abstract class Helper extends Node {}

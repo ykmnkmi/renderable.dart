@@ -1,58 +1,30 @@
 part of '../nodes.dart';
 
-class Assign extends Statement {
-  Assign(this.target, this.expression);
+class Output extends Statement {
+  Output(this.nodes);
 
-  final Expression target;
-
-  final Expression expression;
+  List<Node> nodes;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitAssign(this, context);
+    return visitor.visitOutput(this, context);
   }
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    visitor(target);
-    visitor(expression);
+    nodes.forEach(visitor);
   }
 
   @override
   String toString() {
-    return 'Assign($target, $expression)';
+    return 'Output(${nodes.join(', ')})';
   }
 }
 
-class AssignBlock extends Statement {
-  AssignBlock(this.target, this.body, [this.filters]);
-
-  Expression target;
-
-  List<Node> body;
-
-  List<Filter>? filters;
-
+class Extends extends Statement {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitAssignBlock(this, context);
-  }
-
-  @override
-  void visitChildNodes(NodeVisitor visitor) {
-    visitor(target);
-    body.forEach(visitor);
-  }
-
-  @override
-  String toString() {
-    var result = 'AssignBlock($target, $body';
-
-    if (filters != null && filters!.isNotEmpty) {
-      result = '$result, $filters';
-    }
-
-    return '$result)';
+    throw UnimplementedError();
   }
 }
 
@@ -156,27 +128,6 @@ class If extends Statement {
   }
 }
 
-class Output extends Statement {
-  Output(this.nodes);
-
-  List<Node> nodes;
-
-  @override
-  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitOutput(this, context);
-  }
-
-  @override
-  void visitChildNodes(NodeVisitor visitor) {
-    nodes.forEach(visitor);
-  }
-
-  @override
-  String toString() {
-    return 'Output(${nodes.join(', ')})';
-  }
-}
-
 class With extends Statement {
   With(this.targets, this.values, this.body);
 
@@ -204,10 +155,11 @@ class With extends Statement {
   }
 }
 
-abstract class ImportContext {
-  bool get withContext;
-
-  set withContext(bool withContext);
+class Block extends Statement {
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    throw UnimplementedError();
+  }
 }
 
 class Include extends Statement implements ImportContext {
@@ -246,6 +198,62 @@ class Include extends Statement implements ImportContext {
   }
 }
 
+class Assign extends Statement {
+  Assign(this.target, this.expression);
+
+  final Expression target;
+
+  final Expression expression;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitAssign(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(target);
+    visitor(expression);
+  }
+
+  @override
+  String toString() {
+    return 'Assign($target, $expression)';
+  }
+}
+
+class AssignBlock extends Statement {
+  AssignBlock(this.target, this.body, [this.filters]);
+
+  Expression target;
+
+  List<Node> body;
+
+  List<Filter>? filters;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitAssignBlock(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    visitor(target);
+    body.forEach(visitor);
+  }
+
+  @override
+  String toString() {
+    var result = 'AssignBlock($target, $body';
+
+    if (filters != null && filters!.isNotEmpty) {
+      result = '$result, $filters';
+    }
+
+    return '$result)';
+  }
+}
+
 class Scope extends Statement {
   Scope(this.modifier);
 
@@ -266,8 +274,6 @@ class Scope extends Statement {
     return 'Scope($modifier)';
   }
 }
-
-abstract class ContextModifier extends Statement {}
 
 class ScopedContextModifier extends ContextModifier {
   ScopedContextModifier(this.options, this.body);

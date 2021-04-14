@@ -106,14 +106,6 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
     context!;
 
     final targets = node.target.accept(this, context);
-
-    assert(
-        !node.hasLoop ||
-            (targets != 'loop' ||
-                (targets is List<String> && !targets.contains('loop')) ||
-                (targets is NSRef && targets.name != 'loop')),
-        'can\'t assign to special loop variable in for-loop target');
-
     final iterable = node.iterable.accept(this, context);
     final orElse = node.orElse;
 
