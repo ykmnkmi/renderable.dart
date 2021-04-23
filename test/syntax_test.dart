@@ -243,7 +243,7 @@ void main() {
       final environment = Environment();
       expect(environment.fromString('{% block foo %}...{% endblock foo %}'), isA<Template>());
       expect(() => environment.fromString('{% block x %}{% endblock y %}'), throwsA(isA<TemplateSyntaxError>()));
-    }, skip: true);
+    });
 
     test('constant casing', () {
       final environment = Environment();

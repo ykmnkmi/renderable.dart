@@ -105,6 +105,12 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
+  Block visitBlock(Block node, [Context? context]) {
+    visitAll(node.body, context);
+    return node;
+  }
+
+  @override
   Expression visitCall(Call node, [Context? context]) {
     if (node.expression != null) {
       node.expression = optimize(node.expression!, context);
@@ -169,7 +175,7 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Node visitContextModifier(ScopedContextModifier node, [Context? context]) {
+  ScopedContextModifier visitContextModifier(ScopedContextModifier node, [Context? context]) {
     visitAll(node.body, context);
     return node;
   }
@@ -215,14 +221,14 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  Node visitFor(For node, [Context? context]) {
+  For visitFor(For node, [Context? context]) {
     node.iterable = optimizeSafe(node.iterable, context);
     visitAll(node.body, context);
     return node;
   }
 
   @override
-  Node visitIf(If node, [Context? context]) {
+  If visitIf(If node, [Context? context]) {
     node.test = optimizeSafe(node.test, context);
     visitAll(node.body, context);
     var next = node.nextIf;

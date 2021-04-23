@@ -59,7 +59,7 @@ and bar comment #}
 {% macro blub() %}foo{% endmacro %}
 {{ blub() }}''');
       expect(template.render().trim(), equals('foor'));
-    }, skip: true);
+    }, skip: /* TODO: remove after macro */ true);
 
     test('line syntax', () {
       final environment = Environment(
@@ -156,10 +156,9 @@ and bar comment #}
       );
       assertError(
         '{% block foo-bar-baz %}',
-        'Block names in Jinja have to be valid Python identifiers '
-            'and may not contain hyphens, use an underscore instead.',
+        'use an underscore instead',
       );
       assertError('{% unknown_tag %}', 'Encountered unknown tag \'unknown_tag\'.');
-    }, skip: true);
+    });
   });
 }

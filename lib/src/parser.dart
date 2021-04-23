@@ -298,8 +298,17 @@ class Parser {
   @protected
   Block parseBlock(TokenReader reader) {
     reader.expect('name', 'block');
+    final nameToken = reader.expect('name');
 
-    throw UnimplementedError('block not implemented');
+    final scoped = reader.skipIf('name', 'scoped');
+
+    if (reader.current.test('sub')) {
+      fail('use an underscore instead');
+    }
+
+    final body = parseStatements(reader, <String>['name:endblock'], true);
+    reader.skipIf('name', nameToken.value);
+    return Block(nameToken.value, scoped, body);
   }
 
   @protected

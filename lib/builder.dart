@@ -34,6 +34,11 @@ class Compiler extends Visitor<Frame, String> {
   }
 
   @override
+  String visitBlock(Block node, [Frame? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   String visitCall(Call node, [Frame? context]) {
     throw UnimplementedError();
   }

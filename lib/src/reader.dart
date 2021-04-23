@@ -73,13 +73,13 @@ class TokenReader {
     _current = Token.simple(current.line + current.length, 'eof');
   }
 
-  Token expect(String expressionOrType, [String? value]) {
-    if (!_current.test(expressionOrType, value)) {
+  Token expect(String type, [String? value]) {
+    if (!_current.test(type, value)) {
       if (_current.type == 'eof') {
-        throw TemplateSyntaxError('unexpected end of template, expected $expressionOrType');
+        throw TemplateSyntaxError('unexpected end of template, expected $type');
       }
 
-      throw TemplateSyntaxError('expected token $expressionOrType, got $_current');
+      throw TemplateSyntaxError('expected token $type, got $_current');
     }
 
     return next();

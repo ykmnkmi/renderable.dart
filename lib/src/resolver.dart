@@ -122,6 +122,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
+  void visitBlock(Block node, [Context? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   Object? visitCall(Call node, [C? context]) {
     context!;
 

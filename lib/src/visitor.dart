@@ -26,6 +26,8 @@ abstract class Visitor<C, R> {
 
   R visitBinary(Binary node, [C? context]);
 
+  R visitBlock(Block node, [C? context]);
+
   R visitCall(Call node, [C? context]);
 
   R visitCompare(Compare node, [C? context]);

@@ -156,9 +156,27 @@ class With extends Statement {
 }
 
 class Block extends Statement {
+  Block(this.name, this.scoped, this.body);
+
+  String name;
+
+  bool scoped;
+
+  List<Node> body;
+
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    throw UnimplementedError();
+    return visitor.visitBlock(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    body.forEach(visitor);
+  }
+
+  @override
+  String toString() {
+    return 'Block($name, $scoped, $body)';
   }
 }
 
@@ -201,9 +219,9 @@ class Include extends Statement implements ImportContext {
 class Assign extends Statement {
   Assign(this.target, this.expression);
 
-  final Expression target;
+  Expression target;
 
-  final Expression expression;
+  Expression expression;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
