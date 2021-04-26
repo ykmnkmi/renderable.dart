@@ -176,7 +176,13 @@ class Block extends Statement {
 
   @override
   String toString() {
-    return 'Block($name, $scoped, $body)';
+    var result = 'Block';
+
+    if (scoped) {
+      result += '.scoped';
+    }
+
+    return '$result($name, ${body.join(', ')})';
   }
 }
 

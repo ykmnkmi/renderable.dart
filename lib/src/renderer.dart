@@ -102,6 +102,11 @@ class Renderer extends ExpressionResolver<StringBufferRenderContext> {
   }
 
   @override
+  void visitBlock(Block node, [StringBufferRenderContext? context]) {
+    visitAll(node.body, context);
+  }
+
+  @override
   void visitFor(For node, [StringBufferRenderContext? context]) {
     context!;
 

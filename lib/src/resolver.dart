@@ -122,7 +122,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  void visitBlock(Block node, [Context? context]) {
+  void visitBlock(Block node, [C? context]) {
     throw UnimplementedError();
   }
 

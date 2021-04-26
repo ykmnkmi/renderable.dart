@@ -6,9 +6,9 @@ import 'package:stack_trace/stack_trace.dart';
 void main() {
   try {
     final environment = Environment();
-    final template = environment.fromString('{% for i in range(1) %}{{ i }} - {{ loop.depth0 }}{% endfor %}');
+    final template = environment.fromString('{% block hello %}hello {{ name }}!{% endblock %}');
     print(template.nodes);
-    print(template.render());
+    print(template.render({'name': 'jhon'}));
   } catch (error, trace) {
     print(error);
     print(Trace.from(trace));
