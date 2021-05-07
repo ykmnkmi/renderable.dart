@@ -31,12 +31,12 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
         named[symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
       }
     }
-    if (callable.dArguments != null) {
-      positional.addAll(callable.dArguments!.accept(this, context) as Iterable<Object?>);
+    if (callable.dynamicArguments != null) {
+      positional.addAll(callable.dynamicArguments!.accept(this, context) as Iterable<Object?>);
     }
 
-    if (callable.dKeywordArguments != null) {
-      named.addAll((callable.dKeywordArguments!.accept(this, context) as Map<Object?, Object?>)
+    if (callable.dynamicKeywordArguments != null) {
+      named.addAll((callable.dynamicKeywordArguments!.accept(this, context) as Map<Object?, Object?>)
           .cast<String, Object?>()
           .map<Symbol, Object?>((key, value) => MapEntry<Symbol, Object?>(symbol(key), value)));
     }
@@ -237,6 +237,11 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
+  void visitDo(Do node, [C? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   Object? visitFilter(Filter node, [C? context]) {
     Object? value;
 
@@ -298,7 +303,7 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @override
   Object? visitNamespaceReference(NamespaceReference node, [C? context]) {
-    return NSRef(node.name, node.attribute);
+    return NamespaceValue(node.name, node.attribute);
   }
 
   @override

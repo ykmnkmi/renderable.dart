@@ -317,59 +317,11 @@ class Environment {
       name.fail();
     }
 
-    if (name is Template) {
-      return name;
-    }
-
     if (name is String) {
       return loadTemplate(name);
     }
 
     throw TypeError();
-  }
-
-  Template selectTemplate(Object? names) {
-    if (names is Undefined) {
-      names.fail();
-    }
-
-    if (names is! List<Object?>) {
-      throw TypeError();
-    }
-
-    if (names.isEmpty) {
-      throw TemplateNotFound(message: 'tried to select from an empty list of templates');
-    }
-
-    for (final name in names) {
-      if (name is Template) {
-        return name;
-      }
-
-      if (name is Undefined || name is! String) {
-        continue;
-      }
-
-      try {
-        return loadTemplate(name);
-      } on TemplateNotFound {
-        continue;
-      }
-    }
-
-    throw TemplatesNotFound(names: names);
-  }
-
-  Template getOrSelectTemplate(Object? templateNameOrList) {
-    if (templateNameOrList is String) {
-      return getTemplate(templateNameOrList);
-    }
-
-    if (templateNameOrList is Template) {
-      return templateNameOrList;
-    }
-
-    return selectTemplate(templateNameOrList);
   }
 
   Template fromString(String source) {
@@ -384,7 +336,7 @@ class Environment {
     final template = Template.parsed(this, nodes);
 
     if (optimized) {
-      template.accept(const Optimizer(), Context(this));
+      const Optimizer().visitTemplate(template, Context(this));
     }
 
     return template;
@@ -487,13 +439,26 @@ class Template extends Node implements Renderable {
     List<Node> nodes, {
     String? path,
   })  : nodes = List<Node>.of(nodes),
-        path = path;
+        blocks = <Block>[],
+        path = path {
+    void visitor(Node node) {
+      if (node is Block) {
+        blocks.add(node);
+      }
+
+      node.visitChildNodes(visitor);
+    }
+
+    nodes.forEach(visitor);
+  }
 
   final Environment environment;
 
-  final String? path;
+  final List<Node> nodes;
 
-  List<Node> nodes;
+  final List<Block> blocks;
+
+  final String? path;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -502,23 +467,20 @@ class Template extends Node implements Renderable {
 
   @override
   Iterable<String> generate([Map<String, Object?>? data]) {
-    throw UnimplementedError();
+    throw UnsupportedError('');
   }
 
   @override
   String render([Map<String, Object?>? data]) {
     final buffer = StringBuffer();
-    final context = StringBufferRenderContext(environment, buffer: buffer, data: data);
-    accept(const Renderer(), context);
+    accept(const StringBufferRenderer(), RenderContext(environment, buffer: buffer, data: data));
     return buffer.toString();
   }
 
   @override
   Stream<String> stream([Map<String, Object?>? data]) {
-    throw UnimplementedError();
+    throw UnsupportedError('');
   }
-
-  void setNodes(List<Node> nodes) {}
 
   @override
   void visitChildNodes(NodeVisitor visitor) {

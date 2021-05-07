@@ -1,7 +1,6 @@
 library utils;
 
 import 'package:meta/meta.dart';
-import 'package:renderable/runtime.dart';
 
 import 'runtime.dart';
 

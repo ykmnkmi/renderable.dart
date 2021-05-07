@@ -1,9 +1,9 @@
 import 'package:meta/meta.dart';
 
+import 'context.dart';
 import 'enirvonment.dart';
 import 'nodes.dart';
 import 'resolver.dart';
-import 'runtime.dart';
 import 'utils.dart';
 import 'visitor.dart';
 
@@ -88,6 +88,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   AssignBlock visitAssignBlock(AssignBlock node, [Context? context]) {
+    visitAll(node.nodes, context);
     return node;
   }
 
@@ -106,7 +107,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Block visitBlock(Block node, [Context? context]) {
-    visitAll(node.body, context);
+    visitAll(node.nodes, context);
     return node;
   }
 
@@ -124,12 +125,12 @@ class Optimizer extends Visitor<Context, Node> {
       visitAll(node.keywordArguments!, context);
     }
 
-    if (node.dArguments != null) {
-      node.dArguments = optimize(node.dArguments!, context);
+    if (node.dynamicArguments != null) {
+      node.dynamicArguments = optimize(node.dynamicArguments!, context);
     }
 
-    if (node.dKeywordArguments != null) {
-      node.dKeywordArguments = optimize(node.dKeywordArguments!, context);
+    if (node.dynamicKeywordArguments != null) {
+      node.dynamicKeywordArguments = optimize(node.dynamicKeywordArguments!, context);
     }
 
     return constant(node, context);
@@ -176,7 +177,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   ScopedContextModifier visitContextModifier(ScopedContextModifier node, [Context? context]) {
-    visitAll(node.body, context);
+    visitAll(node.nodes, context);
     return node;
   }
 
@@ -189,6 +190,12 @@ class Optimizer extends Visitor<Context, Node> {
   Expression visitDictLiteral(DictLiteral node, [Context? context]) {
     visitAllNotSafe(node.pairs, context);
     return constant(node, context);
+  }
+
+  @override
+  Do visitDo(Do node, [Context? context]) {
+    visitAll(node.expressions, context);
+    return node;
   }
 
   @override
@@ -209,12 +216,12 @@ class Optimizer extends Visitor<Context, Node> {
       visitAll(node.keywordArguments!, context);
     }
 
-    if (node.dArguments != null) {
-      node.dArguments = optimize(node.dArguments!, context);
+    if (node.dynamicArguments != null) {
+      node.dynamicArguments = optimize(node.dynamicArguments!, context);
     }
 
-    if (node.dKeywordArguments != null) {
-      node.dKeywordArguments = optimize(node.dKeywordArguments!, context);
+    if (node.dynamicKeywordArguments != null) {
+      node.dynamicKeywordArguments = optimize(node.dynamicKeywordArguments!, context);
     }
 
     return constant(node, context);
@@ -308,7 +315,7 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   ScopedContextModifier visitScopedContextModifier(ScopedContextModifier node, [Context? context]) {
     node.options.updateAll((option, expression) => optimizeSafe(expression, context));
-    visitAll(node.body, context);
+    visitAll(node.nodes, context);
     return node;
   }
 
@@ -353,12 +360,12 @@ class Optimizer extends Visitor<Context, Node> {
       visitAll(node.keywordArguments!, context);
     }
 
-    if (node.dArguments != null) {
-      node.dArguments = optimize(node.dArguments!, context);
+    if (node.dynamicArguments != null) {
+      node.dynamicArguments = optimize(node.dynamicArguments!, context);
     }
 
-    if (node.dKeywordArguments != null) {
-      node.dKeywordArguments = optimize(node.dKeywordArguments!, context);
+    if (node.dynamicKeywordArguments != null) {
+      node.dynamicKeywordArguments = optimize(node.dynamicKeywordArguments!, context);
     }
 
     return constant(node, context);

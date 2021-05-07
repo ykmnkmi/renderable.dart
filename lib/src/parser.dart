@@ -334,7 +334,8 @@ class Parser {
   Include parseInclude(TokenReader reader) {
     reader.expect('name', 'include');
 
-    final node = Include(parseExpression(reader));
+    final name = reader.expect('string');
+    final node = Include(name.value);
 
     if (reader.current.test('name', 'ignore') && reader.look().test('name', 'missing')) {
       node.ignoreMissing = true;
@@ -909,8 +910,8 @@ class Parser {
       expression: expression,
       arguments: arguments,
       keywordArguments: keywordArguments,
-      dArguments: dArguments,
-      dKeywordArguments: dKeywordArguments,
+      dynamicArguments: dArguments,
+      dynamicKeywordArguments: dKeywordArguments,
     );
   }
 
@@ -945,8 +946,8 @@ class Parser {
           expression: expression,
           arguments: call.arguments,
           keywordArguments: call.keywordArguments,
-          dArguments: call.dArguments,
-          dKeywordArguments: call.dKeywordArguments,
+          dynamicArguments: call.dynamicArguments,
+          dynamicKeywordArguments: call.dynamicKeywordArguments,
         );
       } else {
         expression = Filter(name, expression: expression);
@@ -1000,8 +1001,8 @@ class Parser {
         expression: expression,
         arguments: call.arguments,
         keywordArguments: call.keywordArguments,
-        dArguments: call.dArguments,
-        dKeywordArguments: call.dKeywordArguments,
+        dynamicArguments: call.dynamicArguments,
+        dynamicKeywordArguments: call.dynamicKeywordArguments,
       );
     } else {
       expression = Test(name, expression: expression);

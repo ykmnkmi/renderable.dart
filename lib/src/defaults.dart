@@ -1,3 +1,4 @@
+import 'modifiers.dart';
 import 'nodes.dart';
 import 'runtime.dart';
 import 'utils.dart';
@@ -24,7 +25,9 @@ const Map<String, Object?> globals = <String, Object?>{
   'range': range,
 };
 
-const List<NodeVisitor> modifiers = <NodeVisitor>[Namespace.prepare];
+const List<NodeVisitor> modifiers = <NodeVisitor>[
+  namespace,
+];
 
 Object? finalize(Object? value) {
   return value;

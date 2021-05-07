@@ -69,24 +69,6 @@ void main() {
       expect(cycler.current, equals(1));
     });
 
-    test('template passthrough', () {
-      final environment = Environment();
-      final template = Template('content');
-      expect(environment.getTemplate(template), equals(template));
-      expect(environment.selectTemplate([template]), equals(template));
-      expect(environment.getOrSelectTemplate([template]), equals(template));
-      expect(environment.getOrSelectTemplate(template), equals(template));
-    });
-
-    test('get template undefined', () {
-      final environment = Environment(loader: MapLoader({}));
-      final template = Undefined(name: 'no-name-1');
-      expect(() => environment.getTemplate(template), throwsA(isA<UndefinedError>()));
-      expect(() => environment.getOrSelectTemplate(template), throwsA(isA<UndefinedError>()));
-      expect(() => environment.selectTemplate(template), throwsA(isA<UndefinedError>()));
-      expect(() => environment.selectTemplate([template, 'no-name-2']), throwsA(isA<TemplatesNotFound>()));
-    });
-
     // TODO: add test: autoescape autoselect
   });
 }

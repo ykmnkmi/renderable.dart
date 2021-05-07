@@ -69,3 +69,36 @@ class Operand extends Helper {
     return 'Operand(\'$operator\', $expression)';
   }
 }
+
+class NamespaceReference extends Helper implements CanAssign {
+  NamespaceReference(this.name, this.attribute);
+
+  String name;
+
+  String attribute;
+
+  @override
+  bool get canAssign {
+    return true;
+  }
+
+  @override
+  AssignContext get context {
+    return AssignContext.store;
+  }
+
+  @override
+  set context(AssignContext context) {
+    throw UnsupportedError('only for store');
+  }
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitNamespaceReference(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'NamespaceReference($name, $attribute)';
+  }
+}

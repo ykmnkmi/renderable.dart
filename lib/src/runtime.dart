@@ -1,115 +1,10 @@
-import 'dart:collection';
-
 import 'package:meta/meta.dart';
 
 import 'enirvonment.dart';
 import 'exceptions.dart';
-import 'markup.dart';
-import 'nodes.dart';
 import 'utils.dart';
 
-@optionalTypeArgs
-typedef ContextCallback<C extends Context> = void Function(C context);
-
-class Context {
-  Context(this.environment, [Map<String, Object?>? data])
-      : contexts = <Map<String, Object?>>[environment.globals],
-        minimal = 2 {
-    if (data != null) {
-      data = HashMap<String, Object?>.of(data);
-
-      if (!data.containsKey('autoescape')) {
-        data['autoescape'] = environment.autoEscape;
-      }
-
-      contexts.add(data);
-    } else {
-      data = <String, Object?>{'autoescape': environment.autoEscape};
-      contexts.add(data);
-    }
-
-    data
-      ..['context'] = this
-      ..['ctx'] = this
-      ..['environment'] = this
-      ..['env'] = this;
-  }
-
-  Context.from(Context context)
-      : contexts = context.contexts,
-        environment = context.environment,
-        minimal = context.contexts.length;
-
-  final Environment environment;
-
-  final List<Map<String, Object?>> contexts;
-
-  int minimal;
-
-  Object? operator [](String key) {
-    return resolve(key);
-  }
-
-  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
-    push(data);
-    closure(this as C);
-    pop();
-  }
-
-  Object? call(Object? object, [List<Object?>? positional, Map<Symbol, Object?>? named]) {
-    positional ??= <Object?>[];
-
-    if (object is! Function) {
-      object = environment.getAttribute(object, 'call');
-    }
-
-    if (object is Function) {
-      return Function.apply(object, positional, named);
-    }
-  }
-
-  Object? escape(Object? value) {
-    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup(value as String) : value;
-  }
-
-  Object? escaped(Object? value) {
-    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup.escaped(value) : value;
-  }
-
-  Object? get(String key) {
-    for (final context in contexts.reversed) {
-      if (context.containsKey(key)) {
-        return context[key];
-      }
-    }
-
-    return missing;
-  }
-
-  bool has(String name) {
-    return contexts.any((context) => context.containsKey(name));
-  }
-
-  void pop() {
-    if (contexts.length > minimal) {
-      contexts.removeLast();
-    }
-  }
-
-  void push(Map<String, Object?> context) {
-    contexts.add(context);
-  }
-
-  Object? resolve(String key) {
-    final result = get(key);
-
-    if (result == missing) {
-      return environment.undefined(name: key);
-    }
-
-    return result;
-  }
-}
+export 'context.dart';
 
 class LoopContext extends Iterable<Object?> {
   LoopContext(this.values, this.undefined, {this.depth0 = 0, this.recurse})
@@ -369,52 +264,17 @@ class Namespace {
 
     return Namespace(context);
   }
-
-  static void prepare(Node node) {
-    if (node is Call) {
-      if (node.expression is Name && (node.expression as Name).name == 'namespace') {
-        final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
-        node.arguments = null;
-
-        if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
-          final dict = DictLiteral(node.keywordArguments!
-              .map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value))
-              .toList());
-          node.keywordArguments = null;
-          arguments.add(dict);
-        }
-
-        if (node.dArguments != null) {
-          arguments.add(node.dArguments!);
-          node.dArguments = null;
-        }
-
-        if (node.dKeywordArguments != null) {
-          arguments.add(node.dKeywordArguments!);
-          node.dKeywordArguments = null;
-        }
-
-        if (arguments.isNotEmpty) {
-          node.arguments = <Expression>[ListLiteral(arguments)];
-        }
-
-        return;
-      }
-    }
-
-    node.visitChildNodes(prepare);
-  }
 }
 
-class NSRef {
-  NSRef(this.name, this.attribute);
+class NamespaceValue {
+  NamespaceValue(this.name, this.item);
 
   String name;
 
-  String attribute;
+  String item;
 
   @override
   String toString() {
-    return 'NSRef($name, $attribute)';
+    return 'NamespaceValue($name, $item)';
   }
 }

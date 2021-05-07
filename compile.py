@@ -3,6 +3,6 @@
 import sys
 from jinja2 import Environment
 
-env = Environment()
+env = Environment(extensions=['jinja2.ext.do'])
 
-print(env.compile(sys.argv[1], raw=True))
+print(env.compile(''.join(sys.stdin), raw=True))

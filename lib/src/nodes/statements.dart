@@ -1,5 +1,26 @@
 part of '../nodes.dart';
 
+class Do extends Statement {
+  Do(this.expressions);
+
+  List<Expression> expressions;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitDo(this, context);
+  }
+
+  @override
+  void visitChildNodes(NodeVisitor visitor) {
+    expressions.forEach(visitor);
+  }
+
+  @override
+  String toString() {
+    return 'Do(${expressions.join(', ')})';
+  }
+}
+
 class Output extends Statement {
   Output(this.nodes);
 
@@ -155,14 +176,14 @@ class With extends Statement {
   }
 }
 
-class Block extends Statement {
-  Block(this.name, this.scoped, this.body);
+class Block extends Statement with LinkedListEntry<Block> {
+  Block(this.name, this.scoped, this.nodes);
 
   String name;
 
   bool scoped;
 
-  List<Node> body;
+  List<Node> nodes;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -171,7 +192,7 @@ class Block extends Statement {
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    body.forEach(visitor);
+    nodes.forEach(visitor);
   }
 
   @override
@@ -182,14 +203,14 @@ class Block extends Statement {
       result += '.scoped';
     }
 
-    return '$result($name, ${body.join(', ')})';
+    return '$result($name, ${nodes.join(', ')})';
   }
 }
 
 class Include extends Statement implements ImportContext {
   Include(this.template, {this.ignoreMissing = false, this.withContext = true});
 
-  Expression template;
+  String template;
 
   bool ignoreMissing;
 
@@ -199,11 +220,6 @@ class Include extends Statement implements ImportContext {
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitInclude(this, context);
-  }
-
-  @override
-  void visitChildNodes(NodeVisitor visitor) {
-    template.visitChildNodes(visitor);
   }
 
   @override
@@ -247,11 +263,11 @@ class Assign extends Statement {
 }
 
 class AssignBlock extends Statement {
-  AssignBlock(this.target, this.body, [this.filters]);
+  AssignBlock(this.target, this.nodes, [this.filters]);
 
   Expression target;
 
-  List<Node> body;
+  List<Node> nodes;
 
   List<Filter>? filters;
 
@@ -263,12 +279,12 @@ class AssignBlock extends Statement {
   @override
   void visitChildNodes(NodeVisitor visitor) {
     visitor(target);
-    body.forEach(visitor);
+    nodes.forEach(visitor);
   }
 
   @override
   String toString() {
-    var result = 'AssignBlock($target, $body';
+    var result = 'AssignBlock($target, $nodes';
 
     if (filters != null && filters!.isNotEmpty) {
       result = '$result, $filters';
@@ -300,9 +316,9 @@ class Scope extends Statement {
 }
 
 class ScopedContextModifier extends ContextModifier {
-  ScopedContextModifier(this.options, this.body);
+  ScopedContextModifier(this.options, this.nodes);
 
-  List<Node> body;
+  List<Node> nodes;
 
   Map<String, Expression> options;
 
@@ -313,11 +329,11 @@ class ScopedContextModifier extends ContextModifier {
 
   @override
   void visitChildNodes(NodeVisitor visitor) {
-    body.forEach(visitor);
+    nodes.forEach(visitor);
   }
 
   @override
   String toString() {
-    return 'ScopedContextModifier($options, $body)';
+    return 'ScopedContextModifier($options, $nodes)';
   }
 }

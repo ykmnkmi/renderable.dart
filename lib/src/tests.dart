@@ -1,6 +1,5 @@
-import 'package:renderable/src/runtime.dart';
-
 import 'markup.dart';
+import 'runtime.dart';
 import 'utils.dart';
 
 bool isBoolean(Object? object) {

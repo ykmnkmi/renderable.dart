@@ -7,13 +7,11 @@ After merging this package will be simplified to object based context and divide
 Differences:
 - no context and environment function decorators, use `context`/`ctx` or `environment`/`env` variables: `{{ function(ctx/env, ...) }}` and 
   `Environment(contextFilters: {...}, environmentFilters: {...})` parameters for filters.
+- `inlcude` and `extends` accepts only single path.
 - ... working
 
-Status:
-------
-
-API:
-----
+## Status:
+### API:
 - Environment
   - constructor
     - ~~extensions~~
@@ -27,10 +25,8 @@ API:
   - ~~addExtension~~
   - ~~compileExpression~~
   - fromString
-  - getOrSelectTemplate
   - getTemplate
   - ~~listTemplates~~
-  - selectTemplate
 - Template
   - path (name)
   - render
@@ -63,14 +59,12 @@ API:
   - TemplateError
   - UndefinedError
   - TemplateNotFound
-  - TemplatesNotFound
   - TemplateSyntaxError
   - TemplateRuntimeError
   - ~~TemplateAssertionError~~
 - ... working
 
-Templates:
-----------
+### Templates:
 - Variables `[a-zA-Z$_][a-zA-Z0-9$_]*`
 - Filters
 - Tests
@@ -87,7 +81,6 @@ Templates:
   - ~~Nesting extends~~
   - ~~Named Block End-Tags~~
   - ~~Block Nesting and Scope~~
-  - ~~Template Objects~~
 - HTML Escaping
   - Working with Manual Escaping
   - Working with Automatic Escaping
@@ -103,7 +96,7 @@ Templates:
   - ~~Blocks~~
   - Include
   - ~~Import~~
-- ~~Import Context Behavior~~
+- Import Context Behavior
 - Expressions
   - Literals
   - Math

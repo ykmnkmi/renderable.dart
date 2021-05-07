@@ -5,4 +5,4 @@ from jinja2 import Environment
 
 env = Environment()
 
-print(env.from_string(sys.argv[1]).render())
+print(env.from_string(''.join(sys.stdin)).render())

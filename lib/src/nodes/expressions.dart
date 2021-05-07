@@ -21,9 +21,9 @@ abstract class Callable {
 
   List<Keyword>? get keywordArguments;
 
-  Expression? get dArguments;
+  Expression? get dynamicArguments;
 
-  Expression? get dKeywordArguments;
+  Expression? get dynamicKeywordArguments;
 }
 
 class Name extends Expression with CanAssign {
@@ -53,39 +53,6 @@ class Name extends Expression with CanAssign {
     }
 
     return 'Name($name, $type)';
-  }
-}
-
-class NamespaceReference extends Expression implements CanAssign {
-  NamespaceReference(this.name, this.attribute);
-
-  String name;
-
-  String attribute;
-
-  @override
-  bool get canAssign {
-    return true;
-  }
-
-  @override
-  AssignContext get context {
-    return AssignContext.store;
-  }
-
-  @override
-  set context(AssignContext context) {
-    throw UnsupportedError('only for store');
-  }
-
-  @override
-  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitNamespaceReference(this, context);
-  }
-
-  @override
-  String toString() {
-    return 'NamespaceReference($name, $attribute)';
   }
 }
 
@@ -232,7 +199,7 @@ class Slice extends Expression {
 }
 
 class Call extends Expression implements Callable {
-  Call({this.expression, this.arguments, this.keywordArguments, this.dArguments, this.dKeywordArguments});
+  Call({this.expression, this.arguments, this.keywordArguments, this.dynamicArguments, this.dynamicKeywordArguments});
 
   @override
   Expression? expression;
@@ -244,10 +211,10 @@ class Call extends Expression implements Callable {
   List<Keyword>? keywordArguments;
 
   @override
-  Expression? dArguments;
+  Expression? dynamicArguments;
 
   @override
-  Expression? dKeywordArguments;
+  Expression? dynamicKeywordArguments;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -268,12 +235,12 @@ class Call extends Expression implements Callable {
       keywordArguments!.forEach(visitor);
     }
 
-    if (dArguments != null) {
-      visitor(dArguments!);
+    if (dynamicArguments != null) {
+      visitor(dynamicArguments!);
     }
 
-    if (dKeywordArguments != null) {
-      visitor(dKeywordArguments!);
+    if (dynamicKeywordArguments != null) {
+      visitor(dynamicKeywordArguments!);
     }
   }
 
@@ -307,22 +274,22 @@ class Call extends Expression implements Callable {
       result += '${keywordArguments!.join(', ')}';
     }
 
-    if (dArguments != null) {
+    if (dynamicArguments != null) {
       if (comma) {
         result += ', ';
       } else {
         comma = true;
       }
 
-      result += '*$dArguments';
+      result += '*$dynamicArguments';
     }
 
-    if (dKeywordArguments != null) {
+    if (dynamicKeywordArguments != null) {
       if (comma) {
         result += ', ';
       }
 
-      result += '**$dKeywordArguments';
+      result += '**$dynamicKeywordArguments';
     }
 
     return result + ')';
@@ -330,7 +297,7 @@ class Call extends Expression implements Callable {
 }
 
 class Filter extends Expression implements Callable {
-  Filter(this.name, {this.expression, this.arguments, this.keywordArguments, this.dArguments, this.dKeywordArguments});
+  Filter(this.name, {this.expression, this.arguments, this.keywordArguments, this.dynamicArguments, this.dynamicKeywordArguments});
 
   String name;
 
@@ -344,10 +311,10 @@ class Filter extends Expression implements Callable {
   List<Keyword>? keywordArguments;
 
   @override
-  Expression? dArguments;
+  Expression? dynamicArguments;
 
   @override
-  Expression? dKeywordArguments;
+  Expression? dynamicKeywordArguments;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -368,12 +335,12 @@ class Filter extends Expression implements Callable {
       keywordArguments!.forEach(visitor);
     }
 
-    if (dArguments != null) {
-      visitor(dArguments!);
+    if (dynamicArguments != null) {
+      visitor(dynamicArguments!);
     }
 
-    if (dKeywordArguments != null) {
-      visitor(dKeywordArguments!);
+    if (dynamicKeywordArguments != null) {
+      visitor(dynamicKeywordArguments!);
     }
   }
 
@@ -401,20 +368,20 @@ class Filter extends Expression implements Callable {
       result += '${keywordArguments!.join(', ')}';
     }
 
-    if (dArguments != null) {
+    if (dynamicArguments != null) {
       if (result.contains(',')) {
         result += ', ';
       }
 
-      result += '*$dArguments';
+      result += '*$dynamicArguments';
     }
 
-    if (dKeywordArguments != null) {
+    if (dynamicKeywordArguments != null) {
       if (result.contains(',')) {
         result += ', ';
       }
 
-      result += '**$dKeywordArguments';
+      result += '**$dynamicKeywordArguments';
     }
 
     return result + ')';
@@ -422,7 +389,7 @@ class Filter extends Expression implements Callable {
 }
 
 class Test extends Expression implements Callable {
-  Test(this.name, {this.expression, this.arguments, this.keywordArguments, this.dArguments, this.dKeywordArguments});
+  Test(this.name, {this.expression, this.arguments, this.keywordArguments, this.dynamicArguments, this.dynamicKeywordArguments});
 
   String name;
 
@@ -436,10 +403,10 @@ class Test extends Expression implements Callable {
   List<Keyword>? keywordArguments;
 
   @override
-  Expression? dArguments;
+  Expression? dynamicArguments;
 
   @override
-  Expression? dKeywordArguments;
+  Expression? dynamicKeywordArguments;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
@@ -460,12 +427,12 @@ class Test extends Expression implements Callable {
       keywordArguments!.forEach(visitor);
     }
 
-    if (dArguments != null) {
-      visitor(dArguments!);
+    if (dynamicArguments != null) {
+      visitor(dynamicArguments!);
     }
 
-    if (dKeywordArguments != null) {
-      visitor(dKeywordArguments!);
+    if (dynamicKeywordArguments != null) {
+      visitor(dynamicKeywordArguments!);
     }
   }
 
@@ -493,20 +460,20 @@ class Test extends Expression implements Callable {
       result += '${keywordArguments!.join(', ')}';
     }
 
-    if (dArguments != null) {
+    if (dynamicArguments != null) {
       if (result.contains(',')) {
         result += ', ';
       }
 
-      result += '*$dArguments';
+      result += '*$dynamicArguments';
     }
 
-    if (dKeywordArguments != null) {
+    if (dynamicKeywordArguments != null) {
       if (result.contains(',')) {
         result += ', ';
       }
 
-      result += '**$dKeywordArguments';
+      result += '**$dynamicKeywordArguments';
     }
 
     return result + ')';
