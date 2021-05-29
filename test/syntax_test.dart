@@ -227,9 +227,9 @@ void main() {
         '{% for x in foo, %}...{% endfor %}',
       };
 
-      sources.forEach((source) {
+      for (final source in sources) {
         expect(environment.fromString(source), isA<Template>());
-      });
+      }
     });
 
     test('triling comma', () {

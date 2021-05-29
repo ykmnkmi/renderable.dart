@@ -261,7 +261,7 @@ class Call extends Expression implements Callable {
         comma = true;
       }
 
-      result += '${arguments!.join(', ')}';
+      result += arguments!.join(', ');
     }
 
     if (keywordArguments != null && keywordArguments!.isNotEmpty) {
@@ -271,7 +271,7 @@ class Call extends Expression implements Callable {
         comma = true;
       }
 
-      result += '${keywordArguments!.join(', ')}';
+      result += keywordArguments!.join(', ');
     }
 
     if (dynamicArguments != null) {
@@ -357,7 +357,7 @@ class Filter extends Expression implements Callable {
         result += ', ';
       }
 
-      result += '${arguments!.join(', ')}';
+      result += arguments!.join(', ');
     }
 
     if (keywordArguments != null && keywordArguments!.isNotEmpty) {
@@ -365,7 +365,7 @@ class Filter extends Expression implements Callable {
         result += ', ';
       }
 
-      result += '${keywordArguments!.join(', ')}';
+      result += keywordArguments!.join(', ');
     }
 
     if (dynamicArguments != null) {
@@ -449,7 +449,7 @@ class Test extends Expression implements Callable {
         result += ', ';
       }
 
-      result += '${arguments!.join(', ')}';
+      result += arguments!.join(', ');
     }
 
     if (keywordArguments != null && keywordArguments!.isNotEmpty) {
@@ -457,7 +457,7 @@ class Test extends Expression implements Callable {
         result += ', ';
       }
 
-      result += '${keywordArguments!.join(', ')}';
+      result += keywordArguments!.join(', ');
     }
 
     if (dynamicArguments != null) {

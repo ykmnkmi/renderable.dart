@@ -118,7 +118,7 @@ abstract class Visitor<C, R> {
     return visitBinary(node, context);
   }
 
-  R visitTemplate(Template template, [C? context]);
+  R visitTemplate(Template node, [C? context]);
 
   R visitTest(Test node, [C? context]);
 

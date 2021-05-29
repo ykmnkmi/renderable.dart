@@ -77,7 +77,7 @@ void main() {
       final environment = Environment();
       Template template;
 
-      for (final char in ['\0', '\u2668', '\xe4', '\t', '\r', '\n']) {
+      for (final char in ['0', '\u2668', '\xe4', '\t', '\r', '\n']) {
         template = environment.fromString('{{ ${represent(char)} }}');
         expect(template.render(), equals(char));
       }

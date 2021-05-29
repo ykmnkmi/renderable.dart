@@ -296,17 +296,9 @@ class Environment {
     return Function.apply(test, positional, named) as bool;
   }
 
-  List<Node> parse(String source, {String? path}) {
-    return Parser(this).parse(source, path: path);
-  }
-
   Template loadTemplate(String name) {
     if (loader == null) {
       throw UnsupportedError('no loader for this environment specified');
-    }
-
-    if (!autoReload && templates.containsKey(name)) {
-      return templates[name]!;
     }
 
     return templates[name] = loader!.load(this, name);
@@ -318,25 +310,27 @@ class Environment {
     }
 
     if (name is String) {
-      return loadTemplate(name);
+      if (autoReload && templates.containsKey(name)) {
+        return templates[name] = loadTemplate(name);
+      }
+
+      return templates[name] ??= loadTemplate(name);
     }
 
     throw TypeError();
   }
 
-  Template fromString(String source) {
-    final nodes = parse(source);
+  Template fromString(String source, {String? path}) {
+    final template = Parser(this, path: path).parse(source);
 
     for (final modifier in modifiers) {
-      for (final node in nodes) {
+      for (final node in template.nodes) {
         modifier(node);
       }
     }
 
-    final template = Template.parsed(this, nodes);
-
     if (optimized) {
-      const Optimizer().visitTemplate(template, Context(this));
+      template.accept(const Optimizer(), Context(this));
     }
 
     return template;
@@ -434,23 +428,7 @@ class Template extends Node implements Renderable {
     return environment.fromString(source);
   }
 
-  Template.parsed(
-    this.environment,
-    List<Node> nodes, {
-    String? path,
-  })  : nodes = List<Node>.of(nodes),
-        blocks = <Block>[],
-        path = path {
-    void visitor(Node node) {
-      if (node is Block) {
-        blocks.add(node);
-      }
-
-      node.visitChildNodes(visitor);
-    }
-
-    nodes.forEach(visitor);
-  }
+  Template.parsed(this.environment, this.nodes, {this.blocks = const <Block>[], this.path});
 
   final Environment environment;
 
@@ -472,9 +450,9 @@ class Template extends Node implements Renderable {
 
   @override
   String render([Map<String, Object?>? data]) {
-    final buffer = StringBuffer();
-    accept(const StringBufferRenderer(), RenderContext(environment, buffer: buffer, data: data));
-    return buffer.toString();
+    final context = RenderContext(environment, data: data);
+    accept(const StringBufferRenderer(), context);
+    return context.buffer.toString();
   }
 
   @override

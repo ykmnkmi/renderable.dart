@@ -1,13 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-import 'context.dart';
 import 'enirvonment.dart';
 import 'exceptions.dart';
-import 'optimizer.dart';
 
 abstract class Loader {
   String getSource(String template) {
@@ -22,7 +19,7 @@ abstract class Loader {
     throw UnsupportedError('this loader cannot iterate over all templates');
   }
 
-  Template load(Environment environment, String name);
+  Template load(Environment environment, String path);
 }
 
 class MapLoader extends Loader {
@@ -50,8 +47,8 @@ class MapLoader extends Loader {
   }
 
   @override
-  Template load(Environment environment, String name) {
-    final source = getSource(name);
+  Template load(Environment environment, String path) {
+    final source = getSource(path);
     return environment.fromString(source);
   }
 }
@@ -72,10 +69,6 @@ class FileSystemLoader extends Loader {
   final Set<String> extensions;
 
   final Encoding encoding;
-
-  StreamSubscription<ProcessSignal>? subscription;
-
-  List<StreamSubscription<void>>? subscriptions;
 
   File? findFile(String path) {
     final pieces = path.split('/');
@@ -139,30 +132,15 @@ class FileSystemLoader extends Loader {
   }
 
   @override
-  Template load(Environment environment, String name) {
-    final file = findFile(name);
+  Template load(Environment environment, String path) {
+    final file = findFile(path);
 
     if (file == null) {
-      throw TemplateNotFound(name: name);
+      throw TemplateNotFound(name: path);
     }
 
-    var source = file.readAsStringSync(encoding: encoding);
-    var nodes = environment.parse(source, path: name);
-
-    for (final modifier in environment.modifiers) {
-      for (final node in nodes) {
-        modifier(node);
-      }
-    }
-
-    const optimizer = Optimizer();
-    final template = Template.parsed(environment, nodes, path: name);
-
-    if (environment.optimized) {
-      template.accept(optimizer, Context(environment));
-    }
-
-    return template;
+    final source = file.readAsStringSync(encoding: encoding);
+    return environment.fromString(source, path: path);
   }
 
   @override
