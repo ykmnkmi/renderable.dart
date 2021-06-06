@@ -126,9 +126,7 @@ class Parser {
 
   List<Node> parseStatements(TokenReader reader, List<String> endTokens, [bool dropNeedle = false]) {
     reader.skipIf('colon');
-
     reader.expect('block_end');
-
     final nodes = subParse(reader, endTokens: endTokens);
 
     if (reader.current.test('eof')) {
@@ -144,7 +142,6 @@ class Parser {
 
   Statement parseSet(TokenReader reader) {
     reader.expect('name', 'set');
-
     final target = parseAssignTarget(reader, withNamespace: true);
 
     if (reader.skipIf('assign')) {
@@ -156,11 +153,11 @@ class Parser {
     final body = parseStatements(reader, <String>['name:endset'], true);
 
     if (filter is Filter) {
-      final filters = <Filter>[];
+      var filters = <Filter>[];
       dynamic expression = filter;
 
       while (expression is Filter) {
-        final next = expression.expression;
+        var next = expression.expression;
         expression.expression = null;
         filters.insert(0, expression);
         expression = next;
@@ -174,15 +171,14 @@ class Parser {
 
   For parseFor(TokenReader reader) {
     reader.expect('name', 'for');
-
-    final target = parseAssignTarget(reader, extraEndRules: <String>['name:in']);
+    var target = parseAssignTarget(reader, extraEndRules: <String>['name:in']);
 
     if (target is Name && target.name == 'loop') {
       fail('can\'t assign to special loop variable in for-loop target');
     }
 
     reader.expect('name', 'in');
-    final iterable = parseTuple(reader, withCondition: false);
+    var iterable = parseTuple(reader, withCondition: false);
     var hasLoop = false;
 
     void visit(Node node) {
@@ -200,13 +196,13 @@ class Parser {
     Test? test;
 
     if (reader.skipIf('name', 'if')) {
-      final expression = parseExpression(reader);
+      var expression = parseExpression(reader);
       expression.visitChildNodes(visit);
       test = expression is Test ? expression : Test('defined', expression: expression);
     }
 
-    final recursive = reader.skipIf('name', 'recursive');
-    final body = parseStatements(reader, <String>['name:endfor', 'name:else']);
+    var recursive = reader.skipIf('name', 'recursive');
+    var body = parseStatements(reader, <String>['name:endfor', 'name:else']);
 
     if (!hasLoop) {
       body.forEach(visit);
@@ -223,18 +219,17 @@ class Parser {
 
   If parseIf(TokenReader reader) {
     reader.expect('name', 'if');
-
-    final test = parseTuple(reader, withCondition: false);
-    final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
-    final root = If(test, body);
+    var test = parseTuple(reader, withCondition: false);
+    var body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
+    var root = If(test, body);
     var node = root;
 
     while (true) {
-      final tag = reader.next();
+      var tag = reader.next();
 
       if (tag.test('name', 'elif')) {
-        final test = parseTuple(reader, withCondition: false);
-        final body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
+        var test = parseTuple(reader, withCondition: false);
+        var body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
         node.nextIf = If(test, body);
         node = node.nextIf!;
         continue;
@@ -252,7 +247,6 @@ class Parser {
 
   With parseWith(TokenReader reader) {
     reader.expect('name', 'with');
-
     final targets = <Expression>[];
     final values = <Expression>[];
 
@@ -264,9 +258,7 @@ class Parser {
       final target = parseAssignTarget(reader);
       (target as CanAssign).context = AssignContext.parameter;
       targets.add(target);
-
       reader.expect('assign');
-
       values.add(parseExpression(reader));
     }
 
@@ -276,7 +268,6 @@ class Parser {
 
   Scope parseAutoEscape(TokenReader reader) {
     reader.expect('name', 'autoescape');
-
     final escape = parseExpression(reader);
     final body = parseStatements(reader, <String>['name:endautoescape'], true);
     return Scope(ScopedContextModifier(<String, Expression>{'autoEscape': escape}, body));
@@ -284,12 +275,10 @@ class Parser {
 
   Block parseBlock(TokenReader reader) {
     reader.expect('name', 'block');
-    reader.expect('name');
+    final name = reader.expect('name');
 
-    final name = reader.current.value;
-
-    if (blocks.contains(name)) {
-      fail('block \'$name\' defined twice', reader.current.line);
+    if (blocks.contains(name.value)) {
+      fail('block \'${name.value}\' defined twice', reader.current.line);
     }
 
     final scoped = reader.skipIf('name', 'scoped');
@@ -299,13 +288,22 @@ class Parser {
     }
 
     final body = parseStatements(reader, <String>['name:endblock'], true);
-    reader.skipIf('name', name);
-    return Block(name, scoped, body);
+    final maybeName = reader.current;
+
+    if (maybeName.test('name')) {
+      if (maybeName.value != name.value) {
+        // TODO: set error message
+        fail('\'${name.value}\' expected, got ${maybeName.value}');
+      }
+
+      reader.next();
+    }
+
+    return Block(name.value, scoped, body);
   }
 
   Extends parseExtends(TokenReader reader) {
     reader.expect('name', 'extends');
-
     throw UnimplementedError('extends not implemented');
   }
 
@@ -322,7 +320,6 @@ class Parser {
 
   Include parseInclude(TokenReader reader) {
     reader.expect('name', 'include');
-
     final name = reader.expect('string');
     final node = Include(name.value);
 
@@ -379,7 +376,7 @@ class Parser {
     var expression1 = parseOr(reader);
 
     while (reader.skipIf('name', 'if')) {
-      var expression2 = parseOr(reader);
+      final expression2 = parseOr(reader);
 
       if (reader.skipIf('name', 'else')) {
         expression1 = Condition(expression2, expression1, parseCondition(reader));
@@ -536,7 +533,6 @@ class Parser {
         break;
       case 'sub':
         reader.next();
-
         expression = parseUnary(reader, withFilter: false);
         expression = Neg(expression);
         break;
@@ -668,7 +664,6 @@ class Parser {
 
   Expression parseList(TokenReader reader) {
     reader.expect('lbracket');
-
     final values = <Expression>[];
 
     while (!reader.current.test('rbracket')) {
@@ -684,13 +679,11 @@ class Parser {
     }
 
     reader.expect('rbracket');
-
     return ListLiteral(values);
   }
 
   Expression parseDict(TokenReader reader) {
     reader.expect('lbrace');
-
     final pairs = <Pair>[];
 
     while (!reader.current.test('rbrace')) {
@@ -703,9 +696,7 @@ class Parser {
       }
 
       final key = parseExpression(reader);
-
       reader.expect('colon');
-
       final value = parseExpression(reader);
       pairs.add(Pair(key, value));
     }
@@ -823,12 +814,10 @@ class Parser {
 
   Call parseCall(TokenReader reader, [Expression? expression]) {
     final token = reader.expect('lparen');
-
     final arguments = <Expression>[];
     final keywordArguments = <Keyword>[];
-    Expression? dArguments, dKeywordArguments;
-
     var requireComma = false;
+    Expression? dArguments, dKeywordArguments;
 
     void ensure(bool ensure) {
       if (!ensure) {
@@ -891,14 +880,11 @@ class Parser {
       }
 
       var token = reader.expect('name');
-
       var name = token.value;
 
       while (reader.current.test('dot')) {
         reader.next();
-
         token = reader.expect('name');
-
         name = '$name.${token.value}';
       }
 
@@ -929,7 +915,6 @@ class Parser {
 
   Expression parseTest(TokenReader reader, Expression expression) {
     reader.expect('name', 'is');
-
     var negated = false;
 
     if (reader.current.test('name', 'not')) {
@@ -938,7 +923,6 @@ class Parser {
     }
 
     var token = reader.expect('name');
-
     var name = token.value;
 
     while (reader.current.test('dot')) {
@@ -957,8 +941,7 @@ class Parser {
         fail('You cannot chain multiple tests with is');
       }
 
-      var argument = parsePrimary(reader);
-      argument = parsePostfix(reader, argument);
+      final argument = parsePostfix(reader, parsePrimary(reader));
       call = Call(arguments: <Expression>[argument]);
     }
 
@@ -1013,7 +996,6 @@ class Parser {
           case 'variable_begin':
             reader.next();
             buffer.add(parseTuple(reader));
-
             reader.expect('variable_end');
 
             break;
@@ -1026,9 +1008,7 @@ class Parser {
             }
 
             nodes.add(parseStatement(reader));
-
             reader.expect('block_end');
-
             break;
           default:
             throw AssertionError('internal parsing error');

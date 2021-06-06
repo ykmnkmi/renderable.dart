@@ -1,49 +1,33 @@
-import 'package:meta/meta.dart';
-
 import 'enirvonment.dart';
 import 'markup.dart';
 import 'utils.dart';
 
-@optionalTypeArgs
 typedef ContextCallback<C extends Context> = void Function(C context);
 
 class Context {
   Context(this.environment, [Map<String, Object?>? data])
       : contexts = <Map<String, Object?>>[environment.globals],
-        blocks = <String, BlockReference>{},
         minimal = 2 {
-    if (data != null) {
-      data = Map<String, Object?>.of(data);
-
-      if (!data.containsKey('autoescape')) {
-        data['autoescape'] = environment.autoEscape;
-      }
-
-      contexts.add(data);
-    } else {
-      data = <String, Object?>{'autoescape': environment.autoEscape};
-      contexts.add(data);
-    }
+    data = data == null ? <String, Object?>{} : Map<String, Object?>.of(data);
+    contexts.add(data);
 
     data
       ..['context'] = this
       ..['ctx'] = this
       ..['environment'] = this
       ..['env'] = this
+      ..['autoescape'] = environment.autoEscape
       ..['super'] = parent;
   }
 
   Context.from(Context context)
       : environment = context.environment,
         contexts = context.contexts,
-        blocks = context.blocks,
         minimal = context.contexts.length;
 
   final Environment environment;
 
   final List<Map<String, Object?>> contexts;
-
-  final Map<String, BlockReference> blocks;
 
   final int minimal;
 
@@ -92,7 +76,7 @@ class Context {
   }
 
   String parent() {
-    return ': ';
+    throw UnimplementedError();
   }
 
   void pop() {

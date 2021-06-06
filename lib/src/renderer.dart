@@ -10,13 +10,16 @@ import 'utils.dart';
 class RenderContext extends Context {
   RenderContext(Environment environment, {Map<String, Object?>? data, StringBuffer? buffer})
       : buffer = buffer ?? StringBuffer(),
+        blocks = <String, List<Block>>{},
         super(environment, data);
 
   RenderContext.from(Context context, {StringBuffer? buffer})
       : buffer = buffer ?? StringBuffer(),
+        blocks = {},
         super.from(context);
 
   final StringBuffer buffer;
+  final Map<String, List<Block>> blocks;
 
   Object? finalize(Object? object) {
     return environment.finalize(this, object);
@@ -243,9 +246,9 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
 
     for (final block in node.blocks) {
       if (context.blocks.containsKey(block.name)) {
-        context.blocks[block.name]!.parent = BlockReference(block);
+        context.blocks[block.name]!.add(block);
       } else {
-        context.blocks[block.name] = BlockReference(block);
+        context.blocks[block.name] = <Block>[block];
       }
     }
 
