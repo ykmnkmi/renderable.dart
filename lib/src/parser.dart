@@ -3,7 +3,7 @@ import 'exceptions.dart';
 import 'lexer.dart';
 import 'nodes.dart';
 import 'reader.dart';
-import 'utils.dart' show represent;
+import 'utils.dart';
 
 class Parser {
   Parser(this.environment, {this.name, this.path})
@@ -304,7 +304,8 @@ class Parser {
 
   Extends parseExtends(TokenReader reader) {
     reader.expect('name', 'extends');
-    throw UnimplementedError('extends not implemented');
+    final template = parsePrimary(reader);
+    return Extends(template);
   }
 
   T parseImportContext<T extends ImportContext>(TokenReader reader, T node, [bool defaultValue = true]) {
@@ -997,7 +998,6 @@ class Parser {
             reader.next();
             buffer.add(parseTuple(reader));
             reader.expect('variable_end');
-
             break;
           case 'block_begin':
             flushData();
@@ -1011,7 +1011,7 @@ class Parser {
             reader.expect('block_end');
             break;
           default:
-            throw AssertionError('internal parsing error');
+            throw AssertionError('unsuported token type: ${token.type}');
         }
       }
 

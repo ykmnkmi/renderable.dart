@@ -50,6 +50,8 @@ abstract class Visitor<C, R> {
 
   R visitDo(Do node, [C? context]);
 
+  R visitExtends(Extends node, [C? context]);
+
   R visitFilter(Filter node, [C? context]);
 
   R visitFloorDiv(FloorDiv node, [C? context]) {

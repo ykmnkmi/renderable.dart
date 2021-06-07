@@ -43,9 +43,13 @@ class Output extends Statement {
 }
 
 class Extends extends Statement {
+  Extends(this.template);
+
+  Expression template;
+
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    throw UnimplementedError();
+    return visitor.visitExtends(this, context);
   }
 }
 

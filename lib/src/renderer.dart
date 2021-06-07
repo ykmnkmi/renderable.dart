@@ -99,6 +99,15 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
+  void visitExtends(Extends node, [RenderContext? context]) {
+    context!;
+
+    final path = node.template.accept(this, context);
+    final template = context.environment.getTemplate(path);
+    throw UnimplementedError(template.nodes.toString());
+  }
+
+  @override
   void visitFor(For node, [RenderContext? context]) {
     context!;
 

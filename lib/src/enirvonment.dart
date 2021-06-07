@@ -296,25 +296,25 @@ class Environment {
     return Function.apply(test, positional, named) as bool;
   }
 
-  Template loadTemplate(String name) {
+  Template loadTemplate(String template) {
     if (loader == null) {
       throw UnsupportedError('no loader for this environment specified');
     }
 
-    return templates[name] = loader!.load(this, name);
+    return templates[template] = loader!.load(this, template);
   }
 
-  Template getTemplate(Object? name) {
-    if (name is Undefined) {
-      name.fail();
+  Template getTemplate(Object? template) {
+    if (template is Undefined) {
+      template.fail();
     }
 
-    if (name is String) {
-      if (autoReload && templates.containsKey(name)) {
-        return templates[name] = loadTemplate(name);
+    if (template is String) {
+      if (autoReload && templates.containsKey(template)) {
+        return templates[template] = loadTemplate(template);
       }
 
-      return templates[name] ??= loadTemplate(name);
+      return templates[template] ??= loadTemplate(template);
     }
 
     throw TypeError();

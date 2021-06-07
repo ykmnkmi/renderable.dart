@@ -199,6 +199,12 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
+  Extends visitExtends(Extends node, [Context? context]) {
+    node.template = optimize(node.template, context);
+    return node;
+  }
+
+  @override
   Expression visitFilter(Filter node, [Context? context]) {
     if (node.name == 'random' || !context!.environment.filters.containsKey(node.name)) {
       throw Impossible();

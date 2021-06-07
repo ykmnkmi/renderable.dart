@@ -84,6 +84,11 @@ class Compiler extends Visitor<Frame, String> {
   }
 
   @override
+  String visitExtends(Extends node, [Frame? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
   String visitFilter(Filter node, [Frame? context]) {
     throw UnimplementedError();
   }

@@ -8,7 +8,7 @@ import 'exceptions.dart';
 
 abstract class Loader {
   String getSource(String template) {
-    throw TemplateNotFound(name: template);
+    throw TemplateNotFound(template: template);
   }
 
   bool get hasSourceAccess {
@@ -19,7 +19,7 @@ abstract class Loader {
     throw UnsupportedError('this loader cannot iterate over all templates');
   }
 
-  Template load(Environment environment, String path);
+  Template load(Environment environment, String template);
 }
 
 class MapLoader extends Loader {
@@ -38,7 +38,7 @@ class MapLoader extends Loader {
       return mapping[template]!;
     }
 
-    throw TemplateNotFound(name: template);
+    throw TemplateNotFound(template: template);
   }
 
   @override
@@ -55,12 +55,12 @@ class MapLoader extends Loader {
 
 class FileSystemLoader extends Loader {
   FileSystemLoader({
-    String path = 'templates',
+    String? path,
     List<String>? paths,
     this.followLinks = true,
     this.extensions = const <String>{'html'},
     this.encoding = utf8,
-  }) : paths = paths ?? <String>[path];
+  }) : paths = paths ?? <String>[path ?? 'templates'];
 
   final List<String> paths;
 
@@ -70,8 +70,8 @@ class FileSystemLoader extends Loader {
 
   final Encoding encoding;
 
-  File? findFile(String path) {
-    final pieces = path.split('/');
+  File? findFile(String template) {
+    final pieces = template.split('/');
 
     for (final path in paths) {
       final templatePath = p.joinAll(<String>[path, ...pieces]);
@@ -99,7 +99,7 @@ class FileSystemLoader extends Loader {
     final file = findFile(template);
 
     if (file == null) {
-      throw TemplateNotFound(name: template);
+      throw TemplateNotFound(template: template);
     }
 
     return file.readAsStringSync(encoding: encoding);
@@ -132,15 +132,15 @@ class FileSystemLoader extends Loader {
   }
 
   @override
-  Template load(Environment environment, String path) {
-    final file = findFile(path);
+  Template load(Environment environment, String template) {
+    final file = findFile(template);
 
     if (file == null) {
-      throw TemplateNotFound(name: path);
+      throw TemplateNotFound(template: template);
     }
 
     final source = file.readAsStringSync(encoding: encoding);
-    return environment.fromString(source, path: path);
+    return environment.fromString(source, path: template);
   }
 
   @override
