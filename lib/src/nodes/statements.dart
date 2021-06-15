@@ -43,13 +43,18 @@ class Output extends Statement {
 }
 
 class Extends extends Statement {
-  Extends(this.template);
+  Extends(this.path);
 
-  Expression template;
+  String path;
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitExtends(this, context);
+  }
+
+  @override
+  String toString() {
+    return 'Extends($path)';
   }
 }
 

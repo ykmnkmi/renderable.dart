@@ -450,9 +450,10 @@ class Template extends Node implements Renderable {
 
   @override
   String render([Map<String, Object?>? data]) {
-    final context = RenderContext(environment, data: data);
-    accept(const StringBufferRenderer(), context);
-    return context.buffer.toString();
+    final buffer = StringBuffer();
+    final context = RenderContext(environment, buffer, data: data);
+    accept(const StringSinkRenderer(), context);
+    return buffer.toString();
   }
 
   @override
@@ -463,5 +464,48 @@ class Template extends Node implements Renderable {
   @override
   void visitChildNodes(NodeVisitor visitor) {
     nodes.forEach(visitor);
+  }
+}
+
+class ExtendedTemplate extends Node implements Template {
+  ExtendedTemplate.parsed(this.environment, this.parent, this.blocks, {this.path});
+
+  @override
+  final Environment environment;
+
+  final Extends parent;
+
+  @override
+  final List<Block> blocks;
+
+  @override
+  final String? path;
+
+  @override
+  List<Node> get nodes {
+    return <Node>[parent];
+  }
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
+    return visitor.visitExtendedTemplate(this, context);
+  }
+
+  @override
+  Iterable<String> generate([Map<String, Object?>? data]) {
+    throw UnimplementedError();
+  }
+
+  @override
+  String render([Map<String, Object?>? data]) {
+    final buffer = StringBuffer();
+    final context = RenderContext(environment, buffer, data: data);
+    accept(const StringSinkRenderer(), context);
+    return buffer.toString();
+  }
+
+  @override
+  Stream<String> stream([Map<String, Object?>? data]) {
+    throw UnimplementedError();
   }
 }

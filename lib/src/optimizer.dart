@@ -200,7 +200,12 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Extends visitExtends(Extends node, [Context? context]) {
-    node.template = optimize(node.template, context);
+    return node;
+  }
+
+  @override
+  ExtendedTemplate visitExtendedTemplate(ExtendedTemplate node, [Context? context]) {
+    visitAll(node.blocks);
     return node;
   }
 
@@ -344,6 +349,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Template visitTemplate(Template node, [Context? context]) {
+    visitAll(node.blocks, context);
     visitAll(node.nodes, context);
     return node;
   }

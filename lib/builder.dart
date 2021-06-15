@@ -2,7 +2,7 @@ import 'src/enirvonment.dart';
 import 'src/nodes.dart';
 import 'src/visitor.dart';
 
-class Frame {}
+abstract class Frame {}
 
 class Compiler extends Visitor<Frame, String> {
   Compiler(this.template);
@@ -85,6 +85,11 @@ class Compiler extends Visitor<Frame, String> {
 
   @override
   String visitExtends(Extends node, [Frame? context]) {
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitExtendedTemplate(ExtendedTemplate node, [Frame? context]) {
     throw UnimplementedError();
   }
 

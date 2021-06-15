@@ -8,17 +8,16 @@ import 'runtime.dart';
 import 'utils.dart';
 
 class RenderContext extends Context {
-  RenderContext(Environment environment, {Map<String, Object?>? data, StringBuffer? buffer})
-      : buffer = buffer ?? StringBuffer(),
-        blocks = <String, List<Block>>{},
+  RenderContext(Environment environment, this.sink, {Map<String, Object?>? data})
+      : blocks = <String, List<Block>>{},
         super(environment, data);
 
-  RenderContext.from(Context context, {StringBuffer? buffer})
-      : buffer = buffer ?? StringBuffer(),
-        blocks = {},
+  RenderContext.from(Context context, this.sink)
+      : blocks = {},
         super.from(context);
 
-  final StringBuffer buffer;
+  final StringSink sink;
+
   final Map<String, List<Block>> blocks;
 
   Object? finalize(Object? object) {
@@ -41,13 +40,13 @@ class RenderContext extends Context {
   }
 
   void write(Object? object) {
-    buffer.write(object);
+    sink.write(object);
   }
 }
 
-class StringBufferRenderer extends ExpressionResolver<RenderContext> {
+class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   @literal
-  const StringBufferRenderer();
+  const StringSinkRenderer();
 
   @override
   void visitAll(List<Node> nodes, [RenderContext? context]) {
@@ -68,9 +67,9 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
     context!;
 
     final target = node.target.accept(this, context);
-    final assignContext = RenderContext.from(context);
-    visitAll(node.nodes, assignContext);
-    Object? value = assignContext.buffer.toString();
+    final buffer = StringBuffer();
+    visitAll(node.nodes, RenderContext.from(context, buffer));
+    Object? value = buffer.toString();
 
     if (node.filters == null || node.filters!.isEmpty) {
       assignTargetsToContext(context, target, context.escaped(value));
@@ -86,6 +85,9 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitBlock(Block node, [RenderContext? context]) {
+    context!;
+
+    print(context.blocks[node.name]);
     visitAll(node.nodes, context);
   }
 
@@ -102,9 +104,23 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
   void visitExtends(Extends node, [RenderContext? context]) {
     context!;
 
-    final path = node.template.accept(this, context);
-    final template = context.environment.getTemplate(path);
-    throw UnimplementedError(template.nodes.toString());
+    final template = context.environment.getTemplate(node.path);
+    template.accept(this, context);
+  }
+
+  @override
+  void visitExtendedTemplate(ExtendedTemplate node, [RenderContext? context]) {
+    context!;
+
+    for (final block in node.blocks) {
+      if (context.blocks.containsKey(block.name)) {
+        context.blocks[block.name]!.insert(0, block);
+      } else {
+        context.blocks[block.name] = <Block>[block];
+      }
+    }
+
+    node.parent.accept(this, context);
   }
 
   @override
@@ -209,7 +225,7 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
       if (node.withContext) {
         template.accept(this, context);
       } else {
-        template.accept(this, RenderContext(context.environment, buffer: context.buffer));
+        template.accept(this, RenderContext(context.environment, context.sink));
       }
     } on TemplateNotFound {
       if (!node.ignoreMissing) {
@@ -251,16 +267,6 @@ class StringBufferRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitTemplate(Template node, [RenderContext? context]) {
-    context!;
-
-    for (final block in node.blocks) {
-      if (context.blocks.containsKey(block.name)) {
-        context.blocks[block.name]!.add(block);
-      } else {
-        context.blocks[block.name] = <Block>[block];
-      }
-    }
-
     visitAll(node.nodes, context);
   }
 

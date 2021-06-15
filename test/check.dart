@@ -10,7 +10,7 @@ void main() {
   final source = '{% extends "layouts/base.html" %}{% block title %}hello {{ name }}!{% endblock %}';
 
   try {
-    final environment = Environment(loader: FileSystemLoader(path: uri.path));
+    final environment = Environment(loader: FileSystemLoader(path: uri.toFilePath()));
     final template = environment.fromString(source);
     print(template.render({'name': 'jhon'}));
   } catch (error, trace) {

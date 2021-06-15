@@ -304,8 +304,14 @@ class Parser {
 
   Extends parseExtends(TokenReader reader) {
     reader.expect('name', 'extends');
-    final template = parsePrimary(reader);
-    return Extends(template);
+    final node = parsePrimary(reader);
+
+    if (node is! Constant<String>) {
+      // TODO: add error message
+      fail('message');
+    }
+
+    return Extends(node.value!);
   }
 
   T parseImportContext<T extends ImportContext>(TokenReader reader, T node, [bool defaultValue = true]) {
@@ -973,14 +979,39 @@ class Parser {
   List<Node> subParse(TokenReader reader, {List<String>? endTokens}) {
     final buffer = <Node>[];
     final nodes = <Node>[];
+    // 0 - not extends, 1 - extends
+    int? firstNodeType;
 
     if (endTokens != null) {
       endTokensStack.add(endTokens);
     }
 
+    void check(Node node) {
+      if (firstNodeType == null) {
+        firstNodeType = node is Extends ? 1 : 0;
+      } else if (node is Extends) {
+        if (firstNodeType == 0) {
+          // TODO: add error message
+          fail('message 0');
+        }
+
+        if (firstNodeType == 1) {
+          // TODO: add error message
+          fail('message 1');
+        }
+      } else {
+        if (firstNodeType == 1 && node is! Block) {
+          // TODO: add error message
+          fail('message 2');
+        }
+      }
+    }
+
     void flushData() {
       if (buffer.isNotEmpty) {
-        nodes.add(Output(buffer.toList()));
+        final node = Output(buffer.toList());
+        check(node);
+        nodes.add(node);
         buffer.clear();
       }
     }
@@ -1007,7 +1038,9 @@ class Parser {
               return nodes;
             }
 
-            nodes.add(parseStatement(reader));
+            final node = parseStatement(reader);
+            check(node);
+            nodes.add(node);
             reader.expect('block_end');
             break;
           default:
@@ -1034,12 +1067,18 @@ class Parser {
     void visit(Node node) {
       if (node is Block) {
         blocks.add(node);
+        return;
       }
 
       node.visitChildNodes(visit);
     }
 
     nodes.forEach(visit);
+
+    if (nodes.isNotEmpty && nodes[0] is Extends) {
+      return ExtendedTemplate.parsed(environment, nodes[0] as Extends, blocks);
+    }
+
     return Template.parsed(environment, nodes, blocks: blocks, path: path);
   }
 

@@ -16,8 +16,7 @@ class Context {
       ..['ctx'] = this
       ..['environment'] = this
       ..['env'] = this
-      ..['autoescape'] = environment.autoEscape
-      ..['super'] = parent;
+      ..['autoescape'] = environment.autoEscape;
   }
 
   Context.from(Context context)
@@ -73,10 +72,6 @@ class Context {
 
   bool has(String name) {
     return contexts.any((context) => context.containsKey(name));
-  }
-
-  String parent() {
-    throw UnimplementedError();
   }
 
   void pop() {
