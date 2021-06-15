@@ -87,8 +87,27 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   void visitBlock(Block node, [RenderContext? context]) {
     context!;
 
-    print(context.blocks[node.name]);
-    visitAll(node.nodes, context);
+    final blocks = context.blocks[node.name];
+
+    if (blocks == null || blocks.isEmpty) {
+      visitAll(node.nodes, context);
+    } else {
+      final current = blocks.removeLast();
+
+      if (current.hasSuper) {
+        // TODO: replace super call with do
+        String parent() {
+          visitAll(node.nodes, context);
+          return '';
+        }
+
+        context.apply<RenderContext>(<String, Object?>{'super': parent}, (context) {
+          visitAll(current.nodes, context);
+        });
+      } else {
+        visitAll(current.nodes, context);
+      }
+    }
   }
 
   @override
@@ -114,7 +133,7 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
 
     for (final block in node.blocks) {
       if (context.blocks.containsKey(block.name)) {
-        context.blocks[block.name]!.insert(0, block);
+        context.blocks[block.name]!.add(block);
       } else {
         context.blocks[block.name] = <Block>[block];
       }
@@ -135,6 +154,7 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       throw TypeError();
     }
 
+    // TODO: replace loop call with do
     String recurse(Object? iterable, [int depth = 0]) {
       var values = list(iterable);
 

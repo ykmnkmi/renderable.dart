@@ -63,6 +63,12 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   void visitAll(List<Node> nodes, [Context? context]) {
     for (var i = 0; i < nodes.length; i += 1) {
+      nodes[i] = nodes[i].accept(this, context);
+    }
+  }
+
+  void visitAllSafe(List<Node> nodes, [Context? context]) {
+    for (var i = 0; i < nodes.length; i += 1) {
       try {
         if (nodes[i] is Data) {
           continue;
@@ -75,12 +81,6 @@ class Optimizer extends Visitor<Context, Node> {
     }
   }
 
-  void visitAllNotSafe(List<Node> nodes, [Context? context]) {
-    for (var i = 0; i < nodes.length; i += 1) {
-      nodes[i] = nodes[i].accept(this, context);
-    }
-  }
-
   @override
   Assign visitAssign(Assign node, [Context? context]) {
     return node;
@@ -88,7 +88,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   AssignBlock visitAssignBlock(AssignBlock node, [Context? context]) {
-    visitAll(node.nodes, context);
+    visitAllSafe(node.nodes, context);
     return node;
   }
 
@@ -107,7 +107,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Block visitBlock(Block node, [Context? context]) {
-    visitAll(node.nodes, context);
+    visitAllSafe(node.nodes, context);
     return node;
   }
 
@@ -118,11 +118,11 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     if (node.arguments != null) {
-      visitAll(node.arguments!, context);
+      visitAllSafe(node.arguments!, context);
     }
 
     if (node.keywordArguments != null) {
-      visitAll(node.keywordArguments!, context);
+      visitAllSafe(node.keywordArguments!, context);
     }
 
     if (node.dynamicArguments != null) {
@@ -139,13 +139,13 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   Expression visitCompare(Compare node, [Context? context]) {
     node.expression = optimize(node.expression, context);
-    visitAllNotSafe(node.operands, context);
+    visitAll(node.operands, context);
     return constant(node, context);
   }
 
   @override
   Expression visitConcat(Concat node, [Context? context]) {
-    visitAllNotSafe(node.expressions);
+    visitAll(node.expressions);
     return constant(node, context);
   }
 
@@ -177,7 +177,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   ScopedContextModifier visitContextModifier(ScopedContextModifier node, [Context? context]) {
-    visitAll(node.nodes, context);
+    visitAllSafe(node.nodes, context);
     return node;
   }
 
@@ -188,13 +188,13 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitDictLiteral(DictLiteral node, [Context? context]) {
-    visitAllNotSafe(node.pairs, context);
+    visitAll(node.pairs, context);
     return constant(node, context);
   }
 
   @override
   Do visitDo(Do node, [Context? context]) {
-    visitAll(node.expressions, context);
+    visitAllSafe(node.expressions, context);
     return node;
   }
 
@@ -205,7 +205,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   ExtendedTemplate visitExtendedTemplate(ExtendedTemplate node, [Context? context]) {
-    visitAll(node.blocks);
+    visitAllSafe(node.blocks);
     return node;
   }
 
@@ -220,11 +220,11 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     if (node.arguments != null) {
-      visitAll(node.arguments!, context);
+      visitAllSafe(node.arguments!, context);
     }
 
     if (node.keywordArguments != null) {
-      visitAll(node.keywordArguments!, context);
+      visitAllSafe(node.keywordArguments!, context);
     }
 
     if (node.dynamicArguments != null) {
@@ -241,24 +241,24 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   For visitFor(For node, [Context? context]) {
     node.iterable = optimizeSafe(node.iterable, context);
-    visitAll(node.body, context);
+    visitAllSafe(node.body, context);
     return node;
   }
 
   @override
   If visitIf(If node, [Context? context]) {
     node.test = optimizeSafe(node.test, context);
-    visitAll(node.body, context);
+    visitAllSafe(node.body, context);
     var next = node.nextIf;
 
     while (next != null) {
       next.test = optimizeSafe(next.test, context);
-      visitAll(next.body, context);
+      visitAllSafe(next.body, context);
       next = next.nextIf;
     }
 
     if (node.orElse != null) {
-      visitAll(node.orElse!, context);
+      visitAllSafe(node.orElse!, context);
     }
 
     return node;
@@ -284,7 +284,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitListLiteral(ListLiteral node, [Context? context]) {
-    visitAllNotSafe(node.expressions, context);
+    visitAll(node.expressions, context);
     return constant(node, context);
   }
 
@@ -306,7 +306,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Output visitOutput(Output node, [Context? context]) {
-    visitAll(node.nodes, context);
+    visitAllSafe(node.nodes, context);
     return node;
   }
 
@@ -326,7 +326,7 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   ScopedContextModifier visitScopedContextModifier(ScopedContextModifier node, [Context? context]) {
     node.options.updateAll((option, expression) => optimizeSafe(expression, context));
-    visitAll(node.nodes, context);
+    visitAllSafe(node.nodes, context);
     return node;
   }
 
@@ -349,8 +349,8 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Template visitTemplate(Template node, [Context? context]) {
-    visitAll(node.blocks, context);
-    visitAll(node.nodes, context);
+    visitAllSafe(node.blocks, context);
+    visitAllSafe(node.nodes, context);
     return node;
   }
 
@@ -365,11 +365,11 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     if (node.arguments != null) {
-      visitAll(node.arguments!, context);
+      visitAllSafe(node.arguments!, context);
     }
 
     if (node.keywordArguments != null) {
-      visitAll(node.keywordArguments!, context);
+      visitAllSafe(node.keywordArguments!, context);
     }
 
     if (node.dynamicArguments != null) {
@@ -385,7 +385,7 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   Expression visitTupleLiteral(TupleLiteral node, [Context? context]) {
-    visitAllNotSafe(node.expressions, context);
+    visitAll(node.expressions, context);
     return constant(node, context);
   }
 
@@ -397,8 +397,8 @@ class Optimizer extends Visitor<Context, Node> {
 
   @override
   With visitWith(With node, [Context? context]) {
-    visitAll(node.values, context);
-    visitAll(node.body, context);
+    visitAllSafe(node.values, context);
+    visitAllSafe(node.body, context);
     return node;
   }
 

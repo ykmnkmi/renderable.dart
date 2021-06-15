@@ -287,7 +287,20 @@ class Parser {
       fail('use an underscore instead', reader.current.line);
     }
 
+    var hasSuper = false;
+
+    void visit(Node node) {
+      if (node is Name && node.name == 'super') {
+        hasSuper = true;
+        return;
+      }
+
+      node.visitChildNodes(visit);
+    }
+
     final body = parseStatements(reader, <String>['name:endblock'], true);
+    body.forEach(visit);
+
     final maybeName = reader.current;
 
     if (maybeName.test('name')) {
@@ -299,7 +312,7 @@ class Parser {
       reader.next();
     }
 
-    return Block(name.value, scoped, body);
+    return Block(name.value, scoped, hasSuper, body);
   }
 
   Extends parseExtends(TokenReader reader) {
@@ -1000,7 +1013,7 @@ class Parser {
           fail('message 1');
         }
       } else {
-        if (firstNodeType == 1 && node is! Block) {
+        if (firstNodeType == 1 && node is! Block && node is! Output) {
           // TODO: add error message
           fail('message 2');
         }

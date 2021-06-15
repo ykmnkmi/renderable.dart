@@ -445,7 +445,7 @@ class Template extends Node implements Renderable {
 
   @override
   Iterable<String> generate([Map<String, Object?>? data]) {
-    throw UnsupportedError('');
+    throw UnsupportedError('generate');
   }
 
   @override
@@ -458,7 +458,7 @@ class Template extends Node implements Renderable {
 
   @override
   Stream<String> stream([Map<String, Object?>? data]) {
-    throw UnsupportedError('');
+    throw UnsupportedError('stream');
   }
 
   @override

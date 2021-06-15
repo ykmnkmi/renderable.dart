@@ -300,6 +300,7 @@ class Lexer {
             final token = rule.tokens[i];
 
             if (token.startsWith('@')) {
+              // TODO: update error
               throw token.substring(1);
             } else if (token == '#group') {
               var notFound = true;
@@ -315,6 +316,7 @@ class Lexer {
               }
 
               if (notFound) {
+                // TODO: update error
                 throw Exception('${rule.regExp} wanted to resolve the token dynamically but no group matched');
               }
             } else {
@@ -327,8 +329,8 @@ class Lexer {
                   tokens.add(Token(line, token, data));
                 }
 
-                line +=
-                    data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count) + newLinesStripped;
+                line += data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+                line += newLinesStripped;
                 newLinesStripped = 0;
               }
             }

@@ -47,8 +47,8 @@ class MapLoader extends Loader {
   }
 
   @override
-  Template load(Environment environment, String path) {
-    final source = getSource(path);
+  Template load(Environment environment, String template) {
+    final source = getSource(template);
     return environment.fromString(source);
   }
 }

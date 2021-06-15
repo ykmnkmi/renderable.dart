@@ -2,7 +2,7 @@ import 'package:renderable/runtime.dart';
 import 'package:test/test.dart' hide escape;
 
 void main() {
-  group('escape', () {
+  group('Escape', () {
     test('empty', () {
       expect(escape(''), equals(''));
     });
