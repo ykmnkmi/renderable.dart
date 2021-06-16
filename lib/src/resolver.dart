@@ -247,11 +247,6 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitExtendedTemplate(ExtendedTemplate node, [C? context]) {
-    throw UnimplementedError();
-  }
-
-  @override
   Object? visitFilter(Filter node, [C? context]) {
     Object? value;
 

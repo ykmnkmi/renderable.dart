@@ -52,8 +52,6 @@ abstract class Visitor<C, R> {
 
   R visitExtends(Extends node, [C? context]);
 
-  R visitExtendedTemplate(ExtendedTemplate node, [C? context]);
-
   R visitFilter(Filter node, [C? context]);
 
   R visitFloorDiv(FloorDiv node, [C? context]) {

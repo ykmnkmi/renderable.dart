@@ -6,14 +6,12 @@ import 'reader.dart';
 import 'utils.dart';
 
 class Parser {
-  Parser(this.environment, {this.name, this.path})
+  Parser(this.environment, {this.path})
       : endTokensStack = <List<String>>[],
         tagStack = <String>[],
         blocks = <String>{};
 
   final Environment environment;
-
-  final String? name;
 
   final String? path;
 
@@ -24,7 +22,7 @@ class Parser {
   final Set<String> blocks;
 
   Never fail(String message, [int? line]) {
-    throw TemplateSyntaxError(message, line: line, name: name, fileName: path);
+    throw TemplateSyntaxError(message, line: line, path: path);
   }
 
   Never failUnknownTagEof(String? name, List<List<String>> endTokensStack, [int? line]) {
@@ -1089,7 +1087,7 @@ class Parser {
     nodes.forEach(visit);
 
     if (nodes.isNotEmpty && nodes[0] is Extends) {
-      return ExtendedTemplate.parsed(environment, nodes[0] as Extends, blocks);
+      nodes.length = 1;
     }
 
     return Template.parsed(environment, nodes, blocks: blocks, path: path);

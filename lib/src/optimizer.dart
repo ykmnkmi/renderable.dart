@@ -204,11 +204,6 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  ExtendedTemplate visitExtendedTemplate(ExtendedTemplate node, [Context? context]) {
-    visitAllSafe(node.blocks);
-    return node;
-  }
-
   @override
   Expression visitFilter(Filter node, [Context? context]) {
     if (node.name == 'random' || !context!.environment.filters.containsKey(node.name)) {

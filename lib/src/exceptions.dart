@@ -26,25 +26,22 @@ class TemplatesNotFound extends TemplateNotFound {
 
 /// Raised to tell the user that there is a problem with the template.
 class TemplateSyntaxError extends TemplateError {
-  TemplateSyntaxError(String message, {this.line, this.name, this.fileName}) : super(message);
+  TemplateSyntaxError(String message, {this.line, this.path}) : super(message);
 
   final int? line;
 
-  final String? name;
-
-  final String? fileName;
+  final String? path;
 
   @override
   String toString() {
     var prefix = 'TemplateSyntaxError';
-    var name = this.name ?? fileName;
 
-    if (name != null) {
+    if (path != null) {
       if (prefix.contains(',')) {
-        prefix += ', file: $name';
+        prefix += ', file: $path';
       }
 
-      prefix += ' file: $name';
+      prefix += ' file: $path';
     }
 
     if (line != null) {

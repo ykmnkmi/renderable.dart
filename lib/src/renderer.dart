@@ -13,7 +13,7 @@ class RenderContext extends Context {
         super(environment, data);
 
   RenderContext.from(Context context, this.sink)
-      : blocks = {},
+      : blocks = <String, List<Block>>{},
         super.from(context);
 
   final StringSink sink;
@@ -57,9 +57,11 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitAssign(Assign node, [RenderContext? context]) {
+    context!;
+
     final target = node.target.accept(this, context);
     final values = node.expression.accept(this, context);
-    assignTargetsToContext(context!, target, values);
+    assignTargetsToContext(context, target, values);
   }
 
   @override
@@ -85,27 +87,31 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitBlock(Block node, [RenderContext? context]) {
-    context!;
-
-    final blocks = context.blocks[node.name];
+    final blocks = context!.blocks[node.name];
 
     if (blocks == null || blocks.isEmpty) {
       visitAll(node.nodes, context);
     } else {
-      final current = blocks.removeLast();
+      final first = blocks.first;
+      var index = 0;
 
-      if (current.hasSuper) {
-        // TODO: replace super call with do
+      if (first.hasSuper) {
+        // TODO: void call
         String parent() {
-          visitAll(node.nodes, context);
-          return '';
+          if (index < blocks.length) {
+            final parentBlock = blocks[++index];
+            visitAll(parentBlock.nodes, context);
+            return '';
+          }
+
+          throw Exception([blocks, node, index, blocks.length]);
         }
 
-        context.apply<RenderContext>(<String, Object?>{'super': parent}, (context) {
-          visitAll(current.nodes, context);
-        });
+        context.push(<String, Object?>{'super': parent});
+        visitAll(first.nodes, context);
+        context.pop();
       } else {
-        visitAll(current.nodes, context);
+        visitAll(first.nodes, context);
       }
     }
   }
@@ -121,25 +127,8 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitExtends(Extends node, [RenderContext? context]) {
-    context!;
-
-    final template = context.environment.getTemplate(node.path);
+    final template = context!.environment.getTemplate(node.path);
     template.accept(this, context);
-  }
-
-  @override
-  void visitExtendedTemplate(ExtendedTemplate node, [RenderContext? context]) {
-    context!;
-
-    for (final block in node.blocks) {
-      if (context.blocks.containsKey(block.name)) {
-        context.blocks[block.name]!.add(block);
-      } else {
-        context.blocks[block.name] = <Block>[block];
-      }
-    }
-
-    node.parent.accept(this, context);
   }
 
   @override
@@ -154,7 +143,7 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       throw TypeError();
     }
 
-    // TODO: replace loop call with do
+    // TODO: void call
     String recurse(Object? iterable, [int depth = 0]) {
       var values = list(iterable);
 
@@ -237,10 +226,8 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitInclude(Include node, [RenderContext? context]) {
-    context!;
-
     try {
-      final template = context.environment.getTemplate(node.template);
+      final template = context!.environment.getTemplate(node.template);
 
       if (node.withContext) {
         template.accept(this, context);
@@ -279,14 +266,24 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   void visitScopedContextModifier(ScopedContextModifier node, [RenderContext? context]) {
     context!;
 
-    final data = {for (final key in node.options.keys) key: node.options[key]!.accept(this)};
-    context.apply<RenderContext>(data, (context) {
-      visitAll(node.nodes, context);
-    });
+    final data = <String, Object?>{for (final key in node.options.keys) key: node.options[key]!.accept(this, context)};
+    context.push(data);
+    visitAll(node.nodes, context);
+    context.pop();
   }
 
   @override
   void visitTemplate(Template node, [RenderContext? context]) {
+    context!;
+
+    for (final block in node.blocks) {
+      if (context.blocks.containsKey(block.name)) {
+        context.blocks[block.name]!.add(block);
+      } else {
+        context.blocks[block.name] = <Block>[block];
+      }
+    }
+
     visitAll(node.nodes, context);
   }
 
@@ -294,9 +291,8 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   void visitWith(With node, [RenderContext? context]) {
     context!;
 
-    final targets = node.targets.map((target) => target.accept(this, context)).toList();
-    final values = node.values.map((value) => value.accept(this, context)).toList();
-
+    final targets = <Object?>[for (final target in node.targets) target.accept(this, context)];
+    final values = <Object?>[for (final value in node.values) value.accept(this, context)];
     context.push(getDataForTargets(targets, values));
     visitAll(node.body, context);
     context.pop();
@@ -379,13 +375,7 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
         throw StateError('too many values to unpack (expected ${names.length})');
       }
 
-      final data = <String, Object?>{};
-
-      for (var i = 0; i < names.length; i++) {
-        data[names[i]] = list[i];
-      }
-
-      return data;
+      return <String, Object?>{for (var i = 0; i < names.length; i++) names[i]: list[i]};
     }
 
     throw ArgumentError.value(target, 'target');
