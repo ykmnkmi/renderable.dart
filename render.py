@@ -3,6 +3,4 @@
 import sys
 from jinja2 import Environment
 
-env = Environment()
-
-print(env.from_string(''.join(sys.stdin)).render())
+print(Environment().from_string(''.join(sys.argv[1:])).render())

@@ -129,7 +129,7 @@ class Compiler extends Visitor<Frame, String> {
   }
 
   @override
-  String visitNamespaceReference(NamespaceReference node, [Frame? context]) {
+  String visitNameSpaceReference(NameSpaceReference node, [Frame? context]) {
     throw UnimplementedError();
   }
 

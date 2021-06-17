@@ -285,6 +285,20 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       }
     }
 
+    if (node.hasSelf) {
+      final self = NameSpace();
+
+      for (final block in node.blocks) {
+        self.context[block.name] = () {
+          // TODO: void call
+          block.accept(this, context);
+          return '';
+        };
+      }
+
+      context.set('self', self);
+    }
+
     visitAll(node.nodes, context);
   }
 
@@ -334,10 +348,10 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       return;
     }
 
-    if (target is NamespaceValue) {
+    if (target is NameSpaceValue) {
       final namespace = context[target.name];
 
-      if (namespace is! Namespace) {
+      if (namespace is! NameSpace) {
         throw TemplateRuntimeError('non-namespace object');
       }
 

@@ -221,8 +221,8 @@ class Undefined {
   }
 }
 
-class Namespace {
-  Namespace([Map<String, Object?>? context]) : context = <String, Object?>{} {
+class NameSpace {
+  NameSpace([Map<String, Object?>? context]) : context = <String, Object?>{} {
     if (context != null) {
       this.context.addAll(context);
     }
@@ -244,12 +244,12 @@ class Namespace {
 
   @override
   String toString() {
-    return 'Namespace($context)';
+    return 'NameSpace($context)';
   }
 
-  static Namespace factory([List<Object?>? datas]) {
+  static NameSpace factory([List<Object?>? datas]) {
     if (datas == null) {
-      return Namespace();
+      return NameSpace();
     }
 
     final context = <String, Object?>{};
@@ -262,12 +262,12 @@ class Namespace {
       }
     }
 
-    return Namespace(context);
+    return NameSpace(context);
   }
 }
 
-class NamespaceValue {
-  NamespaceValue(this.name, this.item);
+class NameSpaceValue {
+  NameSpaceValue(this.name, this.item);
 
   String name;
 
@@ -275,6 +275,6 @@ class NamespaceValue {
 
   @override
   String toString() {
-    return 'NamespaceValue($name, $item)';
+    return 'NameSpaceValue($name, $item)';
   }
 }

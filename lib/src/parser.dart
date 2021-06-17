@@ -364,7 +364,7 @@ class Parser {
       reader.next(); // skip dot
       final attribute = reader.expect('name');
 
-      target = NamespaceReference(namespace.value, attribute.value);
+      target = NameSpaceReference(namespace.value, attribute.value);
     } else if (nameOnly) {
       final name = reader.expect('name');
 
@@ -1074,11 +1074,13 @@ class Parser {
     final reader = TokenReader(tokens);
     final nodes = scan(reader);
     final blocks = <Block>[];
+    var hasSelf = false;
 
     void visit(Node node) {
-      if (node is Block) {
+      if (node is Name && node.name == 'self') {
+        hasSelf = true;
+      } else if (node is Block) {
         blocks.add(node);
-        return;
       }
 
       node.visitChildNodes(visit);
@@ -1090,7 +1092,7 @@ class Parser {
       nodes.length = 1;
     }
 
-    return Template.parsed(environment, nodes, blocks: blocks, path: path);
+    return Template.parsed(environment, nodes, blocks: blocks, hasSelf: hasSelf, path: path);
   }
 
   @override

@@ -289,7 +289,7 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  NamespaceReference visitNamespaceReference(NamespaceReference node, [Context? context]) {
+  NameSpaceReference visitNameSpaceReference(NameSpaceReference node, [Context? context]) {
     return node;
   }
 

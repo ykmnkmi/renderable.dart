@@ -70,8 +70,8 @@ class Operand extends Helper {
   }
 }
 
-class NamespaceReference extends Helper implements CanAssign {
-  NamespaceReference(this.name, this.attribute);
+class NameSpaceReference extends Helper implements CanAssign {
+  NameSpaceReference(this.name, this.attribute);
 
   String name;
 
@@ -94,7 +94,7 @@ class NamespaceReference extends Helper implements CanAssign {
 
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
-    return visitor.visitNamespaceReference(this, context);
+    return visitor.visitNameSpaceReference(this, context);
   }
 
   @override

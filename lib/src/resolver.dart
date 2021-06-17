@@ -307,8 +307,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
   }
 
   @override
-  Object? visitNamespaceReference(NamespaceReference node, [C? context]) {
-    return NamespaceValue(node.name, node.attribute);
+  Object? visitNameSpaceReference(NameSpaceReference node, [C? context]) {
+    return NameSpaceValue(node.name, node.attribute);
   }
 
   @override

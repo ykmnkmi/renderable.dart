@@ -150,6 +150,50 @@ class Environment {
 
   final FieldGetter getField;
 
+  Object? callFilter(String name, Object? value,
+      {List<Object?>? positional, Map<Symbol, Object?>? named, Context? context}) {
+    Function filter;
+
+    if (filters.containsKey(name)) {
+      filter = filters[name]!;
+    } else {
+      throw TemplateRuntimeError('filter not found: $name');
+    }
+
+    if (contextFilters.contains(name)) {
+      if (context == null) {
+        throw TemplateRuntimeError('attempted to invoke context filter without context');
+      }
+
+      positional ??= <Object?>[];
+      positional.insert(0, context);
+      positional.insert(1, value);
+    } else if (environmentFilters.contains(name)) {
+      positional ??= <Object?>[];
+      positional.insert(0, this);
+      positional.insert(1, value);
+    } else {
+      positional ??= <Object?>[];
+      positional.insert(0, value);
+    }
+
+    return Function.apply(filter, positional, named);
+  }
+
+  bool callTest(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named}) {
+    Function test;
+
+    if (tests.containsKey(name)) {
+      test = tests[name]!;
+    } else {
+      throw TemplateRuntimeError('test not found: $name');
+    }
+
+    positional ??= <Object?>[];
+    positional.insert(0, value);
+    return Function.apply(test, positional, named) as bool;
+  }
+
   Environment copy({
     String? commentBegin,
     String? commentEnd,
@@ -208,15 +252,27 @@ class Environment {
     );
   }
 
+  Object? getAttribute(Object? object, String field) {
+    try {
+      return getField(object, field);
+    } on NoSuchMethodError {
+      try {
+        return (object as dynamic)[field];
+      } on NoSuchMethodError {
+        return undefined(object: object, name: field);
+      }
+    }
+  }
+
   Object? getItem(Object object, Object? key) {
     // TODO: update slices
     if (key is Indices) {
-      if (object is String) {
-        return sliceString(object, key);
-      }
-
       if (object is List<Object?>) {
         return slice(object, key);
+      }
+
+      if (object is String) {
+        return sliceString(object, key);
       }
 
       if (object is Iterable<Object?>) {
@@ -235,68 +291,12 @@ class Environment {
         try {
           return getField(object, key);
         } on NoSuchMethodError {
-          // do nothing.
+          // do nothing
         }
       }
 
       return undefined(object: object, name: '$key');
     }
-  }
-
-  Object? getAttribute(Object? object, String field) {
-    try {
-      return getField(object, field);
-    } on NoSuchMethodError {
-      try {
-        return (object as dynamic)[field];
-      } on NoSuchMethodError {
-        return undefined(object: object, name: field);
-      }
-    }
-  }
-
-  Object? callFilter(String name, Object? value,
-      {List<Object?>? positional, Map<Symbol, Object?>? named, Context? context}) {
-    Function filter;
-
-    if (filters.containsKey(name)) {
-      filter = filters[name]!;
-    } else {
-      throw TemplateRuntimeError('filter not found: $name');
-    }
-
-    if (contextFilters.contains(name)) {
-      if (context == null) {
-        throw TemplateRuntimeError('attempted to invoke context filter without context');
-      }
-
-      positional ??= <Object?>[];
-      positional.insert(0, context);
-      positional.insert(1, value);
-    } else if (environmentFilters.contains(name)) {
-      positional ??= <Object?>[];
-      positional.insert(0, this);
-      positional.insert(1, value);
-    } else {
-      positional ??= <Object?>[];
-      positional.insert(0, value);
-    }
-
-    return Function.apply(filter, positional, named);
-  }
-
-  bool callTest(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named}) {
-    Function test;
-
-    if (tests.containsKey(name)) {
-      test = tests[name]!;
-    } else {
-      throw TemplateRuntimeError('test not found: $name');
-    }
-
-    positional ??= <Object?>[];
-    positional.insert(0, value);
-    return Function.apply(test, positional, named) as bool;
   }
 
   Template loadTemplate(String template) {
@@ -434,13 +434,15 @@ class Template extends Node {
     return environment.fromString(source, path: path);
   }
 
-  Template.parsed(this.environment, this.nodes, {this.blocks = const <Block>[], this.path});
+  Template.parsed(this.environment, this.nodes, {this.blocks = const <Block>[], this.hasSelf = false, this.path});
 
   final Environment environment;
 
   final List<Node> nodes;
 
   final List<Block> blocks;
+
+  final bool hasSelf;
 
   final String? path;
 
