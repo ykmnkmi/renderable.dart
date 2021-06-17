@@ -119,7 +119,7 @@ class Lexer {
         integerRe = RegExp('(\\d+_)*\\d+'),
         floatRe = RegExp('(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?e[+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)'),
         operatorRe = RegExp('\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;'),
-        lStripUnlessRe = environment.lStripBlocks ? compile('[^ \\t]') : null,
+        lStripUnlessRe = environment.leftStripBlocks ? compile('[^ \\t]') : null,
         newLine = environment.newLine,
         keepTrailingNewLine = environment.keepTrailingNewLine {
     final blockSuffixRe = environment.trimBlocks ? r'\n?' : '';

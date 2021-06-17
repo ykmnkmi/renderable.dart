@@ -34,7 +34,7 @@ class Environment {
     this.blockEnd = defaults.blockEnd,
     this.lineCommentPrefix = defaults.lineCommentPrefix,
     this.lineStatementPrefix = defaults.lineStatementPrefix,
-    this.lStripBlocks = defaults.lStripBlocks,
+    this.leftStripBlocks = defaults.lStripBlocks,
     this.trimBlocks = defaults.trimBlocks,
     this.newLine = defaults.newLine,
     this.keepTrailingNewLine = defaults.keepTrailingNewLine,
@@ -59,11 +59,11 @@ class Environment {
             : finalize is ContextFinalizer
                 ? finalize
                 : ((context, value) => finalize(value)),
-        globals = Map<String, Object?>.of(defaults.globals),
-        filters = Map<String, Function>.of(defaults.filters),
+        globals = HashMap<String, Object?>.of(defaults.globals),
+        filters = HashMap<String, Function>.of(defaults.filters),
         environmentFilters = HashSet<String>.of(defaults.environmentFilters),
         contextFilters = HashSet<String>.of(defaults.contextFilters),
-        tests = Map<String, Function>.of(defaults.tests),
+        tests = HashMap<String, Function>.of(defaults.tests),
         templates = HashMap<String, Template>(),
         modifiers = List<NodeVisitor>.of(defaults.modifiers),
         random = random ?? Random() {
@@ -77,6 +77,10 @@ class Environment {
 
     if (environmentFilters != null) {
       this.environmentFilters.addAll(environmentFilters);
+    }
+
+    if (contextFilters != null) {
+      this.contextFilters.addAll(contextFilters);
     }
 
     if (tests != null) {
@@ -108,7 +112,7 @@ class Environment {
 
   final String? lineStatementPrefix;
 
-  final bool lStripBlocks;
+  final bool leftStripBlocks;
 
   final bool trimBlocks;
 
@@ -155,7 +159,7 @@ class Environment {
     String? blockEnd,
     String? lineCommentPrefix,
     String? lineStatementPrefix,
-    bool? lStripBlocks,
+    bool? leftStripBlocks,
     bool? trimBlocks,
     String? newLine,
     bool? keepTrailingNewLine,
@@ -183,7 +187,7 @@ class Environment {
       blockEnd: blockEnd ?? this.blockEnd,
       lineCommentPrefix: lineCommentPrefix ?? this.lineCommentPrefix,
       lineStatementPrefix: lineStatementPrefix ?? this.lineStatementPrefix,
-      lStripBlocks: lStripBlocks ?? this.lStripBlocks,
+      leftStripBlocks: leftStripBlocks ?? this.leftStripBlocks,
       trimBlocks: trimBlocks ?? this.trimBlocks,
       newLine: newLine ?? this.newLine,
       keepTrailingNewLine: keepTrailingNewLine ?? this.keepTrailingNewLine,
@@ -350,7 +354,7 @@ class Template extends Node {
     String? lineCommentPrefix = defaults.lineCommentPrefix,
     String? lineStatementPrefix = defaults.lineStatementPrefix,
     bool trimBlocks = defaults.trimBlocks,
-    bool lStripBlocks = defaults.lStripBlocks,
+    bool leftStripBlocks = defaults.lStripBlocks,
     String newLine = defaults.newLine,
     bool keepTrailingNewLine = defaults.keepTrailingNewLine,
     bool optimized = true,
@@ -360,6 +364,7 @@ class Template extends Node {
     Map<String, Object>? globals,
     Map<String, Function>? filters,
     Set<String>? environmentFilters,
+    Set<String>? contextFilters,
     Map<String, Function>? tests,
     List<NodeVisitor>? modifiers,
     Random? random,
@@ -378,7 +383,7 @@ class Template extends Node {
         blockEnd: blockEnd,
         lineCommentPrefix: lineCommentPrefix,
         lineStatementPrefix: lineStatementPrefix,
-        lStripBlocks: lStripBlocks,
+        leftStripBlocks: leftStripBlocks,
         trimBlocks: trimBlocks,
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
@@ -390,6 +395,7 @@ class Template extends Node {
         globals: globals,
         filters: filters,
         environmentFilters: environmentFilters,
+        contextFilters: contextFilters,
         tests: tests,
         modifiers: modifiers,
         random: random,
@@ -405,7 +411,7 @@ class Template extends Node {
         blockEnd: blockEnd,
         lineCommentPrefix: lineCommentPrefix,
         lineStatementPrefix: lineStatementPrefix,
-        lStripBlocks: lStripBlocks,
+        leftStripBlocks: leftStripBlocks,
         trimBlocks: trimBlocks,
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
@@ -417,6 +423,7 @@ class Template extends Node {
         globals: globals,
         filters: filters,
         environmentFilters: environmentFilters,
+        contextFilters: contextFilters,
         tests: tests,
         modifiers: modifiers,
         random: random,

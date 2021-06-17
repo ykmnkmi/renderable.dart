@@ -6,8 +6,8 @@ import 'package:test/test.dart';
 void main() {
   group('Syntax', () {
     test('call', () {
-      var environment = Environment();
-      environment.globals['foo'] = (dynamic a, dynamic b, {dynamic c, dynamic e, dynamic g}) => a + b + c + e + g;
+      var globals = {'foo': (dynamic a, dynamic b, {dynamic c, dynamic e, dynamic g}) => a + b + c + e + g};
+      var environment = Environment(globals: globals);
       var template = environment.fromString('{{ foo("a", c="d", e="f", *["b"], **{"g": "h"}) }}');
       expect(template.render(), equals('abdfh'));
     });

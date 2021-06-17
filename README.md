@@ -74,12 +74,12 @@ Differences:
 - Line Statements
   - Comments
   - Blocks
-- ~~Template Inheritance~~
-  - ~~Base Template~~
-  - ~~Child Template~~
-  - ~~Super Blocks~~
-  - ~~Nesting extends~~
-  - ~~Named Block End-Tags~~
+- Template Inheritance
+  - Base Template
+  - Child Template
+  - Super Blocks
+  - Nesting extends
+  - Named Block End-Tags
   - ~~Block Nesting and Scope~~
 - HTML Escaping
   - Working with Manual Escaping
@@ -92,8 +92,8 @@ Differences:
   - ~~Filters~~
   - Assignments
   - Block Assignments
-  - ~~Extends~~
-  - ~~Blocks~~
+  - Extends
+  - Blocks
   - Include
   - ~~Import~~
 - Import Context Behavior

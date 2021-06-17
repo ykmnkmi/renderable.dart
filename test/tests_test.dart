@@ -4,7 +4,8 @@ import 'dart:collection';
 
 import 'package:renderable/jinja.dart';
 import 'package:renderable/runtime.dart';
-import 'package:test/test.dart';
+
+import 'core.dart';
 
 class MyMap<K, V> extends MapBase<K, V> {
   @override
@@ -35,34 +36,30 @@ class MyMap<K, V> extends MapBase<K, V> {
 
 void main() {
   group('Test', () {
+    late Environment environment;
+
+    setUpAll(() {
+      environment = Environment();
+    });
+
     test('defined', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ missing is defined }}|{{ true is defined }}');
-      expect(template.render(), equals('false|true'));
+      environment.fromString('{{ missing is defined }}|{{ true is defined }}').render().equals('false|true');
     });
 
     test('even', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ 1 is even }}|{{ 2 is even }}');
-      expect(template.render(), equals('false|true'));
+      environment.fromString('{{ 1 is even }}|{{ 2 is even }}').render().equals('false|true');
     });
 
     test('odd', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ 1 is odd }}|{{ 2 is odd }}');
-      expect(template.render(), equals('true|false'));
+      environment.fromString('{{ 1 is odd }}|{{ 2 is odd }}').render().equals('true|false');
     });
 
     test('lower', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ "foo" is lower }}|{{ "FOO" is lower }}');
-      expect(template.render(), equals('true|false'));
+      environment.fromString('{{ "foo" is lower }}|{{ "FOO" is lower }}').render().equals('true|false');
     });
 
     test('types', () {
-      final environment = Environment();
-
-      final matches = {
+      var matches = <String, bool>{
         'none is none': true,
         'false is none': false,
         'true is none': false,
@@ -147,34 +144,34 @@ void main() {
         'range is callable': true,
       };
 
+      var data = <String, Object?>{'mydict': MyMap<dynamic, dynamic>()};
+
       matches.forEach((op, expekt) {
-        final template = environment.fromString('{{ $op }}');
-        expect(template.render({'mydict': MyMap<dynamic, dynamic>()}), equals('$expekt'));
+        environment.fromString('{{ $op }}').render(data).equals('$expekt');
       });
     });
 
     test('upper', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ "FOO" is upper }}|{{ "foo" is upper }}');
-      expect(template.render(), equals('true|false'));
+      environment.fromString('{{ "FOO" is upper }}|{{ "foo" is upper }}').render().equals('true|false');
     });
 
     test('equal to', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ foo is eq 12 }}|'
-          '{{ foo is eq 0 }}|'
-          '{{ foo is eq (3 * 4) }}|'
-          '{{ bar is eq "baz" }}|'
-          '{{ bar is eq "zab" }}|'
-          '{{ bar is eq ("ba" + "z") }}|'
-          '{{ bar is eq bar }}|'
-          '{{ bar is eq foo }}');
-      expect(template.render({'foo': 12, 'bar': 'baz'}), equals('true|false|true|true|false|true|true|false'));
+      var data = <String, Object?>{'foo': 12, 'bar': 'baz'};
+      environment
+          .fromString('{{ foo is eq 12 }}|'
+              '{{ foo is eq 0 }}|'
+              '{{ foo is eq (3 * 4) }}|'
+              '{{ bar is eq "baz" }}|'
+              '{{ bar is eq "zab" }}|'
+              '{{ bar is eq ("ba" + "z") }}|'
+              '{{ bar is eq bar }}|'
+              '{{ bar is eq foo }}')
+          .render(data)
+          .equals('true|false|true|true|false|true|true|false');
     });
 
     test('compare aliases', () {
-      final environment = Environment();
-      final matches = {
+      var matches = <String, bool>{
         'eq 2': true,
         'eq 3': false,
         'ne 3': true,
@@ -190,69 +187,61 @@ void main() {
       };
 
       matches.forEach((op, expekt) {
-        final template = environment.fromString('{{ 2 is $op }}');
-        expect(template.render(), equals('$expekt'));
+        environment.fromString('{{ 2 is $op }}').render().equals('$expekt');
       });
     });
 
     test('same as', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ foo is sameas false }}|{{ 0 is sameas false }}');
-      expect(template.render({'foo': false}), equals('true|false'));
+      var data = <String, Object?>{'foo': false};
+      environment.fromString('{{ foo is sameas false }}|{{ 0 is sameas false }}').render(data).equals('true|false');
     });
 
     test('no paren for arg 1', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ foo is sameas none }}');
-      expect(template.render({'foo': null}), equals('true'));
+      environment.fromString('{{ foo is sameas none }}').render({'foo': null}).equals('true');
     });
 
     test('escaped', () {
-      final environment = Environment();
-      final template = environment.fromString('{{  x is escaped }}|{{ y is escaped  }}');
-      expect(template.render({'x': 'foo', 'y': Markup('foo')}), equals('false|true'));
+      var data = <String, Object?>{'x': 'foo', 'y': Markup('foo')};
+      environment.fromString('{{  x is escaped }}|{{ y is escaped  }}').render(data).equals('false|true');
     });
 
     test('greater than', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ 1 is greaterthan 0 }}|{{ 0 is greaterthan 1 }}');
-      expect(template.render(), equals('true|false'));
+      environment.fromString('{{ 1 is greaterthan 0 }}|{{ 0 is greaterthan 1 }}').render().equals('true|false');
     });
 
     test('less than', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ 0 is lessthan 1 }}|{{ 1 is lessthan 0 }}');
-      expect(template.render(), equals('true|false'));
+      environment.fromString('{{ 0 is lessthan 1 }}|{{ 1 is lessthan 0 }}').render().equals('true|false');
     });
 
     test('multiple test', () {
-      final items = <dynamic>[];
+      var items = <Object?>[];
 
-      bool matching(dynamic x, dynamic y) {
-        items.add(<dynamic>[x, y]);
+      bool matching(Object? x, Object? y) {
+        items.add(<Object?>[x, y]);
         return false;
       }
 
-      final environment = Environment(tests: {'matching': matching});
-      final template = environment.fromString(
-          '{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}');
-      expect(template.render(), equals('false'));
-      expect(items[0], equals(['us-west-1', '(us-east-1|ap-northeast-1)']));
-      expect(items[1], equals(['stage', '(dev|stage)']));
+      Environment(tests: <String, Function>{'matching': matching})
+          .fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)" or "stage" is matching "(dev|stage)" }}')
+          .render()
+          .equals('false');
+      items[0].equals(['us-west-1', '(us-east-1|ap-northeast-1)']);
+      items[1].equals(['stage', '(dev|stage)']);
     });
 
     test('in', () {
-      final environment = Environment();
-      final template = environment.fromString('{{ "o" is in "foo" }}|'
-          '{{ "foo" is in "foo" }}|'
-          '{{ "b" is in "foo" }}|'
-          '{{ 1 is in ((1, 2)) }}|'
-          '{{ 3 is in ((1, 2)) }}|'
-          '{{ 1 is in [1, 2] }}|'
-          '{{ 3 is in [1, 2] }}|'
-          '{{ "foo" is in {"foo": 1} }}|'
-          '{{ "baz" is in {"bar": 1} }}');
-      expect(template.render(), equals('true|true|false|true|false|true|false|true|false'));
+      environment
+          .fromString('{{ "o" is in "foo" }}|'
+              '{{ "foo" is in "foo" }}|'
+              '{{ "b" is in "foo" }}|'
+              '{{ 1 is in ((1, 2)) }}|'
+              '{{ 3 is in ((1, 2)) }}|'
+              '{{ 1 is in [1, 2] }}|'
+              '{{ 3 is in [1, 2] }}|'
+              '{{ "foo" is in {"foo": 1} }}|'
+              '{{ "baz" is in {"bar": 1} }}')
+          .render()
+          .equals('true|true|false|true|false|true|false|true|false');
     });
   });
 }

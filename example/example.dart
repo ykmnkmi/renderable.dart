@@ -17,7 +17,7 @@ Future<void> main() async {
       },
     },
     loader: FileSystemLoader(path: path),
-    lStripBlocks: true,
+    leftStripBlocks: true,
     trimBlocks: true,
   );
 

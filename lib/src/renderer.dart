@@ -98,12 +98,13 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       if (first.hasSuper) {
         // TODO: void call
         String parent() {
-          if (index < blocks.length) {
+          if (index < blocks.length - 1) {
             final parentBlock = blocks[++index];
             visitAll(parentBlock.nodes, context);
             return '';
           }
 
+          // TODO: update error
           throw Exception([blocks, node, index, blocks.length]);
         }
 

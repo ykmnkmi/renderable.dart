@@ -36,13 +36,13 @@ void main() {
     });
 
     test('raw3', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('bar\n{% raw %}\n  {{baz}}2 spaces\n{% endraw %}\nfoo');
       expect(template.render({'baz': 'test'}), equals('bar\n\n  {{baz}}2 spaces\nfoo'));
     });
 
     test('raw4', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('bar\n{%- raw -%}\n\n  \n  2 spaces\n space{%- endraw -%}\nfoo');
       expect(template.render(), equals('bar2 spaces\n spacefoo'));
     });
@@ -60,17 +60,16 @@ void main() {
 
     test('comments', () {
       final environment = Environment(blockBegin: '<!--', blockEnd: '-->', variableBegin: '{', variableEnd: '}');
+      final data = {
+        'seq': [0, 1, 2]
+      };
       final template = environment.fromString('''
 <ul>
 <!--- for item in seq -->
   <li>{item}</li>
 <!--- endfor -->
 </ul>''');
-      expect(
-          template.render({
-            'seq': [0, 1, 2]
-          }),
-          equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
+      expect(template.render(data), equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
     });
 
     test('string escapes', () {
@@ -171,19 +170,19 @@ void main() {
 
   group('LStripBlocks', () {
     test('lstrip', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('    {% if True %}\n    {% endif %}');
       expect(template.render(), equals('\n'));
     });
 
     test('lstrip trim', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('    {% if true %}\n    {% endif %}');
       expect(template.render(), equals(''));
     });
 
     test('no lstrip', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('    {%+ if true %}\n    {%+ endif %}');
       expect(template.render(), equals('    \n    '));
     });
@@ -197,44 +196,44 @@ void main() {
     });
 
     test('lstrip endline', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('    hello{% if true %}\n    goodbye{% endif %}');
       expect(template.render(), equals('    hello\n    goodbye'));
     });
 
     test('lstrip inline', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('    {% if true %}hello    {% endif %}');
       expect(template.render(), equals('hello    '));
     });
 
     test('lstrip nested', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('    {% if true %}a {% if true %}b {% endif %}c {% endif %}');
       expect(template.render(), equals('a b c '));
     });
 
     test('lstrip left chars', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('''    abc {% if true %}
         hello{% endif %}''');
       expect(template.render(), equals('    abc \n        hello'));
     });
 
     test('lstrip embeded strings', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('    {% set x = " {% str %} " %}{{ x }}');
       expect(template.render(), equals(' {% str %} '));
     });
 
     test('lstrip preserve leading newlines', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('\n\n\n{% set hello = 1 %}');
       expect(template.render(), equals('\n\n\n'));
     });
 
     test('lstrip comment', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('''    {# if true #}
 hello
     {#endif#}''');
@@ -251,7 +250,7 @@ hello
           commentEnd: '%>',
           lineCommentPrefix: '##',
           lineStatementPrefix: '%',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('    <% if true %>hello    <% endif %>');
       expect(template.render(), equals('hello    '));
@@ -267,7 +266,7 @@ hello
           commentEnd: '%>',
           lineCommentPrefix: '##',
           lineStatementPrefix: '%',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('    <%# if true %>hello    <%# endif %>');
       expect(template.render(), equals('hello    '));
@@ -283,7 +282,7 @@ hello
           commentEnd: '%>',
           lineCommentPrefix: '##',
           lineStatementPrefix: '%',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString(r'''
     <%# regular comment %>
@@ -303,7 +302,7 @@ ${item} ## the rest of the stuff
           commentEnd: '%>',
           lineCommentPrefix: '##',
           lineStatementPrefix: '%',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString(r'''    <%#regular comment%>
     <%for item in seq%>
@@ -313,7 +312,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip blocks outside with new line', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('  {% if kvs %}(\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  ){% endif %}');
@@ -328,7 +327,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip trim blocks outside with new line', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('  {% if kvs %}(\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  ){% endif %}');
@@ -343,7 +342,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip blocks inside with new line', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('  ({% if kvs %}\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  {% endif %})');
@@ -358,7 +357,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip trim blocks inside with new line', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('  ({% if kvs %}\n'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}\n'
           '  {% endif %})');
@@ -373,7 +372,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip blocks without new line', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('  {% if kvs %}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}'
           '  {% endif %}');
@@ -388,7 +387,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip trim blocks without new line', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('  {% if kvs %}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor %}'
           '  {% endif %}');
@@ -403,7 +402,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip blocks consume after without new line', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('  {% if kvs -%}'
           '   {% for k, v in kvs %}{{ k }}={{ v }} {% endfor -%}'
           '  {% endif -%}');
@@ -433,13 +432,13 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip trim blocks comment', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString(' {# 1 space #}\n  {# 2 spaces #}    {# 4 spaces #}');
       expect(template.render(), equals(' ' * 4));
     });
 
     test('lstrip trim blocks raw', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('{{x}}\n{%- raw %} {% endraw -%}\n{{ y }}');
       expect(template.render({'x': 1, 'y': 2}), equals('1 2'));
     });
@@ -452,7 +451,7 @@ ${item} ## the rest of the stuff
           variableEnd: '?>',
           commentBegin: '<!--',
           commentEnd: '-->',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('''<!-- I'm a comment, I'm not interesting -->
     <? for item in seq -?>
@@ -469,7 +468,7 @@ ${item} ## the rest of the stuff
           variableEnd: '?>',
           commentBegin: '<!--',
           commentEnd: '-->',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('''<!-- I'm a comment, I'm not interesting -->
     <? for item in seq ?>
@@ -486,7 +485,7 @@ ${item} ## the rest of the stuff
           variableEnd: '?>',
           commentBegin: '<!--',
           commentEnd: '-->',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('''<!-- I'm a comment, I'm not interesting -->
     <?for item in seq?>
@@ -503,7 +502,7 @@ ${item} ## the rest of the stuff
           variableEnd: '%>',
           commentBegin: '<%#',
           commentEnd: '%>',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('''<%# I'm a comment, I'm not interesting %>
     <% for item in seq %>
@@ -521,7 +520,7 @@ ${item} ## the rest of the stuff
           variableEnd: '%>',
           commentBegin: '<%#',
           commentEnd: '%>',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('''<%# I'm a comment, I'm not interesting %>
     <% for item in seq -%>
@@ -538,7 +537,7 @@ ${item} ## the rest of the stuff
           variableEnd: '%>',
           commentBegin: '<%#',
           commentEnd: '%>',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString('''<%# I'm a comment, I'm not interesting %>
     <%+ for item in seq -%>
@@ -555,7 +554,7 @@ ${item} ## the rest of the stuff
           variableEnd: '}',
           commentBegin: '<!--#',
           commentEnd: '-->',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       final template = environment.fromString(r'''<!--# I'm a comment, I'm not interesting -->
 <!-- for item in seq --->
@@ -585,7 +584,7 @@ ${item} ## the rest of the stuff
     });
 
     test('lstrip no trim', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('    {% if True +%}\n    {% endif %}');
       expect(template.render(), equals('\n'));
     });
@@ -609,49 +608,49 @@ ${item} ## the rest of the stuff
     });
 
     test('trim nested', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('    {% if True %}\na {% if True %}\nb {% endif %}\nc {% endif %}');
       expect(template.render(), equals('a b c '));
     });
 
     test('no trim nested', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('    {% if True +%}\na {% if True +%}\nb {% endif +%}\nc {% endif %}');
       expect(template.render(), equals('\na \nb \nc '));
     });
 
     test('comment trim', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('    {# comment #}\n\n  ');
       expect(template.render(), equals('\n  '));
     });
 
     test('comment no trim', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('    {# comment +#}\n\n  ');
       expect(template.render(), equals('\n\n  '));
     });
 
     test('multiple comment trim lstrip', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('   {# comment #}\n\n{# comment2 #}\n   \n{# comment3 #}\n\n ');
       expect(template.render(), equals('\n   \n\n '));
     });
 
     test('multiple comment no trim lstrip', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('   {# comment +#}\n\n{# comment2 +#}\n   \n{# comment3 +#}\n\n ');
       expect(template.render(), equals('\n\n\n   \n\n\n '));
     });
 
     test('raw trim lstrip', () {
-      final environment = Environment(lStripBlocks: true, trimBlocks: true);
+      final environment = Environment(leftStripBlocks: true, trimBlocks: true);
       final template = environment.fromString('{{x}}{% raw %}\n\n    {% endraw %}\n\n{{ y }}');
       expect(template.render({'x': 1, 'y': 2}), equals('1\n\n\n2'));
     });
 
     test('raw no trim lstrip', () {
-      final environment = Environment(lStripBlocks: true);
+      final environment = Environment(leftStripBlocks: true);
       final template = environment.fromString('{{x}}{% raw %}\n\n      {% endraw +%}\n\n{{ y }}');
       expect(template.render({'x': 1, 'y': 2}), equals('1\n\n\n\n2'));
     });
@@ -664,7 +663,7 @@ ${item} ## the rest of the stuff
           variableEnd: '}',
           commentBegin: '<%#',
           commentEnd: '%>',
-          lStripBlocks: true,
+          leftStripBlocks: true,
           trimBlocks: true);
       var template = environment.fromString('    <% if True +%>\n\n    <% endif %>');
       expect(template.render(), equals('\n\n'));

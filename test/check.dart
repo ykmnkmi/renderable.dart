@@ -5,17 +5,15 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main() {
   try {
-    final environment = Environment(
-      loader: MapLoader(<String, String>{
-        'a': '{% block intro %}INTRO{% endblock %}|BEFORE|{% block data %}INNER{% endblock %}|AFTER',
-        'b': '{% extends "a" %}{% block data %}({{ super() }}){% endblock %}',
-        'c': '{% extends "b" %}{% block intro %}--{{ super() }}--{% endblock %}\n'
-            '{% block data %}[{{ super() }}]{% endblock %}',
+    var environment = Environment(
+      loader: MapLoader({
+        'a': '{{ self.intro() }}{% block intro %}BLOCK{% endblock %}{{ self.intro() }}',
+        'b': '{% extends "a" %}{% block intro %}*{{ super() }}*{% endblock %}',
+        'c': '{% extends "b" %}{% block intro %}-{{ super() }}-{% endblock %}',
       }),
     );
 
     final template = environment.getTemplate('c');
-    // '--INTRO--|BEFORE|[(INNER)]|AFTER'
     print(template.render());
   } catch (error, trace) {
     print(error);
