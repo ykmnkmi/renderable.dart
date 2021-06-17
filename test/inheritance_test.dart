@@ -1,4 +1,5 @@
 import 'package:renderable/jinja.dart';
+import 'package:renderable/runtime.dart';
 
 import 'core.dart';
 
@@ -117,5 +118,46 @@ void main() {
           .render()
           .equals('42|42|42');
     });
+
+    test('preserve blocks', () {
+      var environment = Environment(
+        loader: MapLoader({
+          'a': '{% if false %}{% block x %}A{% endblock %}{% endif %}{{ self.x() }}',
+          'b': '{% extends "a" %}{% block x %}B{{ super() }}{% endblock %}',
+        }),
+      );
+
+      environment.getTemplate('b').render().equals('BA');
+    });
+
+    test('scoped block', () {
+      var environment = Environment(
+        loader: MapLoader({'default.html': '{% for item in seq %}[{% block item scoped %}{% endblock %}]{% endfor %}'}),
+      );
+
+      var data = <String, Object?>{'seq': range(5)};
+      environment
+          .fromString('{% extends "default.html" %}{% block item %}{{ item }}{% endblock %}')
+          .render(data)
+          .equals('[0][1][2][3][4]');
+    });
+
+    test('super in scoped block', () {
+      var environment = Environment(
+        loader: MapLoader(<String, String>{
+          'default.html': '{% for item in seq %}[{% block item scoped %}{{ item }}{% endblock %}]{% endfor %}',
+        }),
+      );
+
+      var data = <String, Object?>{'seq': range(5)};
+      environment
+          .fromString('{% extends "default.html" %}{% block item %}{{ super() }}|{{ item * 2 }}{% endblock %}')
+          .render(data)
+          .equals('[0|0][1|2][2|4][3|6][4|8]');
+    });
+
+    test('scoped block after inheritance', () {
+      throw UnimplementedError('scoped block after inheritance');
+    }, skip: true);
   });
 }

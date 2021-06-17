@@ -157,7 +157,7 @@ class Environment {
     if (filters.containsKey(name)) {
       filter = filters[name]!;
     } else {
-      throw TemplateRuntimeError('filter not found: $name');
+      throw TemplateRuntimeError('no filter named $name');
     }
 
     if (contextFilters.contains(name)) {
@@ -186,7 +186,7 @@ class Environment {
     if (tests.containsKey(name)) {
       test = tests[name]!;
     } else {
-      throw TemplateRuntimeError('test not found: $name');
+      throw TemplateRuntimeError('no test named $name');
     }
 
     positional ??= <Object?>[];
@@ -252,6 +252,22 @@ class Environment {
     );
   }
 
+  Template fromString(String source, {String? path}) {
+    final template = Parser(this, path: path).parse(source);
+
+    for (final modifier in modifiers) {
+      for (final node in template.nodes) {
+        modifier(node);
+      }
+    }
+
+    if (optimized) {
+      template.accept(const Optimizer(), Context(this));
+    }
+
+    return template;
+  }
+
   Object? getAttribute(Object? object, String field) {
     try {
       return getField(object, field);
@@ -299,14 +315,6 @@ class Environment {
     }
   }
 
-  Template loadTemplate(String template) {
-    if (loader == null) {
-      throw UnsupportedError('no loader for this environment specified');
-    }
-
-    return templates[template] = loader!.load(this, template);
-  }
-
   Template getTemplate(Object? template) {
     if (template is Undefined) {
       template.fail();
@@ -323,20 +331,14 @@ class Environment {
     throw TypeError();
   }
 
-  Template fromString(String source, {String? path}) {
-    final template = Parser(this, path: path).parse(source);
+  Template loadTemplate(String template) {
+    assert(loader != null, 'no loader for this environment specified');
+    return templates[template] = loader!.load(this, template);
+  }
 
-    for (final modifier in modifiers) {
-      for (final node in template.nodes) {
-        modifier(node);
-      }
-    }
-
-    if (optimized) {
-      template.accept(const Optimizer(), Context(this));
-    }
-
-    return template;
+  List<String> listTemplates() {
+    assert(loader != null, 'no loader configured');
+    return loader!.listTemplates();
   }
 }
 

@@ -8,6 +8,10 @@ import 'exceptions.dart';
 
 abstract class Loader {
   String getSource(String template) {
+    if (hasSourceAccess) {
+      throw UnsupportedError('this loader cannot provide access to the source');
+    }
+
     throw TemplateNotFound(template: template);
   }
 
@@ -15,7 +19,7 @@ abstract class Loader {
     return true;
   }
 
-  List<String> listSources() {
+  List<String> listTemplates() {
     throw UnsupportedError('this loader cannot iterate over all templates');
   }
 
@@ -42,7 +46,7 @@ class MapLoader extends Loader {
   }
 
   @override
-  List<String> listSources() {
+  List<String> listTemplates() {
     return mapping.keys.toList();
   }
 
@@ -106,7 +110,7 @@ class FileSystemLoader extends Loader {
   }
 
   @override
-  List<String> listSources() {
+  List<String> listTemplates() {
     final found = <String>[];
 
     for (final path in paths) {
