@@ -185,12 +185,14 @@ class With extends Statement {
   }
 }
 
-class Block extends Statement with LinkedListEntry<Block> {
-  Block(this.name, this.scoped, this.hasSuper, this.nodes);
+class Block extends Statement {
+  Block(this.name, this.scoped, this.required, this.hasSuper, this.nodes);
 
   String name;
 
   bool scoped;
+
+  bool required;
 
   bool hasSuper;
 

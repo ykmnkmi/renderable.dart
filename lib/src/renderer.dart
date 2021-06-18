@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:meta/meta.dart';
 
 import 'enirvonment.dart';
@@ -92,7 +94,11 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
     if (blocks == null || blocks.isEmpty) {
       visitAll(node.nodes, context);
     } else {
-      final first = blocks.first;
+      if (node.required && blocks.length == 1) {
+        throw TemplateSyntaxError('required block \'${node.name}\' not found');
+      }
+
+      final first = blocks[0];
       var index = 0;
 
       if (first.hasSuper) {
@@ -278,11 +284,11 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
     context!;
 
     for (final block in node.blocks) {
-      if (context.blocks.containsKey(block.name)) {
-        context.blocks[block.name]!.add(block);
-      } else {
-        context.blocks[block.name] = <Block>[block];
+      if (!context.blocks.containsKey(block.name)) {
+        context.blocks[block.name] = <Block>[];
       }
+
+      context.blocks[block.name]!.add(block);
     }
 
     if (node.hasSelf) {

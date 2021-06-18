@@ -156,8 +156,73 @@ void main() {
           .equals('[0|0][1|2][2|4][3|6][4|8]');
     });
 
+    // TODO: after macro: scoped block after inheritance
     test('scoped block after inheritance', () {
-      throw UnimplementedError('scoped block after inheritance');
+      var environment = Environment(
+        loader: MapLoader(<String, String>{
+          'layout.html': '{% block useless %}{% endblock %}',
+          'index.html': '''
+            {%- extends 'layout.html' %}
+            {% from 'helpers.html' import foo with context %}
+            {% block useless %}
+                {% for x in [1, 2, 3] %}
+                    {% block testing scoped %}
+                        {{ foo(x) }}
+                    {% endblock %}
+                {% endfor %}
+            {% endblock %}''',
+          'helpers.html': '{% macro foo(x) %}{{ the_foo + x }}{% endmacro %}',
+        }),
+      );
+
+      var data = <String, Object?>{'the_foo': 42};
+      environment
+          .getTemplate('index.html')
+          .render(data)
+          .split(RegExp('\\s+'))
+          .where((part) => part.isNotEmpty)
+          .orderedEquals(<String>['43', '44', '45']);
     }, skip: true);
+  });
+
+  test('level1 required', () {
+    var environment = Environment(
+      loader: MapLoader(<String, String>{
+        'default': '{% block x required %}{# comment #}\n {% endblock %}',
+        'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
+      }),
+    );
+
+    environment.getTemplate('level1').render().equals('[1]');
+  });
+
+  test('level2 required', () {
+    var environment = Environment(
+      loader: MapLoader(<String, String>{
+        'default': "{% block x required %}{% endblock %}",
+        'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
+        'level2': '{% extends "default" %}{% block x %}[2]{% endblock %}',
+      }),
+    );
+
+    environment.getTemplate('level1').render().equals('[1]');
+    environment.getTemplate('level2').render().equals('[2]');
+  });
+
+  test('level3 required', () {
+    var environment = Environment(
+      loader: MapLoader(<String, String>{
+        'default': '{% block x required %}{% endblock %}',
+        'level1': '{% extends "default" %}',
+        'level2': '{% extends "level1" %}{% block x %}[2]{% endblock %}',
+        'level3': '{% extends "level2" %}',
+      }),
+    );
+
+    environment
+        .getTemplate('level1')
+        .renderThrows<TemplateSyntaxError>(matcher: (error) => error.message == 'required block \'x\' not found');
+    environment.getTemplate('level2').render().equals('[2]');
+    environment.getTemplate('level3').render().equals('[2]');
   });
 }

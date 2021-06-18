@@ -296,6 +296,7 @@ class Parser {
       node.visitChildNodes(visit);
     }
 
+    final required = reader.skipIf('name', 'required');
     final body = parseStatements(reader, <String>['name:endblock'], true);
     body.forEach(visit);
 
@@ -303,14 +304,14 @@ class Parser {
 
     if (maybeName.test('name')) {
       if (maybeName.value != name.value) {
-        // TODO: set error message
+        // TODO: update error message
         fail('\'${name.value}\' expected, got ${maybeName.value}');
       }
 
       reader.next();
     }
 
-    return Block(name.value, scoped, hasSuper, body);
+    return Block(name.value, scoped, required, hasSuper, body);
   }
 
   Extends parseExtends(TokenReader reader) {
