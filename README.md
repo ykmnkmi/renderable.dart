@@ -16,7 +16,7 @@ Differences:
   - constructor
     - ~~extensions~~
     - ~~selectAutoescape~~
-    - ~~autoReload~~
+    - autoReload
   - ~~shared~~
   - filters
   - tests
@@ -26,7 +26,7 @@ Differences:
   - ~~compileExpression~~
   - fromString
   - getTemplate
-  - ~~listTemplates~~
+  - listTemplates
 - Template
   - path (name)
   - render
@@ -37,10 +37,8 @@ Differences:
     - undefinedMessage
     - fail
 - Context
-  - ~~parent~~
   - environment
-  - ~~name~~
-  - ~~blocks~~
+  - blocks
   - call
   - resolve
 - Loaders
@@ -50,7 +48,7 @@ Differences:
     - listSources
     - load
   - MapLoader (DictLoader)
-  - ~~FileSystemLoader~~
+  - FileSystemLoader
 - Utilities
   - escape
   - isUndefined
@@ -80,7 +78,7 @@ Differences:
   - Super Blocks
   - Nesting extends
   - Named Block End-Tags
-  - ~~Block Nesting and Scope~~
+  - Block Nesting and Scope
 - HTML Escaping
   - Working with Manual Escaping
   - Working with Automatic Escaping
