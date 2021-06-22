@@ -225,4 +225,26 @@ void main() {
     environment.getTemplate('level2').render().equals('[2]');
     environment.getTemplate('level3').render().equals('[2]');
   });
+
+  test('invalid required', () {
+    var environment = Environment(
+      loader: MapLoader(<String, String>{
+        'default': '{% block x required %}data {# #}{% endblock %}',
+        'default1': '{% block x required %}{% block y %}{% endblock %}  {% endblock %}',
+        'default2': '{% block x required %}{% if true %}{% endif %}  {% endblock %}',
+        "level1default": '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
+        "level1default2": '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
+        "level1default3": '{% extends "default3" %}{%- block x %}CHILD{% endblock %}',
+      }),
+    );
+
+    bool matcher(dynamic error) {
+      return error.message == 'required block \'x\' not found';
+    }
+
+    environment
+      ..getTemplate('level1default').renderThrows<TemplateSyntaxError>(matcher: matcher)
+      ..getTemplate('level1default2').renderThrows<TemplateSyntaxError>(matcher: matcher)
+      ..getTemplate('level1default3').renderThrows<TemplateSyntaxError>(matcher: matcher);
+  });
 }
