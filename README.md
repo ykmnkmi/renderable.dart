@@ -96,7 +96,7 @@ Differences:
   - ~~Import~~
 - Import Context Behavior
 - Expressions
-  - Literals
+  - Literals: null (none), true (True), false (False), 1_000, 1.1e3, 'sq', "dq", (1,), \[2\], {'k': 'v'}
   - Math
   - Comparisons
   - Logic
@@ -121,7 +121,7 @@ Differences:
   - length, count
   - list
   - lower
-  - pprint (bool, num, String, List, Map, Set)
+  - pprint: bool, num, String, List, Map, Set
   - random
   - replace
   - reverse

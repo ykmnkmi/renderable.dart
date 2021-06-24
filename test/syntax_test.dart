@@ -3,131 +3,102 @@ import 'package:renderable/src/nodes.dart';
 import 'package:renderable/src/utils.dart';
 import 'package:test/test.dart';
 
+class Foo {
+  Object? operator [](Object? key) {
+    return key;
+  }
+}
+
 void main() {
   group('Syntax', () {
+    late final environment = Environment();
+
     test('call', () {
       var globals = {'foo': (dynamic a, dynamic b, {dynamic c, dynamic e, dynamic g}) => a + b + c + e + g};
       var environment = Environment(globals: globals);
-      var template = environment.fromString('{{ foo("a", c="d", e="f", *["b"], **{"g": "h"}) }}');
-      expect(template.render(), equals('abdfh'));
+      expect(environment.fromString('{{ foo("a", c="d", e="f", *["b"], **{"g": "h"}) }}').render(), equals('abdfh'));
     });
 
     test('slicing', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ [1, 2, 3][:] }}|{{ [1, 2, 3][::-1] }}');
-      expect(template.render(), equals('[1, 2, 3]|[3, 2, 1]'));
+      expect(
+          environment.fromString('{{ [1, 2, 3][:] }}|{{ [1, 2, 3][::-1] }}').render(), equals('[1, 2, 3]|[3, 2, 1]'));
     });
 
     test('attr', () {
-      var environment = Environment();
-      var data = {
-        'foo': {'bar': 42}
-      };
-
-      var template = environment.fromString('{{ foo.bar }}|{{ foo["bar"] }}');
-      expect(template.render(data), equals('42|42'));
+      expect(
+          environment.fromString('{{ foo.bar }}|{{ foo["bar"] }}').render({
+            'foo': {'bar': 42}
+          }),
+          equals('42|42'));
     });
 
     test('subscript', () {
-      var environment = Environment();
-      var data = {
-        'foo': [0, 1, 2]
-      };
-
-      var template = environment.fromString('{{ foo[0] }}|{{ foo[-1] }}');
-      expect(template.render(data), equals('0|2'));
+      expect(
+          environment.fromString('{{ foo[0] }}|{{ foo[-1] }}').render({
+            'foo': [0, 1, 2]
+          }),
+          equals('0|2'));
     });
 
     test('tuple', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ () }}|{{ (1,) }}|{{ (1, 2) }}');
-      expect(template.render(), equals('[]|[1]|[1, 2]')); // tuple is list
+      // tuple is list
+      expect(environment.fromString('{{ () }}|{{ (1,) }}|{{ (1, 2) }}').render(), equals('[]|[1]|[1, 2]'));
     });
 
     test('math', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ (1 + 1 * 2) - 3 / 2 }}|{{ 2**3 }}');
-      expect(template.render(), equals('1.5|8'));
+      expect(environment.fromString('{{ (1 + 1 * 2) - 3 / 2 }}|{{ 2**3 }}').render(), equals('1.5|8'));
     });
 
     test('div', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ 3 // 2 }}|{{ 3 / 2 }}|{{ 3 % 2 }}');
-      expect(template.render(), equals('1|1.5|1'));
+      expect(environment.fromString('{{ 3 // 2 }}|{{ 3 / 2 }}|{{ 3 % 2 }}').render(), equals('1|1.5|1'));
     });
 
     test('unary', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ +3 }}|{{ -3 }}');
-      expect(template.render(), equals('3|-3'));
+      expect(environment.fromString('{{ +3 }}|{{ -3 }}').render(), equals('3|-3'));
     });
 
     test('concat', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ [1, 2] ~ "foo" }}');
-      expect(template.render(), equals('[1, 2]foo'));
+      expect(environment.fromString('{{ [1, 2] ~ "foo" }}').render(), equals('[1, 2]foo'));
     });
 
     test('compare', () {
-      var environment = Environment();
-      var matches = {
-        '>': [1, 0],
-        '>=': [1, 1],
-        '<': [2, 3],
-        '<=': [3, 4],
-        '==': [4, 4],
-        '!=': [4, 5]
-      };
-
-      matches.forEach((operation, pair) {
-        var template = environment.fromString('{{ ${pair.first} $operation ${pair.last} }}');
-        expect(template.render(), equals('true'));
-      });
+      expect(environment.fromString('{{ 1 > 0 }}').render(), equals('true'));
+      expect(environment.fromString('{{ 1 >= 1 }}').render(), equals('true'));
+      expect(environment.fromString('{{ 2 < 3 }}').render(), equals('true'));
+      expect(environment.fromString('{{ 3 <= 4 }}').render(), equals('true'));
+      expect(environment.fromString('{{ 4 == 4 }}').render(), equals('true'));
+      expect(environment.fromString('{{ 4 != 5 }}').render(), equals('true'));
     });
 
     test('compare parens', () {
-      var environment = Environment();
       // num * bool not supported
       // '{{ i * (j < 5) }}'
-      var template = environment.fromString('{{ i == (j < 5) }}');
-      expect(template.render({'i': 2, 'j': 3}), equals('false'));
+      expect(environment.fromString('{{ i == (j < 5) }}').render({'i': 2, 'j': 3}), equals('false'));
     });
 
     test('compare compound', () {
-      var environment = Environment();
-      var matches = {
-        '{{ 4 < 2 < 3 }}': 'false',
-        '{{ a < b < c }}': 'false',
-        '{{ 4 > 2 > 3 }}': 'false',
-        '{{ a > b > c }}': 'false',
-        '{{ 4 > 2 < 3 }}': 'true',
-        '{{ a > b < c }}': 'true',
-      };
-
-      matches.forEach((source, expekt) {
-        var template = environment.fromString(source);
-        expect(template.render({'a': 4, 'b': 2, 'c': 3}), equals(expekt));
-      });
+      var data = {'a': 4, 'b': 2, 'c': 3};
+      expect(environment.fromString('{{ 4 < 2 < 3 }}').render(data), equals('false'));
+      expect(environment.fromString('{{ a < b < c }}').render(data), equals('false'));
+      expect(environment.fromString('{{ 4 > 2 > 3 }}').render(data), equals('false'));
+      expect(environment.fromString('{{ a > b > c }}').render(data), equals('false'));
+      expect(environment.fromString('{{ 4 > 2 < 3 }}').render(data), equals('true'));
+      expect(environment.fromString('{{ a > b < c }}').render(data), equals('true'));
     });
 
     test('inop', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ 1 in [1, 2, 3] }}|{{ 1 not in [1, 2, 3] }}');
-      expect(template.render(), equals('true|false'));
+      expect(environment.fromString('{{ 1 in [1, 2, 3] }}|{{ 1 not in [1, 2, 3] }}').render(), equals('true|false'));
     });
 
     test('collection literal', () {
-      var environment = Environment();
       var matches = {'[]': '[]', '{}': '{}', '()': '[]'}; // tuple is list
 
       matches.forEach((source, expekt) {
-        var template = environment.fromString('{{ $source }}');
-        expect(template.render(), equals(expekt));
+        expect(environment.fromString('{{ $source }}').render(), equals(expekt));
       });
     });
 
     test('numeric literal', () {
-      var environment = Environment();
       var matches = {
         '1': '1',
         '123': '123',
@@ -144,49 +115,37 @@ void main() {
       };
 
       matches.forEach((source, expekt) {
-        var template = environment.fromString('{{ $source }}');
-        expect(template.render(), equals(expekt));
+        expect(environment.fromString('{{ $source }}').render(), equals(expekt));
       });
     });
 
     test('bool', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ true and false }}|{{ false or true }}|{{ not false }}');
-      expect(template.render(), equals('false|true|true'));
+      expect(environment.fromString('{{ true and false }}|{{ false or true }}|{{ not false }}').render(),
+          equals('false|true|true'));
     });
 
     test('grouping', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ (true and false) or (false and true) and not false }}');
-      expect(template.render(), equals('false'));
+      expect(
+          environment.fromString('{{ (true and false) or (false and true) and not false }}').render(), equals('false'));
     });
 
     test('django attr', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ [1, 2, 3].0 }}|{{ [[1]].0.0 }}');
-      expect(template.render(), equals('1|1'));
+      expect(environment.fromString('{{ [1, 2, 3].0 }}|{{ [[1]].0.0 }}').render(), equals('1|1'));
     });
 
     test('conditional expression', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ 0 if true else 1 }}');
-      expect(template.render(), equals('0'));
+      expect(environment.fromString('{{ 0 if true else 1 }}').render(), equals('0'));
     });
 
     test('short conditional expression', () {
-      var environment = Environment();
-      var template = environment.fromString('<{{ 1 if false }}>');
-      expect(template.render(), equals('<>'));
+      expect(environment.fromString('<{{ 1 if false }}>').render(), equals('<>'));
     });
 
     test('filter priority', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ "foo" | upper + "bar" | upper }}');
-      expect(template.render(), equals('FOOBAR'));
+      expect(environment.fromString('{{ "foo" | upper + "bar" | upper }}').render(), equals('FOOBAR'));
     });
 
     test('function calls', () {
-      var environment = Environment();
       var matches = {
         '*foo, bar': true,
         '*foo, *bar': true,
@@ -215,8 +174,7 @@ void main() {
     });
 
     test('tuple expr', () {
-      var environment = Environment();
-      var sources = {
+      var sources = <String>[
         '{{ () }}',
         '{{ (1, 2) }}',
         '{{ (1, 2,) }}',
@@ -225,7 +183,7 @@ void main() {
         '{% for foo, bar in seq %}...{% endfor %}',
         '{% for x in foo, bar %}...{% endfor %}',
         '{% for x in foo, %}...{% endfor %}',
-      };
+      ];
 
       for (var source in sources) {
         expect(environment.fromString(source), isA<Template>());
@@ -233,106 +191,76 @@ void main() {
     });
 
     test('triling comma', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ (1, 2,) }}|{{ [1, 2,] }}|{{ {1: 2,} }}');
       // tuple is list
-      expect(template.render(), equals('[1, 2]|[1, 2]|{1: 2}'));
+      expect(
+          environment.fromString('{{ (1, 2,) }}|{{ [1, 2,] }}|{{ {1: 2,} }}').render(), equals('[1, 2]|[1, 2]|{1: 2}'));
     });
 
     test('block end name', () {
-      var environment = Environment();
       expect(environment.fromString('{% block foo %}...{% endblock foo %}'), isA<Template>());
-      expect(() => environment.fromString('{% block x %}{% endblock y %}'), throwsA(isA<TemplateSyntaxError>()));
-    });
-
-    test('constant casing', () {
-      var environment = Environment();
-
-      for (var constant in [true, false, null]) {
-        var string = constant.toString();
-        var source = '{{ $string }}|{{ ${string.toLowerCase()} }}|{{ ${string.toUpperCase()} }}';
-        var template = environment.fromString(source);
-        expect(template.render(), equals('$constant|$constant|'));
-      }
+      expect(
+          () => environment.fromString('{% block x %}{% endblock y %}').render(), throwsA(isA<TemplateSyntaxError>()));
     });
 
     test('string concatenation', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ "foo" "bar" "baz" }}');
-      expect(template.render(), equals('foobarbaz'));
+      expect(environment.fromString('{{ "foo" "bar" "baz" }}').render(), equals('foobarbaz'));
     });
 
     test('notin', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ not 42 in bar }}');
-      expect(template.render({'bar': range(100)}), equals('false'));
+      expect(environment.fromString('{{ not 42 in bar }}').render({'bar': range(100)}), equals('false'));
     });
 
     test('operator precedence', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ 2 * 3 + 4 % 2 + 1 - 2 }}');
-      expect(template.render(), equals('5'));
+      expect(environment.fromString('{{ 2 * 3 + 4 % 2 + 1 - 2 }}').render(), equals('5'));
     });
 
     test('implicit subscribed tuple', () {
-      var environment = Environment();
-      var template = environment.fromString('{{ foo[1, 2] }}');
       // tuple is list
-      expect(template.render({'foo': Foo()}), equals('[1, 2]'));
+      expect(environment.fromString('{{ foo[1, 2] }}').render({'foo': Foo()}), equals('[1, 2]'));
     });
 
     test('raw2', () {
-      var environment = Environment();
-      var template = environment.fromString('{% raw %}{{ FOO }} and {% BAR %}{% endraw %}');
       // tuple is list
-      expect(template.render(), equals('{{ FOO }} and {% BAR %}'));
+      expect(environment.fromString('{% raw %}{{ FOO }} and {% BAR %}{% endraw %}').render(),
+          equals('{{ FOO }} and {% BAR %}'));
     });
 
     test('const', () {
-      var environment = Environment();
-      var source = '{{ true }}|{{ false }}|{{ none }}|{{ none is defined }}|{{ missing is defined }}';
-      var template = environment.fromString(source);
-      expect(template.render(), equals('true|false|null|true|false'));
+      expect(
+          environment
+              .fromString('{{ true }}|{{ false }}|{{ none }}|{{ none is defined }}|{{ missing is defined }}')
+              .render(),
+          equals('true|false|null|true|false'));
     });
 
     test('neg filter priority', () {
-      var environment = Environment();
       var template = environment.fromString('{{ -1 | foo }}');
-      expect((template.nodes[0] as Output).nodes[0], isA<Filter>());
-      expect(((template.nodes[0] as Output).nodes[0] as Filter).expression, isA<Neg>());
+      var output = template.nodes[0] as Output;
+      var filter = output.nodes[0];
+      expect(filter, isA<Filter>());
+      expect((filter as Filter).expression, isA<Neg>());
     });
 
     test('const assign', () {
-      var environment = Environment();
-
       for (var source in ['{% set true = 42 %}', '{% for none in seq %}{% endfor %}']) {
         expect(() => environment.fromString(source), throwsA(isA<TemplateSyntaxError>()));
       }
     });
 
     test('localset', () {
-      var environment = Environment();
-      var source = '{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}{% endfor %}{{ foo }}';
-      var template = environment.fromString(source);
-      expect(template.render(), equals('0'));
+      expect(
+          environment
+              .fromString('{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}{% endfor %}{{ foo }}')
+              .render(),
+          equals('0'));
     });
 
     test('parse unary', () {
-      var environment = Environment();
       var data = {
         'foo': {'bar': 42}
       };
-
-      var template = environment.fromString('{{ -foo["bar"] }}');
-      expect(template.render(data), equals('-42'));
-      template = environment.fromString('{{ foo["bar"] }}');
-      expect(template.render(data), equals('42'));
+      expect(environment.fromString('{{ -foo["bar"] }}').render(data), equals('-42'));
+      expect(environment.fromString('{{ foo["bar"] }}').render(data), equals('42'));
     });
   });
-}
-
-class Foo {
-  Object? operator [](Object? key) {
-    return key;
-  }
 }

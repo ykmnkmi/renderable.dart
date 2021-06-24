@@ -1,7 +1,6 @@
 import 'package:renderable/jinja.dart';
 import 'package:renderable/runtime.dart';
-
-import 'core.dart';
+import 'package:test/test.dart';
 
 const String layout = '''|{% block block1 %}block 1 from layout{% endblock %}
 |{% block block2 %}block 2 from layout{% endblock %}
@@ -54,45 +53,31 @@ const Map<String, String> mapping = <String, String>{
 
 void main() {
   group('Inheritance', () {
-    late Environment environment;
-
-    setUpAll(() {
-      environment = Environment(loader: MapLoader(mapping), trimBlocks: true);
-    });
+    late final environment = Environment(loader: MapLoader(mapping), trimBlocks: true);
 
     test('layout', () {
-      environment
-          .getTemplate('layout')
-          .render()
-          .equals('|block 1 from layout|block 2 from layout|nested block 4 from layout|');
+      var result = environment.getTemplate('layout').render();
+      expect(result, equals('|block 1 from layout|block 2 from layout|nested block 4 from layout|'));
     });
 
     test('level1', () {
-      environment
-          .getTemplate('level1')
-          .render()
-          .equals('|block 1 from level1|block 2 from layout|nested block 4 from layout|');
+      var result = environment.getTemplate('level1').render();
+      expect(result, equals('|block 1 from level1|block 2 from layout|nested block 4 from layout|'));
     });
 
     test('level2', () {
-      environment
-          .getTemplate('level2')
-          .render()
-          .equals('|block 1 from level1|nested block 5 from level2|nested block 4 from layout|');
+      var result = environment.getTemplate('level2').render();
+      expect(result, equals('|block 1 from level1|nested block 5 from level2|nested block 4 from layout|'));
     });
 
     test('level3', () {
-      environment
-          .getTemplate('level3')
-          .render()
-          .equals('|block 1 from level1|block 5 from level3|block 4 from level3|');
+      var result = environment.getTemplate('level3').render();
+      expect(result, equals('|block 1 from level1|block 5 from level3|block 4 from level3|'));
     });
 
     test('level4', () {
-      environment
-          .getTemplate('level4')
-          .render()
-          .equals('|block 1 from level1|block 5 from level3|block 3 from level4|');
+      var result = environment.getTemplate('level4').render();
+      expect(result, equals('|block 1 from level1|block 5 from level3|block 3 from level4|'));
     });
 
     test('super', () {
@@ -105,18 +90,16 @@ void main() {
         }),
       );
 
-      environment.getTemplate('c').render().equals('--INTRO--|BEFORE|[(INNER)]|AFTER');
+      expect(environment.getTemplate('c').render(), equals('--INTRO--|BEFORE|[(INNER)]|AFTER'));
     });
 
     test('working', () {
-      environment.getTemplate('working').render();
+      expect(environment.getTemplate('working').render(), isNotNull);
     });
 
     test('reusing blocks', () {
-      environment
-          .fromString('{{ self.foo() }}|{% block foo %}42{% endblock %}|{{ self.foo() }}')
-          .render()
-          .equals('42|42|42');
+      var template = environment.fromString('{{ self.foo() }}|{% block foo %}42{% endblock %}|{{ self.foo() }}');
+      expect(template.render(), equals('42|42|42'));
     });
 
     test('preserve blocks', () {
@@ -127,39 +110,35 @@ void main() {
         }),
       );
 
-      environment.getTemplate('b').render().equals('BA');
+      expect(environment.getTemplate('b').render(), equals('BA'));
     });
 
     test('scoped block', () {
       var environment = Environment(
-        loader: MapLoader({'default.html': '{% for item in seq %}[{% block item scoped %}{% endblock %}]{% endfor %}'}),
+        loader: MapLoader({
+          'default.html': '{% for item in seq %}[{% block item scoped %}{% endblock %}]{% endfor %}',
+        }),
       );
 
-      var data = <String, Object?>{'seq': range(5)};
-      environment
-          .fromString('{% extends "default.html" %}{% block item %}{{ item }}{% endblock %}')
-          .render(data)
-          .equals('[0][1][2][3][4]');
+      var source = '{% extends "default.html" %}{% block item %}{{ item }}{% endblock %}';
+      expect(environment.fromString(source).render({'seq': range(5)}), equals('[0][1][2][3][4]'));
     });
 
     test('super in scoped block', () {
       var environment = Environment(
-        loader: MapLoader(<String, String>{
+        loader: MapLoader({
           'default.html': '{% for item in seq %}[{% block item scoped %}{{ item }}{% endblock %}]{% endfor %}',
         }),
       );
 
-      var data = <String, Object?>{'seq': range(5)};
-      environment
-          .fromString('{% extends "default.html" %}{% block item %}{{ super() }}|{{ item * 2 }}{% endblock %}')
-          .render(data)
-          .equals('[0|0][1|2][2|4][3|6][4|8]');
+      var source = '{% extends "default.html" %}{% block item %}{{ super() }}|{{ item * 2 }}{% endblock %}';
+      expect(environment.fromString(source).render({'seq': range(5)}), equals('[0|0][1|2][2|4][3|6][4|8]'));
     });
 
     // TODO: after macro: scoped block after inheritance
     test('scoped block after inheritance', () {
       var environment = Environment(
-        loader: MapLoader(<String, String>{
+        loader: MapLoader({
           'layout.html': '{% block useless %}{% endblock %}',
           'index.html': '''
             {%- extends 'layout.html' %}
@@ -175,43 +154,38 @@ void main() {
         }),
       );
 
-      var data = <String, Object?>{'the_foo': 42};
-      environment
-          .getTemplate('index.html')
-          .render(data)
-          .split(RegExp('\\s+'))
-          .where((part) => part.isNotEmpty)
-          .orderedEquals(<String>['43', '44', '45']);
+      var template = environment.getTemplate('index.html');
+      var iterable = template.render({'the_foo': 42}).split(RegExp('\\s+')).where((part) => part.isNotEmpty);
+      expect(iterable, orderedEquals(<String>['43', '44', '45']));
     }, skip: true);
   });
 
   test('level1 required', () {
     var environment = Environment(
-      loader: MapLoader(<String, String>{
+      loader: MapLoader({
         'default': '{% block x required %}{# comment #}\n {% endblock %}',
         'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
       }),
     );
-
-    environment.getTemplate('level1').render().equals('[1]');
+    expect(environment.getTemplate('level1').render(), equals('[1]'));
   });
 
   test('level2 required', () {
     var environment = Environment(
-      loader: MapLoader(<String, String>{
+      loader: MapLoader({
         'default': "{% block x required %}{% endblock %}",
         'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
         'level2': '{% extends "default" %}{% block x %}[2]{% endblock %}',
       }),
     );
 
-    environment.getTemplate('level1').render().equals('[1]');
-    environment.getTemplate('level2').render().equals('[2]');
+    expect(environment.getTemplate('level1').render(), equals('[1]'));
+    expect(environment.getTemplate('level2').render(), equals('[2]'));
   });
 
   test('level3 required', () {
     var environment = Environment(
-      loader: MapLoader(<String, String>{
+      loader: MapLoader({
         'default': '{% block x required %}{% endblock %}',
         'level1': '{% extends "default" %}',
         'level2': '{% extends "level1" %}{% block x %}[2]{% endblock %}',
@@ -219,16 +193,18 @@ void main() {
       }),
     );
 
-    environment
-        .getTemplate('level1')
-        .renderThrows<TemplateSyntaxError>(matcher: (error) => error.message == 'required block \'x\' not found');
-    environment.getTemplate('level2').render().equals('[2]');
-    environment.getTemplate('level3').render().equals('[2]');
+    bool matcher(TemplateSyntaxError error) {
+      return error.message == 'required block \'x\' not found';
+    }
+
+    expect(() => environment.getTemplate('level1').render(), throwsA(predicate<TemplateSyntaxError>(matcher)));
+    expect(environment.getTemplate('level2').render(), equals('[2]'));
+    expect(environment.getTemplate('level3').render(), equals('[2]'));
   });
 
   test('invalid required', () {
     var environment = Environment(
-      loader: MapLoader(<String, String>{
+      loader: MapLoader({
         'default': '{% block x required %}data {# #}{% endblock %}',
         'default1': '{% block x required %}{% block y %}{% endblock %}  {% endblock %}',
         'default2': '{% block x required %}{% if true %}{% endif %}  {% endblock %}',
@@ -238,13 +214,12 @@ void main() {
       }),
     );
 
-    bool matcher(dynamic error) {
+    bool matcher(TemplateSyntaxError error) {
       return error.message == 'required block \'x\' not found';
     }
 
-    environment
-      ..getTemplate('level1default').renderThrows<TemplateSyntaxError>(matcher: matcher)
-      ..getTemplate('level1default2').renderThrows<TemplateSyntaxError>(matcher: matcher)
-      ..getTemplate('level1default3').renderThrows<TemplateSyntaxError>(matcher: matcher);
+    expect(() => environment.getTemplate('level1default').render(), throwsA(predicate<TemplateSyntaxError>(matcher)));
+    expect(() => environment.getTemplate('level1default2').render(), throwsA(predicate<TemplateSyntaxError>(matcher)));
+    expect(() => environment.getTemplate('level1default3').render(), throwsA(predicate<TemplateSyntaxError>(matcher)));
   });
 }
