@@ -80,7 +80,8 @@ abstract class Rule {
 }
 
 class SingleTokenRule extends Rule {
-  SingleTokenRule(RegExp regExp, this.token, [String? newState]) : super(regExp, newState);
+  SingleTokenRule(RegExp regExp, this.token, [String? newState])
+      : super(regExp, newState);
 
   final String token;
 
@@ -115,18 +116,24 @@ class Lexer {
       : newLineRe = RegExp('(\r\n|\r|\n)'),
         whitespaceRe = RegExp('\\s+'),
         nameRe = RegExp('[a-zA-Z\$_][a-zA-Z0-9\$_]*', unicode: true),
-        stringRe = RegExp('(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")', dotAll: true),
+        stringRe = RegExp(
+            '(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")',
+            dotAll: true),
         integerRe = RegExp('(\\d+_)*\\d+'),
-        floatRe = RegExp('(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?e[+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)'),
-        operatorRe = RegExp('\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;'),
-        lStripUnlessRe = environment.leftStripBlocks ? compile('[^ \\t]') : null,
+        floatRe = RegExp(
+            '(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?e[+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)'),
+        operatorRe = RegExp(
+            '\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;'),
+        lStripUnlessRe =
+            environment.leftStripBlocks ? compile('[^ \\t]') : null,
         newLine = environment.newLine,
         keepTrailingNewLine = environment.keepTrailingNewLine {
     final blockSuffixRe = environment.trimBlocks ? r'\n?' : '';
 
     final commentBeginRe = escape(environment.commentBegin);
     final commentEndRe = escape(environment.commentEnd);
-    final commentEnd = compile('(.*?)((?:\\+$commentEndRe|-$commentEndRe\\s*|$commentEndRe$blockSuffixRe))');
+    final commentEnd = compile(
+        '(.*?)((?:\\+$commentEndRe|-$commentEndRe\\s*|$commentEndRe$blockSuffixRe))');
 
     final variableBeginRe = escape(environment.variableBegin);
     final variableEndRe = escape(environment.variableEnd);
@@ -134,7 +141,8 @@ class Lexer {
 
     final blockBeginRe = escape(environment.blockBegin);
     final blockEndRe = escape(environment.blockEnd);
-    final blockEnd = compile('(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe)');
+    final blockEnd = compile(
+        '(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe)');
 
     final tagRules = <Rule>[
       SingleTokenRule(whitespaceRe, 'whitespace'),
@@ -156,12 +164,17 @@ class Lexer {
           '(?:^|(?<=\\S))[^\\S\r\n]*' + environment.lineCommentPrefix!
         ],
       if (environment.lineStatementPrefix != null)
-        ['linestatement_begin', environment.lineStatementPrefix!, '^[ \t\v]*' + environment.lineStatementPrefix!],
+        [
+          'linestatement_begin',
+          environment.lineStatementPrefix!,
+          '^[ \t\v]*' + environment.lineStatementPrefix!
+        ],
     ];
 
     rootTagRules.sort((a, b) => b[1].length.compareTo(a[1].length));
 
-    final rawBegin = compile('(?<raw_begin>$blockBeginRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))');
+    final rawBegin = compile(
+        '(?<raw_begin>$blockBeginRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))');
     final rawEnd = compile('(.*?)((?:$blockBeginRe(-|\\+|))\\s*endraw\\s*'
         '(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe))');
 
@@ -175,7 +188,8 @@ class Lexer {
 
     rules = <String, List<Rule>>{
       'root': <Rule>[
-        MultiTokenRule.optionalLStrip(data, <String>['data', '#group'], '#group'),
+        MultiTokenRule.optionalLStrip(
+            data, <String>['data', '#group'], '#group'),
         SingleTokenRule(compile('.+'), 'data'),
       ],
       'comment_begin': <Rule>[
@@ -191,12 +205,15 @@ class Lexer {
         ...tagRules,
       ],
       'raw_begin': <Rule>[
-        MultiTokenRule.optionalLStrip(rawEnd, <String>['data', 'raw_end'], '#pop'),
-        MultiTokenRule(compile('(.)'), <String>['@missing end of raw directive']),
+        MultiTokenRule.optionalLStrip(
+            rawEnd, <String>['data', 'raw_end'], '#pop'),
+        MultiTokenRule(
+            compile('(.)'), <String>['@missing end of raw directive']),
       ],
       if (environment.lineCommentPrefix != null)
         'linecomment_begin': <Rule>[
-          MultiTokenRule(compile('(.*?)()(?=\n|\$)'), <String>['linecomment', 'linecomment_end'], '#pop'),
+          MultiTokenRule(compile('(.*?)()(?=\n|\$)'),
+              <String>['linecomment', 'linecomment_end'], '#pop'),
         ],
       if (environment.lineStatementPrefix != null)
         'linestatement_begin': <Rule>[
@@ -236,7 +253,11 @@ class Lexer {
 
   @protected
   List<Token> scan(StringScanner scanner, [String? state]) {
-    const endTokens = <String>['variable_end', 'block_end', 'linestatement_end'];
+    const endTokens = <String>[
+      'variable_end',
+      'block_end',
+      'linestatement_end'
+    ];
 
     final stack = <String>['root'];
     final balancingStack = <String>[];
@@ -263,7 +284,8 @@ class Lexer {
         final match = scanner.lastMatch as RegExpMatch;
 
         if (rule is MultiTokenRule) {
-          final groups = match.groups(List<int>.generate(match.groupCount, (index) => index + 1));
+          final groups = match.groups(
+              List<int>.generate(match.groupCount, (index) => index + 1));
 
           if (rule.optionalLStrip) {
             final text = groups[0]!;
@@ -281,15 +303,18 @@ class Lexer {
               newLinesStripped = text
                   .substring(stripped.length)
                   .split('')
-                  .fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+                  .fold<int>(
+                      0, (count, char) => char == '\n' ? count + 1 : count);
               groups[0] = stripped;
             } else if (stripSign != '+' &&
                 lStripUnlessRe != null &&
-                (!match.groupNames.contains('variable_begin') || match.namedGroup('variable_begin') == null)) {
+                (!match.groupNames.contains('variable_begin') ||
+                    match.namedGroup('variable_begin') == null)) {
               final lastPosition = text.lastIndexOf('\n') + 1;
 
               if (lastPosition > 0 || lineStarting) {
-                if (lStripUnlessRe!.firstMatch(text.substring(lastPosition)) == null) {
+                if (lStripUnlessRe!.firstMatch(text.substring(lastPosition)) ==
+                    null) {
                   groups[0] = groups[0]!.substring(0, lastPosition);
                 }
               }
@@ -310,14 +335,16 @@ class Lexer {
 
                 if (group != null) {
                   tokens.add(Token(line, name, group));
-                  line += group.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+                  line += group.split('').fold<int>(
+                      0, (count, char) => char == '\n' ? count + 1 : count);
                   notFound = false;
                 }
               }
 
               if (notFound) {
                 // TODO: update error
-                throw Exception('${rule.regExp} wanted to resolve the token dynamically but no group matched');
+                throw Exception(
+                    '${rule.regExp} wanted to resolve the token dynamically but no group matched');
               }
             } else {
               final data = groups[i];
@@ -329,7 +356,8 @@ class Lexer {
                   tokens.add(Token(line, token, data));
                 }
 
-                line += data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+                line += data.split('').fold<int>(
+                    0, (count, char) => char == '\n' ? count + 1 : count);
                 line += newLinesStripped;
                 newLinesStripped = 0;
               }
@@ -359,7 +387,8 @@ class Lexer {
               final expected = balancingStack.removeLast();
 
               if (data != expected) {
-                throw TemplateSyntaxError('unexpected \'$data\', expected \'$expected\'');
+                throw TemplateSyntaxError(
+                    'unexpected \'$data\', expected \'$expected\'');
               }
             }
           }
@@ -371,7 +400,8 @@ class Lexer {
               tokens.add(Token(line, token, data));
             }
 
-            line += data.split('').fold<int>(0, (count, char) => char == '\n' ? count + 1 : count);
+            line += data.split('').fold<int>(
+                0, (count, char) => char == '\n' ? count + 1 : count);
           }
         } else {
           throw UnsupportedError('${rule.runtimeType}');
@@ -397,7 +427,8 @@ class Lexer {
             }
 
             if (notFound) {
-              throw Exception('${rule.regExp} wanted to resolve the token dynamically but no group matched');
+              throw Exception(
+                  '${rule.regExp} wanted to resolve the token dynamically but no group matched');
             }
           } else {
             stack.add(rule.newState!);
@@ -417,7 +448,8 @@ class Lexer {
         if (scanner.isDone) {
           return tokens;
         } else {
-          throw TemplateSyntaxError('unexpected char ${scanner.rest[0]} at ${scanner.position}.');
+          throw TemplateSyntaxError(
+              'unexpected char ${scanner.rest[0]} at ${scanner.position}.');
         }
       }
     }
@@ -427,7 +459,9 @@ class Lexer {
     final lines = const LineSplitter().convert(source);
 
     if (keepTrailingNewLine && source.isNotEmpty) {
-      if (source.endsWith('\r\n') || source.endsWith('\r') || source.endsWith('\n')) {
+      if (source.endsWith('\r\n') ||
+          source.endsWith('\r') ||
+          source.endsWith('\n')) {
         lines.add('');
       }
     }
@@ -448,7 +482,9 @@ class Lexer {
       } else if (token.test('data')) {
         tokens.add(token.change(value: normalizeNewLines(token.value)));
       } else if (token.test('string')) {
-        tokens.add(token.change(value: normalizeNewLines(token.value.substring(1, token.value.length - 1))));
+        tokens.add(token.change(
+            value: normalizeNewLines(
+                token.value.substring(1, token.value.length - 1))));
       } else if (token.test('integer') || token.test('float')) {
         tokens.add(token.change(value: token.value.replaceAll('_', '')));
       } else if (token.test('operator')) {

@@ -59,7 +59,8 @@ class Extends extends Statement {
 }
 
 class For extends Statement {
-  For(this.target, this.iterable, this.body, {this.hasLoop = false, this.orElse, this.test, this.recursive = false});
+  For(this.target, this.iterable, this.body,
+      {this.hasLoop = false, this.orElse, this.test, this.recursive = false});
 
   Expression target;
 

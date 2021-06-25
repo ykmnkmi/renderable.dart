@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:meta/meta.dart';
 
 import 'enirvonment.dart';
@@ -10,7 +8,8 @@ import 'runtime.dart';
 import 'utils.dart';
 
 class RenderContext extends Context {
-  RenderContext(Environment environment, this.sink, {Map<String, Object?>? data})
+  RenderContext(Environment environment, this.sink,
+      {Map<String, Object?>? data})
       : blocks = <String, List<Block>>{},
         super(environment, data);
 
@@ -94,8 +93,11 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
     if (blocks == null || blocks.isEmpty) {
       visitAll(node.nodes, context);
     } else {
-      if (node.required && blocks.length == 1) {
-        throw TemplateSyntaxError('required block \'${node.name}\' not found');
+      if (node.required) {
+        if (blocks.length == 1) {
+          throw TemplateSyntaxError(
+              'required block \'${node.name}\' not found');
+        }
       }
 
       final first = blocks[0];
@@ -180,7 +182,8 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
         values = filtered;
       }
 
-      final loop = LoopContext(values, context.environment.undefined, depth0: depth, recurse: recurse);
+      final loop = LoopContext(values, context.environment.undefined,
+          depth0: depth, recurse: recurse);
       Map<String, Object?> Function(Object?, Object?) unpack;
 
       if (node.hasLoop) {
@@ -270,10 +273,14 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   }
 
   @override
-  void visitScopedContextModifier(ScopedContextModifier node, [RenderContext? context]) {
+  void visitScopedContextModifier(ScopedContextModifier node,
+      [RenderContext? context]) {
     context!;
 
-    final data = <String, Object?>{for (final key in node.options.keys) key: node.options[key]!.accept(this, context)};
+    final data = <String, Object?>{
+      for (final key in node.options.keys)
+        key: node.options[key]!.accept(this, context)
+    };
     context.push(data);
     visitAll(node.nodes, context);
     context.pop();
@@ -312,15 +319,20 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   void visitWith(With node, [RenderContext? context]) {
     context!;
 
-    final targets = <Object?>[for (final target in node.targets) target.accept(this, context)];
-    final values = <Object?>[for (final value in node.values) value.accept(this, context)];
+    final targets = <Object?>[
+      for (final target in node.targets) target.accept(this, context)
+    ];
+    final values = <Object?>[
+      for (final value in node.values) value.accept(this, context)
+    ];
     context.push(getDataForTargets(targets, values));
     visitAll(node.body, context);
     context.pop();
   }
 
   @protected
-  static void assignTargetsToContext(RenderContext context, Object? target, Object? current) {
+  static void assignTargetsToContext(
+      RenderContext context, Object? target, Object? current) {
     if (target is String) {
       context.set(target, current);
       return;
@@ -340,11 +352,13 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       }
 
       if (list.length < target.length) {
-        throw StateError('not enough values to unpack (expected ${target.length}, got ${list.length})');
+        throw StateError(
+            'not enough values to unpack (expected ${target.length}, got ${list.length})');
       }
 
       if (list.length > target.length) {
-        throw StateError('too many values to unpack (expected ${target.length})');
+        throw StateError(
+            'too many values to unpack (expected ${target.length})');
       }
 
       for (var i = 0; i < target.length; i++) {
@@ -369,7 +383,8 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
   }
 
   @protected
-  static Map<String, Object?> getDataForTargets(Object? target, Object? current) {
+  static Map<String, Object?> getDataForTargets(
+      Object? target, Object? current) {
     if (target is String) {
       return <String, Object?>{target: current};
     }
@@ -389,14 +404,18 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
       }
 
       if (list.length < names.length) {
-        throw StateError('not enough values to unpack (expected ${names.length}, got ${list.length})');
+        throw StateError(
+            'not enough values to unpack (expected ${names.length}, got ${list.length})');
       }
 
       if (list.length > names.length) {
-        throw StateError('too many values to unpack (expected ${names.length})');
+        throw StateError(
+            'too many values to unpack (expected ${names.length})');
       }
 
-      return <String, Object?>{for (var i = 0; i < names.length; i++) names[i]: list[i]};
+      return <String, Object?>{
+        for (var i = 0; i < names.length; i++) names[i]: list[i]
+      };
     }
 
     throw ArgumentError.value(target, 'target');

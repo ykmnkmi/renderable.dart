@@ -55,7 +55,10 @@ abstract class Token {
       return true;
     }
 
-    return other is Token && type == other.type && line == other.line && value == other.value;
+    return other is Token &&
+        type == other.type &&
+        line == other.line &&
+        value == other.value;
   }
 
   Token change({int line, String type, String value});

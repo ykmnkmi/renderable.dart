@@ -7,7 +7,8 @@ void main() {
   try {
     var environment = Environment(
       loader: MapLoader({
-        'a': '{{ self.intro() }}{% block intro %}BLOCK{% endblock %}{{ self.intro() }}',
+        'a': '{{ self.intro() }}{% block intro %}BLOCK{% endblock %}'
+            '{{ self.intro() }}',
         'b': '{% extends "a" %}{% block intro %}*{{ super() }}*{% endblock %}',
         'c': '{% extends "b" %}{% block intro %}-{{ super() }}-{% endblock %}',
       }),

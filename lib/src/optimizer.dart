@@ -130,7 +130,8 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     if (node.dynamicKeywordArguments != null) {
-      node.dynamicKeywordArguments = optimize(node.dynamicKeywordArguments!, context);
+      node.dynamicKeywordArguments =
+          optimize(node.dynamicKeywordArguments!, context);
     }
 
     return constant(node, context);
@@ -176,7 +177,8 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  ScopedContextModifier visitContextModifier(ScopedContextModifier node, [Context? context]) {
+  ScopedContextModifier visitContextModifier(ScopedContextModifier node,
+      [Context? context]) {
     visitAllSafe(node.nodes, context);
     return node;
   }
@@ -206,7 +208,8 @@ class Optimizer extends Visitor<Context, Node> {
   @override
   @override
   Expression visitFilter(Filter node, [Context? context]) {
-    if (node.name == 'random' || !context!.environment.filters.containsKey(node.name)) {
+    if (node.name == 'random' ||
+        !context!.environment.filters.containsKey(node.name)) {
       throw Impossible();
     }
 
@@ -227,7 +230,8 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     if (node.dynamicKeywordArguments != null) {
-      node.dynamicKeywordArguments = optimize(node.dynamicKeywordArguments!, context);
+      node.dynamicKeywordArguments =
+          optimize(node.dynamicKeywordArguments!, context);
     }
 
     return constant(node, context);
@@ -289,7 +293,8 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  NameSpaceReference visitNameSpaceReference(NameSpaceReference node, [Context? context]) {
+  NameSpaceReference visitNameSpaceReference(NameSpaceReference node,
+      [Context? context]) {
     return node;
   }
 
@@ -319,8 +324,10 @@ class Optimizer extends Visitor<Context, Node> {
   }
 
   @override
-  ScopedContextModifier visitScopedContextModifier(ScopedContextModifier node, [Context? context]) {
-    node.options.updateAll((option, expression) => optimizeSafe(expression, context));
+  ScopedContextModifier visitScopedContextModifier(ScopedContextModifier node,
+      [Context? context]) {
+    node.options
+        .updateAll((option, expression) => optimizeSafe(expression, context));
     visitAllSafe(node.nodes, context);
     return node;
   }
@@ -372,7 +379,8 @@ class Optimizer extends Visitor<Context, Node> {
     }
 
     if (node.dynamicKeywordArguments != null) {
-      node.dynamicKeywordArguments = optimize(node.dynamicKeywordArguments!, context);
+      node.dynamicKeywordArguments =
+          optimize(node.dynamicKeywordArguments!, context);
     }
 
     return constant(node, context);

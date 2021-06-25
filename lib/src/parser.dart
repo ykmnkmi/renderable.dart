@@ -25,16 +25,21 @@ class Parser {
     throw TemplateSyntaxError(message, line: line, path: path);
   }
 
-  Never failUnknownTagEof(String? name, List<List<String>> endTokensStack, [int? line]) {
+  Never failUnknownTagEof(String? name, List<List<String>> endTokensStack,
+      [int? line]) {
     final expected = <String>[];
     String? currentlyLooking;
 
     for (final tokens in endTokensStack) {
-      expected.addAll(tokens.map<String>(describeExpression).map<String>(represent));
+      expected.addAll(
+          tokens.map<String>(describeExpression).map<String>(represent));
     }
 
     if (endTokensStack.isNotEmpty) {
-      currentlyLooking = endTokensStack.last.map<String>(describeExpression).map<String>(represent).join(' or ');
+      currentlyLooking = endTokensStack.last
+          .map<String>(describeExpression)
+          .map<String>(represent)
+          .join(' or ');
     }
 
     final message = name == null
@@ -46,12 +51,14 @@ class Parser {
         message.add(
             'You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for $currentlyLooking.');
       } else {
-        message.add('Jinja was looking for the following tags: $currentlyLooking.');
+        message.add(
+            'Jinja was looking for the following tags: $currentlyLooking.');
       }
     }
 
     if (tagStack.isNotEmpty) {
-      message.add('The innermost block that needs to be closed is ${represent(tagStack.last)}.');
+      message.add(
+          'The innermost block that needs to be closed is ${represent(tagStack.last)}.');
     }
 
     fail(message.join(' '), line);
@@ -122,7 +129,8 @@ class Parser {
     }
   }
 
-  List<Node> parseStatements(TokenReader reader, List<String> endTokens, [bool dropNeedle = false]) {
+  List<Node> parseStatements(TokenReader reader, List<String> endTokens,
+      [bool dropNeedle = false]) {
     reader.skipIf('colon');
     reader.expect('block_end');
     final nodes = subParse(reader, endTokens: endTokens);
@@ -196,7 +204,9 @@ class Parser {
     if (reader.skipIf('name', 'if')) {
       var expression = parseExpression(reader);
       expression.visitChildNodes(visit);
-      test = expression is Test ? expression : Test('defined', expression: expression);
+      test = expression is Test
+          ? expression
+          : Test('defined', expression: expression);
     }
 
     var recursive = reader.skipIf('name', 'recursive');
@@ -212,13 +222,15 @@ class Parser {
       orElse = parseStatements(reader, <String>['name:endfor'], true);
     }
 
-    return For(target, iterable, body, hasLoop: hasLoop, orElse: orElse, test: test, recursive: recursive);
+    return For(target, iterable, body,
+        hasLoop: hasLoop, orElse: orElse, test: test, recursive: recursive);
   }
 
   If parseIf(TokenReader reader) {
     reader.expect('name', 'if');
     var test = parseTuple(reader, withCondition: false);
-    var body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
+    var body = parseStatements(
+        reader, <String>['name:elif', 'name:else', 'name:endif']);
     var root = If(test, body);
     var node = root;
 
@@ -227,7 +239,8 @@ class Parser {
 
       if (tag.test('name', 'elif')) {
         var test = parseTuple(reader, withCondition: false);
-        var body = parseStatements(reader, <String>['name:elif', 'name:else', 'name:endif']);
+        var body = parseStatements(
+            reader, <String>['name:elif', 'name:else', 'name:endif']);
         node.nextIf = If(test, body);
         node = node.nextIf!;
         continue;
@@ -268,7 +281,8 @@ class Parser {
     reader.expect('name', 'autoescape');
     final escape = parseExpression(reader);
     final body = parseStatements(reader, <String>['name:endautoescape'], true);
-    return Scope(ScopedContextModifier(<String, Expression>{'autoEscape': escape}, body));
+    return Scope(ScopedContextModifier(
+        <String, Expression>{'autoEscape': escape}, body));
   }
 
   Block parseBlock(TokenReader reader) {
@@ -285,9 +299,14 @@ class Parser {
       fail('use an underscore instead', reader.current.line);
     }
 
+    final required = reader.skipIf('name', 'required');
     var hasSuper = false;
 
     void visit(Node node) {
+      if (required) {
+        checkRequired(node);
+      }
+
       if (node is Name && node.name == 'super') {
         hasSuper = true;
         return;
@@ -296,7 +315,6 @@ class Parser {
       node.visitChildNodes(visit);
     }
 
-    final required = reader.skipIf('name', 'required');
     final body = parseStatements(reader, <String>['name:endblock'], true);
     body.forEach(visit);
 
@@ -326,8 +344,10 @@ class Parser {
     return Extends(node.value!);
   }
 
-  T parseImportContext<T extends ImportContext>(TokenReader reader, T node, [bool defaultValue = true]) {
-    if (reader.current.testAny(<String>['name:with', 'name:without']) && reader.look().test('name', 'context')) {
+  T parseImportContext<T extends ImportContext>(TokenReader reader, T node,
+      [bool defaultValue = true]) {
+    if (reader.current.testAny(<String>['name:with', 'name:without']) &&
+        reader.look().test('name', 'context')) {
       node.withContext = reader.current.value == 'with';
       reader.skip(2);
     } else {
@@ -342,7 +362,8 @@ class Parser {
     final name = reader.expect('string');
     final node = Include(name.value);
 
-    if (reader.current.test('name', 'ignore') && reader.look().test('name', 'missing')) {
+    if (reader.current.test('name', 'ignore') &&
+        reader.look().test('name', 'missing')) {
       node.ignoreMissing = true;
       reader.skip(2);
     }
@@ -372,7 +393,8 @@ class Parser {
       target = Name(name.value, context: AssignContext.store);
     } else {
       if (withTuple) {
-        target = parseTuple(reader, simplified: true, extraEndRules: extraEndRules);
+        target =
+            parseTuple(reader, simplified: true, extraEndRules: extraEndRules);
       } else {
         target = parsePrimary(reader);
       }
@@ -380,7 +402,8 @@ class Parser {
       if (target is CanAssign) {
         target.context = AssignContext.store;
       } else {
-        fail('can\'t assign to ${target.runtimeType.toString().toLowerCase()}', line);
+        fail('can\'t assign to ${target.runtimeType.toString().toLowerCase()}',
+            line);
       }
     }
 
@@ -398,7 +421,8 @@ class Parser {
       final expression2 = parseOr(reader);
 
       if (reader.skipIf('name', 'else')) {
-        expression1 = Condition(expression2, expression1, parseCondition(reader));
+        expression1 =
+            Condition(expression2, expression1, parseCondition(reader));
       } else {
         expression1 = Condition(expression2, expression1);
       }
@@ -448,7 +472,8 @@ class Parser {
         operands.add(Operand(type, parseMath1(reader)));
       } else if (reader.skipIf('name', 'in')) {
         operands.add(Operand('in', parseMath1(reader)));
-      } else if (reader.current.test('name', 'not') && reader.look().test('name', 'in')) {
+      } else if (reader.current.test('name', 'not') &&
+          reader.look().test('name', 'in')) {
         reader.skip(2);
         operands.add(Operand('notin', parseMath1(reader)));
       } else {
@@ -602,7 +627,10 @@ class Parser {
           reader.next();
         }
 
-        expression = Constant<String>(buffer.toString().replaceAll(r'\\r', '\r').replaceAll(r'\\n', '\n'));
+        expression = Constant<String>(buffer
+            .toString()
+            .replaceAll(r'\\r', '\r')
+            .replaceAll(r'\\n', '\n'));
         break;
       case 'integer':
         expression = Constant<int>(int.parse(reader.current.value));
@@ -624,7 +652,8 @@ class Parser {
         expression = parseDict(reader);
         break;
       default:
-        fail('unexpected ${describeToken(reader.current)}', reader.current.line);
+        fail(
+            'unexpected ${describeToken(reader.current)}', reader.current.line);
     }
 
     return expression;
@@ -674,7 +703,8 @@ class Parser {
 
       if (!explicitParentheses) {
         final current = reader.current;
-        fail('expected an expression, got ${describeToken(current)}', current.line);
+        fail('expected an expression, got ${describeToken(current)}',
+            current.line);
       }
     }
 
@@ -810,7 +840,8 @@ class Parser {
 
     if (reader.current.test('colon')) {
       arguments.add(null);
-    } else if (!reader.current.test('rbracket') && !reader.current.test('comma')) {
+    } else if (!reader.current.test('rbracket') &&
+        !reader.current.test('comma')) {
       arguments.add(parseExpression(reader));
     } else {
       arguments.add(null);
@@ -872,7 +903,9 @@ class Parser {
           final value = parseExpression(reader);
           keywordArguments.add(Keyword(key, value));
         } else {
-          ensure(dArguments == null && dKeywordArguments == null && keywordArguments.isEmpty);
+          ensure(dArguments == null &&
+              dKeywordArguments == null &&
+              keywordArguments.isEmpty);
 
           arguments.add(parseExpression(reader));
         }
@@ -892,7 +925,8 @@ class Parser {
     );
   }
 
-  Expression? parseFilter(TokenReader reader, [Expression? expression, bool startInline = false]) {
+  Expression? parseFilter(TokenReader reader,
+      [Expression? expression, bool startInline = false]) {
     while (reader.current.test('pipe') || startInline) {
       if (!startInline) {
         reader.next();
@@ -954,7 +988,15 @@ class Parser {
 
     if (reader.current.test('lparen')) {
       call = parseCall(reader);
-    } else if (reader.current.testAny(['name', 'string', 'integer', 'float', 'lparen', 'lbracket', 'lbrace']) &&
+    } else if (reader.current.testAny([
+          'name',
+          'string',
+          'integer',
+          'float',
+          'lparen',
+          'lbracket',
+          'lbrace'
+        ]) &&
         !reader.current.testAny(['name:else', 'name:or', 'name:and'])) {
       if (reader.current.test('name', 'is')) {
         fail('You cannot chain multiple tests with is');
@@ -1093,11 +1135,29 @@ class Parser {
       nodes.length = 1;
     }
 
-    return Template.parsed(environment, nodes, blocks: blocks, hasSelf: hasSelf, path: path);
+    return Template.parsed(environment, nodes,
+        blocks: blocks, hasSelf: hasSelf, path: path);
   }
 
   @override
   String toString() {
     return 'Parser()';
   }
+}
+
+void checkRequired(Node node) {
+  if (node is Data && node.trimmed.isEmpty) {
+    return;
+  }
+
+  if (node is Output) {
+    for (final node in node.nodes) {
+      checkRequired(node);
+    }
+
+    return;
+  }
+
+  throw TemplateSyntaxError(
+      'required blocks can only contain comments or whitespace');
 }

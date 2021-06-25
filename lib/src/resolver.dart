@@ -15,7 +15,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   // TODO: update calling
   @protected
-  T Function(T Function(List<Object?>, Map<Symbol, Object?>)) callable<T>(Callable callable, C context) {
+  T Function(T Function(List<Object?>, Map<Symbol, Object?>)) callable<T>(
+      Callable callable, C context) {
     final positional = <Object?>[];
 
     if (callable.arguments != null) {
@@ -28,20 +29,26 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
     if (callable.keywordArguments != null) {
       for (final keywordArgument in callable.keywordArguments!) {
-        named[symbol(keywordArgument.key)] = keywordArgument.value.accept(this, context);
+        named[symbol(keywordArgument.key)] =
+            keywordArgument.value.accept(this, context);
       }
     }
     if (callable.dynamicArguments != null) {
-      positional.addAll(callable.dynamicArguments!.accept(this, context) as Iterable<Object?>);
+      positional.addAll(callable.dynamicArguments!.accept(this, context)
+          as Iterable<Object?>);
     }
 
     if (callable.dynamicKeywordArguments != null) {
-      named.addAll((callable.dynamicKeywordArguments!.accept(this, context) as Map<Object?, Object?>)
+      named.addAll((callable.dynamicKeywordArguments!.accept(this, context)
+              as Map<Object?, Object?>)
           .cast<String, Object?>()
-          .map<Symbol, Object?>((key, value) => MapEntry<Symbol, Object?>(symbol(key), value)));
+          .map<Symbol, Object?>(
+              (key, value) => MapEntry<Symbol, Object?>(symbol(key), value)));
     }
 
-    return (T Function(List<Object?> positional, Map<Symbol, Object?> named) callback) => callback(positional, named);
+    return (T Function(List<Object?> positional, Map<Symbol, Object?> named)
+            callback) =>
+        callback(positional, named);
   }
 
   @protected
@@ -49,7 +56,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
     context!;
 
     Object? callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      return context.environment.callFilter(filter.name, value, positional: positional, named: named, context: context);
+      return context.environment.callFilter(filter.name, value,
+          positional: positional, named: named, context: context);
     }
 
     return callable<Object?>(filter, context)(callback);
@@ -60,7 +68,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
     context!;
 
     bool callback(List<Object?> positional, Map<Symbol, Object?> named) {
-      return context.environment.callTest(test.name, value, positional: positional, named: named);
+      return context.environment
+          .callTest(test.name, value, positional: positional, named: named);
     }
 
     return callable<bool>(test, context)(callback);
@@ -83,7 +92,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @override
   Object? visitAttribute(Attribute node, [C? context]) {
-    return context!.environment.getAttribute(node.expression.accept(this, context)!, node.attribute);
+    return context!.environment
+        .getAttribute(node.expression.accept(this, context)!, node.attribute);
   }
 
   @override
@@ -274,12 +284,14 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @override
   Object? visitItem(Item node, [C? context]) {
-    return context!.environment.getItem(node.expression.accept(this, context)!, node.key.accept(this, context));
+    return context!.environment.getItem(
+        node.expression.accept(this, context)!, node.key.accept(this, context));
   }
 
   @override
   MapEntry<Symbol, Object?> visitKeyword(Keyword node, [C? context]) {
-    return MapEntry<Symbol, Object?>(Symbol(node.key), node.value.accept(this, context));
+    return MapEntry<Symbol, Object?>(
+        Symbol(node.key), node.value.accept(this, context));
   }
 
   @override
@@ -323,7 +335,8 @@ class ExpressionResolver<C extends Context> extends Visitor<C, Object?> {
 
   @override
   MapEntry<Object?, Object?> visitPair(Pair node, [C? context]) {
-    return MapEntry<Object?, Object?>(node.key.accept(this, context), node.value.accept(this, context));
+    return MapEntry<Object?, Object?>(
+        node.key.accept(this, context), node.value.accept(this, context));
   }
 
   @override

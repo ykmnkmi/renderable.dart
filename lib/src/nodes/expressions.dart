@@ -136,7 +136,8 @@ class Slice extends Expression {
       case 2:
         return Slice(start: expressions[0], stop: expressions[1]);
       case 3:
-        return Slice(start: expressions[0], stop: expressions[1], step: expressions[2]);
+        return Slice(
+            start: expressions[0], stop: expressions[1], step: expressions[2]);
       default:
         throw TemplateRuntimeError();
     }
@@ -199,7 +200,12 @@ class Slice extends Expression {
 }
 
 class Call extends Expression implements Callable {
-  Call({this.expression, this.arguments, this.keywordArguments, this.dynamicArguments, this.dynamicKeywordArguments});
+  Call(
+      {this.expression,
+      this.arguments,
+      this.keywordArguments,
+      this.dynamicArguments,
+      this.dynamicKeywordArguments});
 
   @override
   Expression? expression;
@@ -297,7 +303,12 @@ class Call extends Expression implements Callable {
 }
 
 class Filter extends Expression implements Callable {
-  Filter(this.name, {this.expression, this.arguments, this.keywordArguments, this.dynamicArguments, this.dynamicKeywordArguments});
+  Filter(this.name,
+      {this.expression,
+      this.arguments,
+      this.keywordArguments,
+      this.dynamicArguments,
+      this.dynamicKeywordArguments});
 
   String name;
 
@@ -389,7 +400,12 @@ class Filter extends Expression implements Callable {
 }
 
 class Test extends Expression implements Callable {
-  Test(this.name, {this.expression, this.arguments, this.keywordArguments, this.dynamicArguments, this.dynamicKeywordArguments});
+  Test(this.name,
+      {this.expression,
+      this.arguments,
+      this.keywordArguments,
+      this.dynamicArguments,
+      this.dynamicKeywordArguments});
 
   String name;
 
@@ -546,6 +562,10 @@ class Data extends Literal {
 
   String data;
 
+  String get trimmed {
+    return data.trim();
+  }
+
   @override
   R accept<C, R>(Visitor<C, R> visitor, [C? context]) {
     return visitor.visitData(this, context);
@@ -580,7 +600,8 @@ class TupleLiteral extends Literal implements CanAssign {
 
   @override
   bool get canAssign {
-    return expressions.every((expression) => expression is CanAssign && expression.canAssign);
+    return expressions
+        .every((expression) => expression is CanAssign && expression.canAssign);
   }
 
   @override
@@ -592,7 +613,8 @@ class TupleLiteral extends Literal implements CanAssign {
         if (context == null) {
           context = expression.context;
         } else if (expression.context != context) {
-          throw StateError('${expression.runtimeType} context must be $context');
+          throw StateError(
+              '${expression.runtimeType} context must be $context');
         }
       }
     }

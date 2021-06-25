@@ -73,13 +73,17 @@ class LoopContext extends Iterable<Object?> {
 
   String call(Object? data) {
     if (recurse == null) {
-      throw TypeError(/* the loop must have the 'recursive' marker to be called recursively. */);
+      throw TypeError(
+          /* the loop must have the 'recursive' marker to be called recursively. */);
     }
 
     return recurse!(data, depth);
   }
 
-  Object cycle([Object? arg01 = missing, Object? arg02 = missing, Object? arg03 = missing]) {
+  Object cycle(
+      [Object? arg01 = missing,
+      Object? arg02 = missing,
+      Object? arg03 = missing]) {
     final values = <Object>[];
 
     if (arg01 != missing) {
@@ -144,7 +148,8 @@ class LoopContext extends Iterable<Object?> {
       case 'changed':
         return changed;
       default:
-        throw NoSuchMethodError.withInvocation(this, Invocation.getter(Symbol(key)));
+        throw NoSuchMethodError.withInvocation(
+            this, Invocation.getter(Symbol(key)));
     }
   }
 }

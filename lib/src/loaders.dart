@@ -95,7 +95,8 @@ class FileSystemLoader extends Loader {
       ext = ext.substring(1);
     }
 
-    return extensions.contains(ext) && FileSystemEntity.typeSync(path) == FileSystemEntityType.file;
+    return extensions.contains(ext) &&
+        FileSystemEntity.typeSync(path) == FileSystemEntityType.file;
   }
 
   @override
@@ -117,11 +118,14 @@ class FileSystemLoader extends Loader {
       final directory = Directory(path);
 
       if (directory.existsSync()) {
-        final entities = directory.listSync(recursive: true, followLinks: followLinks);
+        final entities =
+            directory.listSync(recursive: true, followLinks: followLinks);
 
         for (final entity in entities) {
           if (isTemplate(entity.path, path)) {
-            final template = p.relative(entity.path, from: path).replaceAll(Platform.pathSeparator, '/');
+            final template = p
+                .relative(entity.path, from: path)
+                .replaceAll(Platform.pathSeparator, '/');
 
             if (!found.contains(template)) {
               found.add(template);

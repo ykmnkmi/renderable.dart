@@ -34,13 +34,15 @@ class Context {
     return resolve(key);
   }
 
-  void apply<C extends Context>(Map<String, Object?> data, ContextCallback<C> closure) {
+  void apply<C extends Context>(
+      Map<String, Object?> data, ContextCallback<C> closure) {
     push(data);
     closure(this as C);
     pop();
   }
 
-  Object? call(Object? object, [List<Object?>? positional, Map<Symbol, Object?>? named]) {
+  Object? call(Object? object,
+      [List<Object?>? positional, Map<Symbol, Object?>? named]) {
     positional ??= <Object?>[];
 
     if (object is! Function) {
@@ -53,11 +55,15 @@ class Context {
   }
 
   Object? escape(Object? value) {
-    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup(value as String) : value;
+    return value != null && value is! Markup && boolean(get('autoescape'))
+        ? Markup(value as String)
+        : value;
   }
 
   Object? escaped(Object? value) {
-    return value != null && value is! Markup && boolean(get('autoescape')) ? Markup.escaped(value) : value;
+    return value != null && value is! Markup && boolean(get('autoescape'))
+        ? Markup.escaped(value)
+        : value;
   }
 
   Object? get(String key) {

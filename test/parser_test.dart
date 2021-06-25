@@ -2,10 +2,12 @@ import 'package:renderable/jinja.dart';
 import 'package:renderable/runtime.dart';
 import 'package:test/test.dart';
 
+import 'environment.dart';
+
 void main() {
   group('Parser', () {
     test('php syntax', () {
-      var environment = Environment(
+      final environment = Environment(
         blockBegin: '<?',
         blockEnd: '?>',
         variableBegin: '<?=',
@@ -14,14 +16,16 @@ void main() {
         commentEnd: '-->',
       );
 
-      var template = environment.fromString('''<!-- I'm a comment, I'm not interesting --><? for item in seq -?>
-    <?= item ?>
-<?- endfor ?>''');
-      expect(template.render({'seq': range(5)}), equals('01234'));
+      expect(
+          environment
+              .fromString('<!-- I\'m a comment, I\'m not interesting -->'
+                  '<? for item in seq -?>\n    <?= item ?>\n<?- endfor ?>')
+              .render({'seq': range(5)}),
+          equals('01234'));
     });
 
     test('erb syntax', () {
-      var environment = Environment(
+      final environment = Environment(
         blockBegin: '<%',
         blockEnd: '%>',
         variableBegin: '<%=',
@@ -30,14 +34,16 @@ void main() {
         commentEnd: '%>',
       );
 
-      var template = environment.fromString('''<%# I'm a comment, I'm not interesting %><% for item in seq -%>
-    <%= item %>
-<%- endfor %>''');
-      expect(template.render({'seq': range(5)}), equals('01234'));
+      expect(
+          environment
+              .fromString('<%# I\'m a comment, I\'m not interesting %>'
+                  '<% for item in seq -%>\n    <%= item %><%- endfor %>')
+              .render({'seq': range(5)}),
+          equals('01234'));
     });
 
     test('comment syntax', () {
-      var environment = Environment(
+      final environment = Environment(
         blockBegin: '<!--',
         blockEnd: '-->',
         variableBegin: '\${',
@@ -46,29 +52,29 @@ void main() {
         commentEnd: '-->',
       );
 
-      var template = environment.fromString(r'''<!--# I'm a comment, I'm not interesting --><!-- for item in seq --->
-    ${item}
-<!--- endfor -->''');
-      expect(template.render({'seq': range(5)}), equals('01234'));
+      expect(
+          environment
+              .fromString('<!--# I\'m a comment, I\'m not interesting -->'
+                  '<!-- for item in seq --->    \${item}<!--- endfor -->')
+              .render({'seq': range(5)}),
+          equals('01234'));
     });
 
     test('balancing', () {
-      var environment = Environment();
-      var template = environment.fromString('''{{{'foo':'bar'}.foo}}''');
-      expect(template.render(), equals('bar'));
+      expect(render('''{{{'foo':'bar'}.foo}}'''), equals('bar'));
     });
 
+    // TODO: after macro: enable test
     test('start comment', () {
-      var environment = Environment();
-      var template = environment.fromString('''{# foo comment
-and bar comment #}
-{% macro blub() %}foo{% endmacro %}
-{{ blub() }}''');
-      expect(template.render().trim(), equals('foor'));
-    }, skip: /* TODO: remove after macro */ true);
+      expect(
+          render('{# foo comment\nand bar comment #}'
+                  '{% macro blub() %}foo{% endmacro %}\n{{ blub() }}')
+              .trim(),
+          equals('foor'));
+    }, skip: true);
 
     test('line syntax', () {
-      var environment = Environment(
+      final environment = Environment(
         blockBegin: '<%',
         blockEnd: '%>',
         variableBegin: '\${',
@@ -79,19 +85,18 @@ and bar comment #}
         lineStatementPrefix: '%',
       );
 
-      var template = environment.fromString(r'''<%# regular comment %>
-% for item in seq:
-    ${item} ## the rest of the stuff
-% endfor''');
-      var sequence = range(5).toList();
-      var numbers = template
-          .render({'seq': sequence})
-          .split(RegExp('\\s+'))
-          .map((string) => string.trim())
-          .where((string) => string.isNotEmpty)
-          .map((string) => int.parse(string.trim()))
-          .toList();
-      expect(numbers, equals(sequence));
+      final sequence = range(5).toList();
+      expect(
+          environment
+              .fromString('<%# regular comment %>\n% for item in seq:\n'
+                  '    \${item} ## the rest of the stuff\n% endfor')
+              .render({'seq': sequence})
+              .split(RegExp('\\s+'))
+              .map((string) => string.trim())
+              .where((string) => string.isNotEmpty)
+              .map((string) => int.parse(string.trim()))
+              .toList(),
+          equals(sequence));
     });
 
     test('line syntax priority', () {
@@ -103,16 +108,16 @@ and bar comment #}
         lineCommentPrefix: '#',
         lineStatementPrefix: '##',
       );
-      var data = {
-        'seq': [1, 2]
-      };
 
-      var template = environment.fromString(r'''/* ignore me.
-   I'm a multiline comment */
-## for item in seq:
-* ${item}          # this is just extra stuff
-## endfor''');
-      expect(template.render(data).trim(), equals('* 1\n* 2'));
+      expect(
+          environment
+              .fromString('/* ignore me.\n   I\'m a multiline comment */\n'
+                  '## for item in seq:\n* \${item}          '
+                  '# this is just extra stuff\n## endfor\n')
+              .render({
+            'seq': [1, 2]
+          }).trim(),
+          equals('* 1\n* 2'));
 
       environment = Environment(
         variableBegin: '\${',
@@ -123,13 +128,16 @@ and bar comment #}
         lineStatementPrefix: '#',
       );
 
-      template = environment.fromString(r'''/* ignore me.
-   I'm a multiline comment */
-# for item in seq:
-* ${item}          ## this is just extra stuff
-    ## extra stuff i just want to ignore
-# endfor''');
-      expect(template.render(data).trim(), equals('* 1\n\n* 2'));
+      expect(
+          environment
+              .fromString('/* ignore me.\n   I\'m a multiline comment */\n'
+                  '# for item in seq:\n* \${item}          '
+                  '## this is just extra stuff\n    '
+                  '## extra stuff i just want to ignore\n# endfor')
+              .render({
+            'seq': [1, 2]
+          }).trim(),
+          equals('* 1\n\n* 2'));
     });
 
     test('error messages', () {
@@ -138,7 +146,10 @@ and bar comment #}
           Template(source);
         }
 
-        expect(callback, throwsA(predicate((error) => error is TemplateSyntaxError && error.message == expekted)));
+        expect(
+            callback,
+            throwsA(predicate<TemplateSyntaxError>(
+                (error) => error.message == expekted)));
       }
 
       assertError(
@@ -162,7 +173,8 @@ and bar comment #}
               'following tags: \'endfor\' or \'else\'. The innermost block '
               'that needs to be closed is \'for\'.');
       assertError('{% block foo-bar-baz %}', 'use an underscore instead');
-      assertError('{% unknown_tag %}', 'Encountered unknown tag \'unknown_tag\'.');
+      assertError(
+          '{% unknown_tag %}', 'Encountered unknown tag \'unknown_tag\'.');
     });
   });
 }

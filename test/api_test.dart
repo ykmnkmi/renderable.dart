@@ -7,49 +7,65 @@ void main() {
   group('ExtendedAPI', () {
     test('item and attribute', () {
       final environment = Environment(getField: getField);
-      final template = environment.fromString('{{ foo["items"] }}');
-      final foo = {'items': 42};
-      expect(template.render({'foo': foo}), equals('42'));
+
+      expect(
+          environment.fromString('{{ foo["items"] }}').render({
+            'foo': {'items': 42}
+          }),
+          equals('42'));
     });
 
     test('finalize', () {
       final environment = Environment(finalize: (dynamic obj) => obj ?? '');
-      final template = environment.fromString('{% for item in seq %}|{{ item }}{% endfor %}');
-      final seq = [null, 1, 'foo'];
-      expect(template.render({'seq': seq}), equals('||1|foo'));
+
+      expect(
+          environment
+              .fromString('{% for item in seq %}|{{ item }}{% endfor %}')
+              .render({
+            'seq': [null, 1, 'foo']
+          }),
+          equals('||1|foo'));
     });
 
     test('finalize constant expression', () {
-      final environment = Environment(finalize: (dynamic obj) => obj ?? '');
-      final template = environment.fromString('<{{ none }}>');
-      expect(template.render(), equals('<>'));
+      final environment = Environment(
+        finalize: (dynamic obj) => obj ?? '',
+      );
+
+      expect(environment.fromString('<{{ none }}>').render(), equals('<>'));
     });
 
     test('no finalize template data', () {
-      final environment = Environment(finalize: (dynamic obj) => obj.runtimeType);
-      final template = environment.fromString('<{{ value }}>');
+      final environment =
+          Environment(finalize: (dynamic obj) => obj.runtimeType);
       // if template data was finalized, it would print 'StringintString'.
-      expect(template.render({'value': 123}), equals('<int>'));
+      expect(environment.fromString('<{{ value }}>').render({'value': 123}),
+          equals('<int>'));
     });
 
     test('context finalize', () {
-      Object? finalize(Context context, dynamic value) {
-        return value * context['scale'];
-      }
+      final environment = Environment(
+        finalize: (Context context, dynamic value) {
+          return value * context['scale'];
+        },
+      );
 
-      final environment = Environment(finalize: finalize);
-      final template = environment.fromString('{{ value }}');
-      expect(template.render({'value': 5, 'scale': 3}), equals('15'));
+      expect(
+          environment
+              .fromString('{{ value }}')
+              .render({'value': 5, 'scale': 3}),
+          equals('15'));
     });
 
     test('env autoescape', () {
-      Object? finalize(Environment environment, dynamic value) {
-        return '${environment.variableBegin} ${represent(value)} ${environment.variableEnd}';
-      }
+      final environment = Environment(
+        finalize: (Environment environment, dynamic value) {
+          return '${environment.variableBegin} ${represent(value)} ${environment.variableEnd}';
+        },
+      );
 
-      final environment = Environment(finalize: finalize);
-      final template = environment.fromString('{{ value }}');
-      expect(template.render({'value': 'hello'}), equals("{{ 'hello' }}"));
+      expect(environment.fromString('{{ value }}').render({'value': 'hello'}),
+          equals("{{ 'hello' }}"));
     });
 
     test('cycler', () {

@@ -2,13 +2,17 @@ import 'nodes.dart';
 
 void namespace(Node node) {
   if (node is Call) {
-    if (node.expression is Name && (node.expression as Name).name == 'namespace') {
-      final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
+    if (node.expression is Name &&
+        (node.expression as Name).name == 'namespace') {
+      final arguments =
+          node.arguments == null ? <Expression>[] : node.arguments!.toList();
       node.arguments = null;
 
       if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
-        final dict = DictLiteral(
-            node.keywordArguments!.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
+        final dict = DictLiteral(node.keywordArguments!
+            .map<Pair>(
+                (keyword) => Pair(Constant<String>(keyword.key), keyword.value))
+            .toList());
         node.keywordArguments = null;
         arguments.add(dict);
       }
@@ -37,12 +41,15 @@ void namespace(Node node) {
 void inheritance(Node node) {
   if (node is Call) {
     if (node.expression is Name && (node.expression as Name).name == 'super') {
-      final arguments = node.arguments == null ? <Expression>[] : node.arguments!.toList();
+      final arguments =
+          node.arguments == null ? <Expression>[] : node.arguments!.toList();
       node.arguments = null;
 
       if (node.keywordArguments != null && node.keywordArguments!.isNotEmpty) {
-        final dict = DictLiteral(
-            node.keywordArguments!.map<Pair>((keyword) => Pair(Constant<String>(keyword.key), keyword.value)).toList());
+        final dict = DictLiteral(node.keywordArguments!
+            .map<Pair>(
+                (keyword) => Pair(Constant<String>(keyword.key), keyword.value))
+            .toList());
         node.keywordArguments = null;
         arguments.add(dict);
       }

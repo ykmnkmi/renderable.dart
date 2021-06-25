@@ -6,7 +6,8 @@ import 'runtime.dart';
 
 // import 'package:dart_style/dart_style.dart';
 
-typedef Indices = Iterable<int> Function(int stopOrStart, [int? stop, int? step]);
+typedef Indices = Iterable<int> Function(int stopOrStart,
+    [int? stop, int? step]);
 
 const Missing missing = Missing();
 
@@ -211,7 +212,8 @@ void representTo(Object? object, StringBuffer buffer) {
   }
 
   if (object is String) {
-    buffer.write("'${object.replaceAll('\'', r"\'").replaceAll('\r', r'\\r').replaceAll('\n', r'\\n')}'");
+    buffer.write(
+        "'${object.replaceAll('\'', r"\'").replaceAll('\t', r'\t').replaceAll('\r', r'\r').replaceAll('\n', r'\n')}'");
     return;
   }
 

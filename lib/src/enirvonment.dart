@@ -18,11 +18,13 @@ typedef Finalizer = Object? Function(Object? value);
 
 typedef ContextFinalizer = Object? Function(Context context, Object? value);
 
-typedef EnvironmentFinalizer = Object? Function(Environment environment, Object? value);
+typedef EnvironmentFinalizer = Object? Function(
+    Environment environment, Object? value);
 
 typedef FieldGetter = Object? Function(Object? object, String field);
 
-typedef UndefinedFactory = Undefined Function({String? hint, Object? object, String? name});
+typedef UndefinedFactory = Undefined Function(
+    {String? hint, Object? object, String? name});
 
 class Environment {
   Environment({
@@ -53,7 +55,9 @@ class Environment {
     List<NodeVisitor>? modifiers,
     Random? random,
     this.getField = defaults.getField,
-  })  : assert(finalize is Finalizer || finalize is ContextFinalizer || finalize is EnvironmentFinalizer),
+  })  : assert(finalize is Finalizer ||
+            finalize is ContextFinalizer ||
+            finalize is EnvironmentFinalizer),
         finalize = finalize is EnvironmentFinalizer
             ? ((context, value) => finalize(context.environment, value))
             : finalize is ContextFinalizer
@@ -151,7 +155,9 @@ class Environment {
   final FieldGetter getField;
 
   Object? callFilter(String name, Object? value,
-      {List<Object?>? positional, Map<Symbol, Object?>? named, Context? context}) {
+      {List<Object?>? positional,
+      Map<Symbol, Object?>? named,
+      Context? context}) {
     Function filter;
 
     if (filters.containsKey(name)) {
@@ -162,7 +168,8 @@ class Environment {
 
     if (contextFilters.contains(name)) {
       if (context == null) {
-        throw TemplateRuntimeError('attempted to invoke context filter without context');
+        throw TemplateRuntimeError(
+            'attempted to invoke context filter without context');
       }
 
       positional ??= <Object?>[];
@@ -180,7 +187,8 @@ class Environment {
     return Function.apply(filter, positional, named);
   }
 
-  bool callTest(String name, Object? value, {List<Object?>? positional, Map<Symbol, Object?>? named}) {
+  bool callTest(String name, Object? value,
+      {List<Object?>? positional, Map<Symbol, Object?>? named}) {
     Function test;
 
     if (tests.containsKey(name)) {
@@ -436,7 +444,8 @@ class Template extends Node {
     return environment.fromString(source, path: path);
   }
 
-  Template.parsed(this.environment, this.nodes, {this.blocks = const <Block>[], this.hasSelf = false, this.path});
+  Template.parsed(this.environment, this.nodes,
+      {this.blocks = const <Block>[], this.hasSelf = false, this.path});
 
   final Environment environment;
 

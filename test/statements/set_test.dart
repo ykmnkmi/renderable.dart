@@ -3,7 +3,7 @@ import 'package:renderable/reflection.dart';
 import 'package:renderable/src/exceptions.dart';
 import 'package:test/test.dart';
 
-const Map<Object?, Object?> emptyMap = <Object?, Object?>{};
+const emptyMap = <Object?, Object?>{};
 
 void main() {
   group('Set', () {
@@ -15,58 +15,73 @@ void main() {
 
     test('block', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template = environment.fromString('{% set foo %}42{% endset %}{{ foo }}');
+      final template =
+          environment.fromString('{% set foo %}42{% endset %}{{ foo }}');
       expect(template.render(), equals('42'));
     });
 
     test('block escaping', () {
       final environment = Environment(autoEscape: true);
-      final template = environment.fromString('{% set foo %}<em>{{ test }}</em>{% endset %}foo: {{ foo }}');
-      expect(template.render({'test': '<unsafe>'}), equals('foo: <em>&lt;unsafe&gt;</em>'));
+      final template = environment.fromString(
+          '{% set foo %}<em>{{ test }}</em>{% endset %}foo: {{ foo }}');
+      expect(template.render({'test': '<unsafe>'}),
+          equals('foo: <em>&lt;unsafe&gt;</em>'));
     });
 
     test('set invalid', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      expect(() => environment.fromString('{% set foo["bar"] = 1 %}'), throwsA(isA<TemplateSyntaxError>()));
+      expect(() => environment.fromString('{% set foo["bar"] = 1 %}'),
+          throwsA(isA<TemplateSyntaxError>()));
       final template = environment.fromString('{% set foo.bar = 1 %}');
-      expect(() => template.render({'foo': emptyMap}),
-          throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
+      expect(
+          () => template.render({'foo': emptyMap}),
+          throwsA(predicate<TemplateRuntimeError>(
+              (error) => error.message == 'non-namespace object')));
     });
 
     test('namespace redefined', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template = environment.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
-      expect(() => template.render({'namespace': () => emptyMap}),
-          throwsA(predicate((error) => error is TemplateRuntimeError && error.message == 'non-namespace object')));
+      final template = environment
+          .fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
+      expect(
+          () => template.render({'namespace': () => emptyMap}),
+          throwsA(predicate<TemplateRuntimeError>(
+              (error) => error.message == 'non-namespace object')));
     });
 
     test('namespace', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template = environment.fromString('{% set ns = namespace() %}{% set ns.bar = "42" %}{{ ns.bar }}');
+      final template = environment.fromString(
+          '{% set ns = namespace() %}{% set ns.bar = "42" %}{{ ns.bar }}');
       expect(template.render(), equals('42'));
     });
 
     test('namespace block', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template = environment.fromString('{% set ns = namespace() %}{% set ns.bar %}42{% endset %}{{ ns.bar }}');
+      final template = environment
+          .fromString('{% set ns = namespace() %}{% set ns.bar %}42{% endset %}'
+              '{{ ns.bar }}');
       expect(template.render(), equals('42'));
     });
 
     test('init namespace', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template = environment
-          .fromString('{% set ns = namespace(d, self=37) %}{% set ns.b = 42 %}{{ ns.a }}|{{ ns.self }}|{{ ns.b }}');
-      final data = {
-        'd': {'a': 13}
-      };
-      expect(template.render(data), equals('13|37|42'));
+      final template = environment.fromString(
+          '{% set ns = namespace(d, self=37) %}{% set ns.b = 42 %}{{ ns.a }}|'
+          '{{ ns.self }}|{{ ns.b }}');
+      expect(
+          template.render({
+            'd': {'a': 13}
+          }),
+          equals('13|37|42'));
     });
 
     test('namespace loop', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template =
-          environment.fromString('{% set ns = namespace(found=false) %}{% for x in range(4) %}{% if x == v %}'
-              '{% set ns.found = true %}{% endif %}{% endfor %}{{ ns.found }}');
+      final template = environment.fromString(
+          '{% set ns = namespace(found=false) %}{% for x in range(4) %}'
+          '{% if x == v %}{% set ns.found = true %}{% endif %}{% endfor %}'
+          '{{ ns.found }}');
       expect(template.render({'v': 3}), equals('true'));
       expect(template.render({'v': 4}), equals('false'));
     });
@@ -75,13 +90,16 @@ void main() {
 
     test('block escapeing filtered', () {
       final environment = Environment(autoEscape: true);
-      final template = environment.fromString('{% set foo | trim %}<em>{{ test }}</em>    {% endset %}foo: {{ foo }}');
-      expect(template.render({'test': '<unsafe>'}), equals('foo: <em>&lt;unsafe&gt;</em>'));
+      final template = environment.fromString(
+          '{% set foo | trim %}<em>{{ test }}</em>    {% endset %}foo: {{ foo }}');
+      expect(template.render({'test': '<unsafe>'}),
+          equals('foo: <em>&lt;unsafe&gt;</em>'));
     });
 
     test('block filtered', () {
       final environment = Environment(getField: getField, trimBlocks: true);
-      final template = environment.fromString('{% set foo | trim | length | string %} 42    {% endset %}{{ foo }}');
+      final template = environment.fromString(
+          '{% set foo | trim | length | string %} 42    {% endset %}{{ foo }}');
       expect(template.render(), equals('2'));
     });
 
@@ -91,10 +109,13 @@ void main() {
         return value;
       }
 
-      final environment = Environment(filters: {'myfilter': myfilter}, getField: getField, trimBlocks: true);
-      final template =
-          environment.fromString('{% set a = " xxx " %}{% set foo | myfilter(a) | trim | length | string %} '
-              '{% set b = " yy " %} 42 {{ a }}{{ b }}   {% endset %}{{ foo }}');
+      final environment = Environment(
+          filters: {'myfilter': myfilter},
+          getField: getField,
+          trimBlocks: true);
+      final template = environment.fromString(
+          '{% set a = " xxx " %}{% set foo | myfilter(a) | trim | length | string %} '
+          '{% set b = " yy " %} 42 {{ a }}{{ b }}   {% endset %}{{ foo }}');
       expect(template.render(), equals('11'));
     });
   });

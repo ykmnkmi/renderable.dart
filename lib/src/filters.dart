@@ -15,7 +15,8 @@ List<String> prepareAttributeParts(String attribute) {
   return attribute.split('.');
 }
 
-Object? Function(Object?) makeAttributeGetter(Environment environment, String attributeOrAttributes,
+Object? Function(Object?) makeAttributeGetter(
+    Environment environment, String attributeOrAttributes,
     {Object? Function(Object?)? postProcess, Object? defaultValue}) {
   final attributes = prepareAttributeParts(attributeOrAttributes);
 
@@ -50,7 +51,8 @@ Object? doAttribute(Environment environment, Object? object, String attribute) {
   return environment.getAttribute(object, attribute);
 }
 
-Iterable<List<Object?>> doBatch(Iterable<Object?> items, int lineCount, [Object? fillWith]) sync* {
+Iterable<List<Object?>> doBatch(Iterable<Object?> items, int lineCount,
+    [Object? fillWith]) sync* {
   var temp = <Object?>[];
 
   for (final item in items) {
@@ -76,7 +78,8 @@ String doCapitalize(String string) {
     return string.toUpperCase();
   }
 
-  return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+  return string.substring(0, 1).toUpperCase() +
+      string.substring(1).toLowerCase();
 }
 
 String doCenter(String string, int width) {
@@ -93,7 +96,8 @@ int doLength(Object? items) {
   return (items as dynamic).length as int;
 }
 
-Object? doDefault(Object? value, [Object? defaultValue = '', bool asBoolean = false]) {
+Object? doDefault(Object? value,
+    [Object? defaultValue = '', bool asBoolean = false]) {
   if (value is Undefined || (asBoolean && !boolean(value))) {
     return defaultValue;
   }
@@ -210,16 +214,19 @@ int doInteger(Object? value, {int d = 0, int base = 10}) {
   }
 }
 
-Object? doJoin(Context context, Iterable<Object?> values, [String delimiter = '', String? attribute]) {
+Object? doJoin(Context context, Iterable<Object?> values,
+    [String delimiter = '', String? attribute]) {
   if (attribute != null) {
-    values = values.map<Object?>(makeAttributeGetter(context.environment, attribute));
+    values = values
+        .map<Object?>(makeAttributeGetter(context.environment, attribute));
   }
 
   if (!boolean(context.get('autoescape'))) {
     return values.join(delimiter);
   }
 
-  return context.escaped(values.map<Object?>((value) => context.escape(value)).join(delimiter));
+  return context.escaped(
+      values.map<Object?>((value) => context.escape(value)).join(delimiter));
 }
 
 Object? doLast(Iterable<Object?> values) {
@@ -283,7 +290,8 @@ String doString(Object? value) {
   return value.toString();
 }
 
-num doSum(Environment environment, Iterable<Object?> values, {String? attribute, num start = 0}) {
+num doSum(Environment environment, Iterable<Object?> values,
+    {String? attribute, num start = 0}) {
   if (attribute != null) {
     values = values.map<Object?>(makeAttributeGetter(environment, attribute));
   }
@@ -305,7 +313,9 @@ int doWordCount(String string) {
 }
 
 String doWordWrap(Environment environment, String string, int width,
-    {bool breakLongWords = true, String? wrapString, bool breakOnHyphens = true}) {
+    {bool breakLongWords = true,
+    String? wrapString,
+    bool breakOnHyphens = true}) {
   final wrapper = TextWrapper(
       width: width,
       expandTabs: false,

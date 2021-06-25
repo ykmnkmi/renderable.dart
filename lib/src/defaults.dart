@@ -34,7 +34,8 @@ Object? finalize(Object? value) {
 }
 
 Object? getField(Object? object, String field) {
-  throw NoSuchMethodError.withInvocation(object, Invocation.getter(Symbol(field)));
+  throw NoSuchMethodError.withInvocation(
+      object, Invocation.getter(Symbol(field)));
 }
 
 Undefined undefined({String? hint, Object? object, String? name}) {

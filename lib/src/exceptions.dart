@@ -16,12 +16,14 @@ abstract class TemplateError implements Exception {
 
 /// Raised if a template does not exist.
 class TemplateNotFound extends TemplateError {
-  TemplateNotFound({Object? template, Object? message}) : super(message ?? template);
+  TemplateNotFound({Object? template, Object? message})
+      : super(message ?? template);
 }
 
 /// Like [TemplateNotFound] but raised if multiple templates are selected.
 class TemplatesNotFound extends TemplateNotFound {
-  TemplatesNotFound({List<Object?>? names, Object? message}) : super(message: message);
+  TemplatesNotFound({List<Object?>? names, Object? message})
+      : super(message: message);
 }
 
 /// Raised to tell the user that there is a problem with the template.
