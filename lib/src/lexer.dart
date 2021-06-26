@@ -110,7 +110,6 @@ class MultiTokenRule extends Rule {
   }
 }
 
-@doNotStore
 class Lexer {
   Lexer(Environment environment)
       : newLineRe = RegExp('(\r\n|\r|\n)'),
@@ -243,15 +242,15 @@ class Lexer {
 
   final bool keepTrailingNewLine;
 
-  @protected
+  @internal
   late Map<String, List<Rule>> rules;
 
-  @protected
+  @internal
   String normalizeNewLines(String value) {
     return value.replaceAll(newLineRe, newLine);
   }
 
-  @protected
+  @internal
   List<Token> scan(StringScanner scanner, [String? state]) {
     const endTokens = <String>[
       'variable_end',

@@ -1,6 +1,6 @@
 name: renderable
 description: Testing features for Jinja.dart.
-version: 1.0.0-dev+140
+version: 1.0.0-dev+141
 publish_to: none
 
 environment:
@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   path: ^1.8.0
+  quiver: ^3.0.1
   string_scanner: ^1.1.0
   textwrap: ^1.0.2
 

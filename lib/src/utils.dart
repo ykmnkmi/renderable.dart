@@ -107,7 +107,7 @@ bool boolean(Object? value) {
 }
 
 String format(Object? object) {
-  final source = represent(object);
+  final source = repr(object);
   return source;
   // return DartFormatter().formatStatement(source);
 }
@@ -166,13 +166,17 @@ Iterable<int> range(int stopOrStart, [int? stop, int step = 1]) sync* {
   }
 }
 
-String represent(Object? object) {
+String repr(Object? object) {
+  if (object == null) {
+    return 'null';
+  }
+
   final buffer = StringBuffer();
-  representTo(object, buffer);
+  reprTo(object, buffer);
   return buffer.toString();
 }
 
-void representTo(Object? object, StringBuffer buffer) {
+void reprTo(Object? object, StringBuffer buffer) {
   if (object == null) {
     buffer.write('null');
     return;
@@ -186,7 +190,7 @@ void representTo(Object? object, StringBuffer buffer) {
         buffer.write(', ');
       }
 
-      representTo(object[i], buffer);
+      reprTo(object[i], buffer);
     }
 
     buffer.write(']');
@@ -202,9 +206,9 @@ void representTo(Object? object, StringBuffer buffer) {
         buffer.write(', ');
       }
 
-      representTo(keys[i], buffer);
+      reprTo(keys[i], buffer);
       buffer.write(': ');
-      representTo(object[keys[i]], buffer);
+      reprTo(object[keys[i]], buffer);
     }
 
     buffer.write('}');
@@ -212,8 +216,12 @@ void representTo(Object? object, StringBuffer buffer) {
   }
 
   if (object is String) {
-    buffer.write(
-        "'${object.replaceAll('\'', r"\'").replaceAll('\t', r'\t').replaceAll('\r', r'\r').replaceAll('\n', r'\n')}'");
+    object = object
+        .replaceAll('\'', r"\'")
+        .replaceAll('\t', r'\t')
+        .replaceAll('\r', r'\r')
+        .replaceAll('\n', r'\n');
+    buffer.write("'$object'");
     return;
   }
 

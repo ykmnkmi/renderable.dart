@@ -31,20 +31,17 @@ class Parser {
     String? currentlyLooking;
 
     for (final tokens in endTokensStack) {
-      expected.addAll(
-          tokens.map<String>(describeExpression).map<String>(represent));
+      expected.addAll(tokens.map<String>(describeExpression));
     }
 
     if (endTokensStack.isNotEmpty) {
-      currentlyLooking = endTokensStack.last
-          .map<String>(describeExpression)
-          .map<String>(represent)
-          .join(' or ');
+      currentlyLooking =
+          endTokensStack.last.map<String>(describeExpression).join(' or ');
     }
 
     final message = name == null
         ? <String>['Unexpected end of template.']
-        : <String>['Encountered unknown tag ${represent(name)}.'];
+        : <String>['Encountered unknown tag $name.'];
 
     if (currentlyLooking != null) {
       if (name != null && expected.contains(name)) {
@@ -58,7 +55,7 @@ class Parser {
 
     if (tagStack.isNotEmpty) {
       message.add(
-          'The innermost block that needs to be closed is ${represent(tagStack.last)}.');
+          'The innermost block that needs to be closed is ${tagStack.last}.');
     }
 
     fail(message.join(' '), line);

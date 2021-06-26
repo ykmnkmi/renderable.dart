@@ -1,10 +1,12 @@
 import 'dart:collection' show HashMap, HashSet;
 import 'dart:math' show Random;
 
+import 'package:quiver/core.dart';
 import 'package:renderable/jinja.dart';
 
 import 'defaults.dart' as defaults;
 import 'exceptions.dart';
+import 'lexer.dart';
 import 'loaders.dart';
 import 'nodes.dart';
 import 'optimizer.dart';
@@ -25,6 +27,8 @@ typedef FieldGetter = Object? Function(Object? object, String field);
 
 typedef UndefinedFactory = Undefined Function(
     {String? hint, Object? object, String? name});
+
+late final Expando<Lexer> lexerCache = Expando('lexerCache');
 
 class Environment {
   Environment({
@@ -153,6 +157,41 @@ class Environment {
   final Random random;
 
   final FieldGetter getField;
+
+  @override
+  int get hashCode {
+    return hashObjects(<Object?>[
+      blockBegin,
+      blockEnd,
+      variableBegin,
+      variableEnd,
+      commentBegin,
+      commentEnd,
+      lineStatementPrefix,
+      lineCommentPrefix,
+      trimBlocks,
+      leftStripBlocks
+    ]);
+  }
+
+  Lexer get lexer {
+    return lexerCache[this] ??= Lexer(this);
+  }
+
+  @override
+  bool operator ==(Object? other) {
+    return other is Environment &&
+        blockBegin == other.blockBegin &&
+        blockEnd == other.blockEnd &&
+        variableBegin == other.variableBegin &&
+        variableEnd == other.variableEnd &&
+        commentBegin == other.commentBegin &&
+        commentEnd == other.commentEnd &&
+        lineStatementPrefix == other.lineStatementPrefix &&
+        lineCommentPrefix == other.lineCommentPrefix &&
+        trimBlocks == other.trimBlocks &&
+        leftStripBlocks == other.leftStripBlocks;
+  }
 
   Object? callFilter(String name, Object? value,
       {List<Object?>? positional,
@@ -339,14 +378,19 @@ class Environment {
     throw TypeError();
   }
 
-  Template loadTemplate(String template) {
-    assert(loader != null, 'no loader for this environment specified');
-    return templates[template] = loader!.load(this, template);
-  }
-
   List<String> listTemplates() {
     assert(loader != null, 'no loader configured');
     return loader!.listTemplates();
+  }
+
+  List<Token> lex(String source) {
+    // TODO: catch error
+    return lexer.tokenize(source);
+  }
+
+  Template loadTemplate(String template) {
+    assert(loader != null, 'no loader for this environment specified');
+    return templates[template] = loader!.load(this, template);
   }
 }
 

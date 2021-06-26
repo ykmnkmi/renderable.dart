@@ -11,55 +11,20 @@ Differences:
 - ... working
 
 ## Status:
-### API:
+### ToDo:
 - Environment
   - constructor
     - ~~extensions~~
     - ~~selectAutoescape~~
-    - autoReload
-  - ~~shared~~
-  - filters
-  - tests
-  - globals
-  - undefined
   - ~~addExtension~~
   - ~~compileExpression~~
-  - fromString
-  - getTemplate
-  - listTemplates
+  - ~~shared~~
 - Template
-  - path (name)
-  - render
   - ~~generate~~
   - ~~stream~~
-- Undefined Types
-  - Undefined
-    - undefinedMessage
-    - fail
-- Context
-  - environment
-  - blocks
-  - call
-  - resolve
 - Loaders
-  - Loader
-    - hasSourceAccess
-    - getSource
-    - listSources
-    - load
-  - MapLoader (DictLoader)
-  - FileSystemLoader
-- Utilities
-  - escape
-  - isUndefined
-  - Markup
-- Exceptions
-  - TemplateError
-  - UndefinedError
-  - TemplateNotFound
-  - TemplateSyntaxError
-  - TemplateRuntimeError
-  - ~~TemplateAssertionError~~
+  - ~~PackageLoader~~
+  - ...
 - ... working
 
 ### Templates:
@@ -164,6 +129,9 @@ Differences:
   - list
   - namespace
   - range
+- Loaders
+  - FileSystemLoader
+  - MapLoader (DictLoader)
 - Extensions
   - With Statement
   - ~~i18n~~
