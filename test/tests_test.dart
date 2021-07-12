@@ -43,17 +43,17 @@ void main() {
 
     test('even', () {
       final tmpl = env.fromString('{{ 1 is even }}|{{ 2 is even }}');
-      expect(tmpl, equals('false|true'));
+      expect(tmpl.render(), equals('false|true'));
     });
 
     test('odd', () {
       final tmpl = env.fromString('{{ 1 is odd }}|{{ 2 is odd }}');
-      expect(tmpl, equals('true|false'));
+      expect(tmpl.render(), equals('true|false'));
     });
 
     test('lower', () {
       final tmpl = env.fromString('{{ "foo" is lower }}|{{ "FOO" is lower }}');
-      expect(tmpl, equals('true|false'));
+      expect(tmpl.render(), equals('true|false'));
     });
 
     test('types', () {
@@ -219,8 +219,8 @@ void main() {
     });
 
     test('upper', () {
-      expect(env.fromString('{{ "FOO" is upper }}|{{ "foo" is upper }}'),
-          equals('true|false'));
+      final tmpl = env.fromString('{{ "FOO" is upper }}|{{ "foo" is upper }}');
+      expect(tmpl.render(), equals('true|false'));
     });
 
     test('equal to', () {

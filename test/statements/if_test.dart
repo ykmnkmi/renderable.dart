@@ -16,11 +16,11 @@ void main() {
     });
 
     test('elif deep', () {
-      final eilfs = <String>[
-        for (var i = 0; i < 999; i++) '{% elif a == ${i + 1} %}${i + 1}'
-      ].join('\n');
+      final elifs = <String>[
+        for (var i = 1; i < 1000; i++) '{% elif a == $i %}$i'
+      ].join();
       final tmpl =
-          env.fromString('{% if a == 0 %}0$eilfs{% else %}x{% endif %}');
+          env.fromString('{% if a == 0 %}0$elifs{% else %}x{% endif %}');
       expect(tmpl.render({'a': 0}), equals('0'));
       expect(tmpl.render({'a': 10}), equals('10'));
       expect(tmpl.render({'a': 999}), equals('999'));

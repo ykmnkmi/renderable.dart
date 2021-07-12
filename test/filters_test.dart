@@ -57,11 +57,11 @@ void main() {
       final data = {'foo': range(10)};
       var tmpl = env.fromString('{{ foo|batch(3)|list }}');
       var result = tmpl.render(data);
-      expect(result, equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]|'));
+      expect(result, equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]'));
       tmpl = env.fromString('{{ foo|batch(3, "X")|list }}');
       result = tmpl.render(data);
       expect(
-          result, equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, "X", "X"]]'));
+          result, equals('[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, X, X]]'));
     });
 
     // TODO: add test: slice
