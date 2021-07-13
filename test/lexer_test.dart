@@ -86,19 +86,10 @@ void main() {
           equals('<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>'));
     });
 
-    test('string escapes', () {
-      var tmpl = env.fromString('{{ "\t" }}');
-      expect(tmpl.render(), equals('\t'));
-      tmpl = env.fromString('{{ "\r" }}');
-      expect(tmpl.render(), equals('\r'));
-      tmpl = env.fromString('{{ "\n" }}');
-      expect(tmpl.render(), equals('\n'));
-    });
-
     // not supported
     // test('bytefallback', () {
     //   final environment = Environment();
-    //   final template = environment.fromString('{{ \'foo\' | pprint }}|{{ \'bär\' | pprint }}');
+    //   final template = environment.fromString('{{ \'foo\'|pprint }}|{{ \'bär\'|pprint }}');
     //   expect(template.render(), equals(pformat('foo') + '|' + pformat('bär')));
     // });
 

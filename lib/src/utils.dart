@@ -171,15 +171,31 @@ String repr(Object? object) {
     return 'null';
   }
 
+  if (object is num) {
+    return '$object';
+  }
+
+  if (object is String) {
+    object = object.replaceAll("'", "\\'");
+    return "'$object'";
+  }
+
   final buffer = StringBuffer();
   reprTo(object, buffer);
-  return buffer.toString();
+  return '$buffer';
 }
 
 void reprTo(Object? object, StringBuffer buffer) {
   if (object == null) {
     buffer.write('null');
-    return;
+  }
+
+  if (object is num) {
+    buffer.write(object);
+  }
+
+  if (object is String) {
+    buffer.write(object.replaceAll("'", "\\'"));
   }
 
   if (object is List<Object?>) {
@@ -212,16 +228,6 @@ void reprTo(Object? object, StringBuffer buffer) {
     }
 
     buffer.write('}');
-    return;
-  }
-
-  if (object is String) {
-    object = object
-        .replaceAll('\'', r"\'")
-        .replaceAll('\t', r'\t')
-        .replaceAll('\r', r'\r')
-        .replaceAll('\n', r'\n');
-    buffer.write("'$object'");
     return;
   }
 
