@@ -236,18 +236,12 @@ class StringSinkRenderer extends ExpressionResolver<RenderContext> {
 
   @override
   void visitInclude(Include node, [RenderContext? context]) {
-    try {
-      final template = context!.environment.getTemplate(node.template);
+    final template = context!.environment.getTemplate(node.template);
 
-      if (node.withContext) {
-        template.accept(this, context);
-      } else {
-        template.accept(this, RenderContext(context.environment, context.sink));
-      }
-    } on TemplateNotFound {
-      if (!node.ignoreMissing) {
-        rethrow;
-      }
+    if (node.withContext) {
+      template.accept(this, context);
+    } else {
+      template.accept(this, RenderContext(context.environment, context.sink));
     }
   }
 

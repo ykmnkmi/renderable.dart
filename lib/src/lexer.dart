@@ -1,7 +1,5 @@
 library tokenizer;
 
-import 'dart:convert';
-
 import 'package:meta/meta.dart';
 import 'package:string_scanner/string_scanner.dart';
 
@@ -288,8 +286,7 @@ class Lexer {
 
           if (rule.optionalLStrip) {
             final text = groups[0]!;
-
-            late String stripSign;
+            String? stripSign;
 
             for (var i = 2; i < groups.length; i += 2) {
               if (groups[i] != null) {
@@ -455,20 +452,14 @@ class Lexer {
   }
 
   List<Token> tokenize(String source, {String? path}) {
-    final lines = const LineSplitter().convert(source);
+    final lines = split(newLineRe, source);
 
-    if (keepTrailingNewLine && source.isNotEmpty) {
-      if (source.endsWith('\r\n') ||
-          source.endsWith('\r') ||
-          source.endsWith('\n')) {
-        lines.add('');
-      }
+    if (!keepTrailingNewLine && lines.last.isEmpty) {
+      lines.removeLast();
     }
 
     source = lines.join('\n');
-
     final scanner = StringScanner(source, sourceUrl: path);
-
     final tokens = <Token>[];
 
     for (final token in scan(scanner)) {
@@ -481,9 +472,9 @@ class Lexer {
       } else if (token.test('data')) {
         tokens.add(token.change(value: normalizeNewLines(token.value)));
       } else if (token.test('string')) {
-        tokens.add(token.change(
-            value: normalizeNewLines(
-                token.value.substring(1, token.value.length - 1))));
+        var value = token.value;
+        value = normalizeNewLines(value.substring(1, value.length - 1));
+        tokens.add(token.change(value: value));
       } else if (token.test('integer') || token.test('float')) {
         tokens.add(token.change(value: token.value.replaceAll('_', '')));
       } else if (token.test('operator')) {
@@ -500,5 +491,28 @@ class Lexer {
   @override
   String toString() {
     return 'Tokenizer()';
+  }
+
+  static List<String> split(Pattern pattern, String text) {
+    final matches = pattern.allMatches(text).toList();
+
+    if (matches.isEmpty) {
+      return <String>[text];
+    }
+
+    final result = <String>[];
+    final length = matches.length;
+    Match? match;
+
+    for (var i = 0, start = 0; i < length; i += 1, start = match.end) {
+      match = matches[i];
+      result.add(text.substring(start, match.start));
+    }
+
+    if (match != null) {
+      result.add(text.substring(match.end));
+    }
+
+    return result;
   }
 }

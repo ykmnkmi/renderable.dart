@@ -222,11 +222,9 @@ class Block extends Statement {
 }
 
 class Include extends Statement implements ImportContext {
-  Include(this.template, {this.ignoreMissing = false, this.withContext = true});
+  Include(this.template, {this.withContext = true});
 
   String template;
-
-  bool ignoreMissing;
 
   @override
   bool withContext;
@@ -238,17 +236,13 @@ class Include extends Statement implements ImportContext {
 
   @override
   String toString() {
-    var result = 'Include(';
-
-    if (ignoreMissing) {
-      result = '${result}ignoreMissing, ';
-    }
+    var prefix = 'Include';
 
     if (withContext) {
-      result = '${result}withContext, ';
+      prefix = '${prefix}withContext';
     }
 
-    return '$result$template)';
+    return '$prefix($template)';
   }
 }
 

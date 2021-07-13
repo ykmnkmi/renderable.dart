@@ -3,7 +3,6 @@ import 'exceptions.dart';
 import 'lexer.dart';
 import 'nodes.dart';
 import 'reader.dart';
-import 'utils.dart';
 
 class Parser {
   Parser(this.environment, {this.path})
@@ -35,13 +34,15 @@ class Parser {
     }
 
     if (endTokensStack.isNotEmpty) {
-      currentlyLooking =
-          endTokensStack.last.map<String>(describeExpression).join(' or ');
+      currentlyLooking = endTokensStack.last
+          .map<String>(describeExpression)
+          .map<String>((token) => '\'$token\'')
+          .join(' or ');
     }
 
     final message = name == null
         ? <String>['Unexpected end of template.']
-        : <String>['Encountered unknown tag $name.'];
+        : <String>['Encountered unknown tag \'$name\'.'];
 
     if (currentlyLooking != null) {
       if (name != null && expected.contains(name)) {
@@ -55,7 +56,7 @@ class Parser {
 
     if (tagStack.isNotEmpty) {
       message.add(
-          'The innermost block that needs to be closed is ${tagStack.last}.');
+          'The innermost block that needs to be closed is \'${tagStack.last}\'.');
     }
 
     fail(message.join(' '), line);
@@ -358,13 +359,6 @@ class Parser {
     reader.expect('name', 'include');
     final name = reader.expect('string');
     final node = Include(name.value);
-
-    if (reader.current.test('name', 'ignore') &&
-        reader.look().test('name', 'missing')) {
-      node.ignoreMissing = true;
-      reader.skip(2);
-    }
-
     return parseImportContext<Include>(reader, node, true);
   }
 
@@ -399,8 +393,7 @@ class Parser {
       if (target is CanAssign) {
         target.context = AssignContext.store;
       } else {
-        fail('can\'t assign to ${target.runtimeType.toString().toLowerCase()}',
-            line);
+        fail('can\'t assign to ${target.runtimeType}', line);
       }
     }
 

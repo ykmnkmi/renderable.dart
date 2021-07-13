@@ -65,7 +65,7 @@ void main() {
         variableEnd: '}',
       );
       final tmpl = env.fromString(r'''{% for item in seq
-            %}${{'foo': item} | upper}{% endfor %}''');
+            %}${{'foo': item}|string|upper}{% endfor %}''');
       expect(tmpl.render(seq123), equals('{FOO: 0}{FOO: 1}{FOO: 2}'));
     });
 
@@ -87,11 +87,11 @@ void main() {
     });
 
     test('string escapes', () {
-      var tmpl = env.fromString('{{ "\\t" }}');
+      var tmpl = env.fromString('{{ "\t" }}');
       expect(tmpl.render(), equals('\t'));
-      tmpl = env.fromString('{{ "\\r" }}');
+      tmpl = env.fromString('{{ "\r" }}');
       expect(tmpl.render(), equals('\r'));
-      tmpl = env.fromString('{{ "\\n" }}');
+      tmpl = env.fromString('{{ "\n" }}');
       expect(tmpl.render(), equals('\n'));
     });
 

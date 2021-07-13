@@ -5,9 +5,9 @@ Renderable.dart
 After merging this package will be simplified to object based context and divided to annotations and generator.
 
 Differences:
-- no context and environment function decorators, use `context`/`ctx` or `environment`/`env` variables: `{{ function(ctx/env, ...) }}` and 
+- no context and environment function decorators, use `context`/`ctx` or `environment`/`env` variables: `{{ function(ctx/env, ...) }}` and
   `Environment(contextFilters: {...}, environmentFilters: {...})` parameters for filters.
-- `inlcude` and `extends` accepts only single path.
+- `inlcude` and `extends` accepts only single existing template.
 - ... working
 
 ## Status:
